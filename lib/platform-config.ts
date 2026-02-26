@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { defaultEmailTemplate, normalizeEmailTemplate } from "@/lib/email-template";
 import { buildEmailTemplateFromBuilder, defaultEmailTemplateBuilder, normalizeEmailTemplateBuilder } from "@/lib/email-template-builder";
 
@@ -63,16 +64,19 @@ export async function upsertEmailTemplateConfig(input: {
   emailTemplateSubject?: string | null;
   emailTemplateHtml?: string | null;
 }) {
+  const emailTemplateBuilder =
+    input.emailTemplateBuilder === undefined ? undefined : input.emailTemplateBuilder ?? Prisma.DbNull;
+
   return db.platformConfig.upsert({
     where: { id: DEFAULT_CONFIG_ID },
     create: {
       id: DEFAULT_CONFIG_ID,
-      emailTemplateBuilder: input.emailTemplateBuilder ?? null,
+      emailTemplateBuilder: emailTemplateBuilder ?? Prisma.DbNull,
       emailTemplateSubject: input.emailTemplateSubject ?? null,
       emailTemplateHtml: input.emailTemplateHtml ?? null
     },
     update: {
-      emailTemplateBuilder: input.emailTemplateBuilder,
+      emailTemplateBuilder,
       emailTemplateSubject: input.emailTemplateSubject,
       emailTemplateHtml: input.emailTemplateHtml
     }

@@ -435,7 +435,7 @@ export async function generateTicketPdf(input: TicketPdfInput) {
     ...(input.template ?? {})
   };
 
-  const dimensions =
+  const dimensions: [number, number] =
     template.layout === "VERTICAL"
       ? [430, 760]
       : template.layout === "VERTICAL_COMPACT"
@@ -507,4 +507,3 @@ export async function generateTicketPdf(input: TicketPdfInput) {
 
   return Buffer.from(await doc.save());
 }
-

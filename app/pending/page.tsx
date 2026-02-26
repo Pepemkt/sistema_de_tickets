@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 type Props = {
-  searchParams: { event?: string | string[] } | Promise<{ event?: string | string[] }>;
+  searchParams?: Promise<{ event?: string | string[] }>;
 };
 
 function resolveEventSlug(value: string | string[] | undefined) {
@@ -10,7 +10,7 @@ function resolveEventSlug(value: string | string[] | undefined) {
 }
 
 export default async function PendingPage({ searchParams }: Props) {
-  const params = await searchParams;
+  const params = (await searchParams) ?? {};
   const eventSlug = resolveEventSlug(params.event);
   const eventUrl = eventSlug ? `/e/${encodeURIComponent(eventSlug)}` : null;
 
