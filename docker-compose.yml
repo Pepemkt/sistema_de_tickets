@@ -9,6 +9,8 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     networks:
       - internal
 
@@ -26,22 +28,9 @@ services:
       - db
     networks:
       - internal
-      - proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.tickets.rule=Host(`tickets.aiderbrand.com`)"
-      - "traefik.http.routers.tickets.entrypoints=websecure"
-      - "traefik.http.routers.tickets.tls.certresolver=letsencrypt"
-      - "traefik.http.services.tickets.loadbalancer.server.port=3000"
-      - "traefik.http.routers.tickets-http.rule=Host(`tickets.aiderbrand.com`)"
-      - "traefik.http.routers.tickets-http.entrypoints=web"
-      - "traefik.http.routers.tickets-http.middlewares=tickets-https-redirect"
-      - "traefik.http.middlewares.tickets-https-redirect.redirectscheme.scheme=https"
 
 volumes:
   postgres_data:
 
 networks:
-  proxy:
-    external: true
   internal:

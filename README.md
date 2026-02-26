@@ -108,24 +108,21 @@ Esto crea una orden `PAID`, emite tickets y devuelve preview en:
 Desde ahi puedes abrir el PDF final de cada ticket.
 Si SMTP esta configurado, tambien enviara email real al comprador.
 
-## Deploy en VPS (Docker Compose)
+## Deploy en VPS (Docker + Traefik)
 
-1. Subir codigo al VPS.
-2. Configurar `.env` productivo con dominio HTTPS.
-3. Levantar stack:
+Flujo recomendado documentado en:
 
-```bash
-docker compose up -d --build
-```
+- `DEPLOY.md`
 
-4. Aplicar schema:
+Resumen rapido:
 
 ```bash
-docker compose exec app npm run db:push
+docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml exec app npx prisma db push
+docker compose -f docker-compose.prod.yml exec app npm run db:seed
 ```
 
-5. Configurar proxy (Nginx/Caddy) al puerto `3000`.
-6. Configurar webhook Mercado Pago a:
+Webhook Mercado Pago:
 
 - `https://tu-dominio.com/api/mercadopago/webhook`
 
