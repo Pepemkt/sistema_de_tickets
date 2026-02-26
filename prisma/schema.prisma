@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum UserRole {
+  ADMIN
+  SELLER
+  SCANNER
+}
+
+enum TicketSaleMode {
+  PUBLIC
+  COUPON_ONLY
+  HIDDEN
+}
+
+model Event {
+  id           String       @id @default(cuid())
+  slug         String       @unique
+  name         String
+  description  String?
+  venue        String?
+  startsAt     DateTime
+  endsAt       DateTime?
+  templateJson Json?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  ticketTypes  TicketType[]
+  coupons      Coupon[]
+  orders       Order[]
+  tickets      Ticket[]
+}
+
+model TicketType {
+  id          String         @id @default(cuid())
+  eventId     String
+  name        String
+  priceCents  Int
+  stock       Int
+  saleMode    TicketSaleMode @default(PUBLIC)
+  maxPerOrder Int?
+  maxPerEmail Int?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  event       Event          @relation(fields: [eventId], references: [id])
+  orders      Order[]
+  tickets     Ticket[]
+  coupons     Coupon[]
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  eventId         String
+  ticketTypeId    String
+  quantity        Int
+  totalCents      Int
+  buyerName       String
+  buyerEmail      String
+  couponId        String?
+  status          OrderStatus @default(PENDING)
+  mercadoPagoRef  String?
+  mercadoPagoInit String?
+  mercadoPagoPay  String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  event           Event       @relation(fields: [eventId], references: [id])
+  ticketType      TicketType  @relation(fields: [ticketTypeId], references: [id])
+  coupon          Coupon?     @relation(fields: [couponId], references: [id])
+  tickets         Ticket[]
+}
+
+model Coupon {
+  id           String     @id @default(cuid())
+  code         String     @unique
+  eventId      String
+  ticketTypeId String?
+  maxUses      Int
+  usedCount    Int        @default(0)
+  isActive     Boolean    @default(true)
+  expiresAt    DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  event        Event      @relation(fields: [eventId], references: [id])
+  ticketType   TicketType? @relation(fields: [ticketTypeId], references: [id])
+  orders       Order[]
+
+  @@index([eventId, ticketTypeId])
+}
+
+model Ticket {
+  id            String     @id @default(cuid())
+  code          String     @unique
+  qrPayload     String
+  attendeeName  String
+  attendeeEmail String
+  eventId       String
+  ticketTypeId  String
+  orderId       String
+  attendedAt    DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  event         Event      @relation(fields: [eventId], references: [id])
+  ticketType    TicketType @relation(fields: [ticketTypeId], references: [id])
+  order         Order      @relation(fields: [orderId], references: [id])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  displayName  String?
+  passwordHash String
+  role         UserRole  @default(SCANNER)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model PlatformConfig {
+  id                       String   @id @default("default")
+  mercadoPagoAccessToken   String?
+  mercadoPagoWebhookSecret String?
+  smtpHost                 String?
+  smtpPort                 Int?
+  smtpUser                 String?
+  smtpPass                 String?
+  smtpFrom                 String?
+  smtpSecure               Boolean?
+  emailTemplateBuilder     Json?
+  emailTemplateSubject     String?
+  emailTemplateHtml        String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
