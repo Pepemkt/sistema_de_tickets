@@ -104,22 +104,31 @@ export async function resolveCheckoutFeeItems() {
 
 export async function resolveMercadoPagoAccessToken() {
   const config = await getPlatformConfig();
-  return config?.mercadoPagoAccessToken || process.env.MERCADOPAGO_ACCESS_TOKEN || "";
+  const envToken = process.env.MERCADOPAGO_ACCESS_TOKEN?.trim() ?? "";
+  return envToken || config?.mercadoPagoAccessToken || "";
 }
 
 export async function resolveMercadoPagoWebhookSecret() {
   const config = await getPlatformConfig();
-  return config?.mercadoPagoWebhookSecret || process.env.MERCADOPAGO_WEBHOOK_SECRET || "";
+  const envSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET?.trim() ?? "";
+  return envSecret || config?.mercadoPagoWebhookSecret || "";
 }
 
 export async function resolveSmtpConfig() {
   const config = await getPlatformConfig();
 
-  const host = config?.smtpHost || process.env.SMTP_HOST || "";
-  const port = config?.smtpPort || Number(process.env.SMTP_PORT ?? "587");
-  const user = config?.smtpUser || process.env.SMTP_USER || "";
-  const pass = config?.smtpPass || process.env.SMTP_PASS || "";
-  const from = config?.smtpFrom || process.env.SMTP_FROM || "";
+  const envHost = process.env.SMTP_HOST?.trim() ?? "";
+  const envPortRaw = process.env.SMTP_PORT?.trim() ?? "";
+  const envPort = envPortRaw ? Number(envPortRaw) : null;
+  const envUser = process.env.SMTP_USER?.trim() ?? "";
+  const envPass = process.env.SMTP_PASS?.trim() ?? "";
+  const envFrom = process.env.SMTP_FROM?.trim() ?? "";
+
+  const host = envHost || config?.smtpHost || "";
+  const port = envPort && Number.isFinite(envPort) ? envPort : config?.smtpPort || 587;
+  const user = envUser || config?.smtpUser || "";
+  const pass = envPass || config?.smtpPass || "";
+  const from = envFrom || config?.smtpFrom || "";
   const envSecure =
     process.env.SMTP_SECURE === undefined
       ? null
