@@ -9,8 +9,15 @@ export const ticketTemplateSchema = z.object({
   accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
   headerText: z.string().min(2).max(80),
   footerText: z.string().min(2).max(140),
+  backgroundOverlayOpacity: z.number().min(0).max(1).optional(),
   backgroundImageDataUrl: z.string().max(2_000_000).nullable().optional(),
-  logoImageDataUrl: z.string().max(500_000).nullable().optional()
+  backgroundImageZoom: z.number().min(1).max(3).optional(),
+  backgroundImageOffsetX: z.number().min(-100).max(100).optional(),
+  backgroundImageOffsetY: z.number().min(-100).max(100).optional(),
+  logoImageDataUrl: z.string().max(500_000).nullable().optional(),
+  logoImageZoom: z.number().min(1).max(3).optional(),
+  logoImageOffsetX: z.number().min(-100).max(100).optional(),
+  logoImageOffsetY: z.number().min(-100).max(100).optional()
 });
 
 export type TicketTemplate = z.infer<typeof ticketTemplateSchema>;
@@ -21,8 +28,15 @@ export const defaultTicketTemplate: TicketTemplate = {
   accentColor: "#2563eb",
   headerText: "Aiderbrand Pass",
   footerText: "Presenta este QR en el acceso para validar tu ingreso.",
+  backgroundOverlayOpacity: 0.82,
   backgroundImageDataUrl: null,
-  logoImageDataUrl: null
+  backgroundImageZoom: 1,
+  backgroundImageOffsetX: 0,
+  backgroundImageOffsetY: 0,
+  logoImageDataUrl: null,
+  logoImageZoom: 1,
+  logoImageOffsetX: 0,
+  logoImageOffsetY: 0
 };
 
 export function normalizeTicketTemplate(template: unknown): TicketTemplate {
@@ -35,8 +49,15 @@ export function normalizeTicketTemplate(template: unknown): TicketTemplate {
     ...defaultTicketTemplate,
     ...parsed.data,
     layout: parsed.data.layout ?? defaultTicketTemplate.layout,
+    backgroundOverlayOpacity: parsed.data.backgroundOverlayOpacity ?? defaultTicketTemplate.backgroundOverlayOpacity,
     backgroundImageDataUrl: parsed.data.backgroundImageDataUrl ?? null,
-    logoImageDataUrl: parsed.data.logoImageDataUrl ?? null
+    backgroundImageZoom: parsed.data.backgroundImageZoom ?? defaultTicketTemplate.backgroundImageZoom,
+    backgroundImageOffsetX: parsed.data.backgroundImageOffsetX ?? defaultTicketTemplate.backgroundImageOffsetX,
+    backgroundImageOffsetY: parsed.data.backgroundImageOffsetY ?? defaultTicketTemplate.backgroundImageOffsetY,
+    logoImageDataUrl: parsed.data.logoImageDataUrl ?? null,
+    logoImageZoom: parsed.data.logoImageZoom ?? defaultTicketTemplate.logoImageZoom,
+    logoImageOffsetX: parsed.data.logoImageOffsetX ?? defaultTicketTemplate.logoImageOffsetX,
+    logoImageOffsetY: parsed.data.logoImageOffsetY ?? defaultTicketTemplate.logoImageOffsetY
   };
 }
 
