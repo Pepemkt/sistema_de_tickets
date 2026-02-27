@@ -8,6 +8,41 @@ type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+const SUCCESS_EMAIL_RETRY_MEMORY_TTL_MS = 1000 * 60 * 30;
+const globalForSuccessEmail = globalThis as typeof globalThis & {
+  aiderbrandSuccessEmailSentAt?: Map<string, number>;
+};
+
+function successEmailCache() {
+  if (!globalForSuccessEmail.aiderbrandSuccessEmailSentAt) {
+    globalForSuccessEmail.aiderbrandSuccessEmailSentAt = new Map();
+  }
+  return globalForSuccessEmail.aiderbrandSuccessEmailSentAt;
+}
+
+function wasEmailRecentlySent(key: string) {
+  const cache = successEmailCache();
+  const sentAt = cache.get(key);
+  if (!sentAt) return false;
+  if (Date.now() - sentAt > SUCCESS_EMAIL_RETRY_MEMORY_TTL_MS) {
+    cache.delete(key);
+    return false;
+  }
+  return true;
+}
+
+function markEmailAsSent(key: string) {
+  const cache = successEmailCache();
+  const now = Date.now();
+
+  for (const [cacheKey, sentAt] of cache.entries()) {
+    if (now - sentAt > SUCCESS_EMAIL_RETRY_MEMORY_TTL_MS) {
+      cache.delete(cacheKey);
+    }
+  }
+  cache.set(key, now);
+}
+
 function resolveValue(value: string | string[] | undefined) {
   if (Array.isArray(value)) return value[0] ?? "";
   return value ?? "";
@@ -27,6 +62,7 @@ async function reconcileOrderFromMercadoPagoReturn(orderId: string, paymentId: s
   try {
     const payment = await getPayment(paymentId);
     const normalizedPaymentId = payment.id.toString();
+    const emailCacheKey = `${orderId}:${normalizedPaymentId}`;
 
     if (payment.status !== "approved" || payment.external_reference !== orderId) {
       return { confirmed: false as const };
@@ -45,13 +81,25 @@ async function reconcileOrderFromMercadoPagoReturn(orderId: string, paymentId: s
       order.status === "PAID" && order.mercadoPagoPay === normalizedPaymentId && order.tickets.length > 0;
 
     if (alreadyProcessed) {
-      return { confirmed: true as const, emailSent: true as const };
+      if (wasEmailRecentlySent(emailCacheKey)) {
+        return { confirmed: true as const, emailSent: true as const };
+      }
+
+      try {
+        await sendOrderTicketsEmail(order.id);
+        markEmailAsSent(emailCacheKey);
+        return { confirmed: true as const, emailSent: true as const };
+      } catch (error) {
+        console.error(`[success] email retry failed for order ${order.id}`, error);
+        return { confirmed: true as const, emailSent: false as const };
+      }
     }
 
     await generateTicketsForPaidOrder(order.id, normalizedPaymentId);
 
     try {
       await sendOrderTicketsEmail(order.id);
+      markEmailAsSent(emailCacheKey);
       return { confirmed: true as const, emailSent: true as const };
     } catch (error) {
       console.error(`[success] email failed for order ${order.id}`, error);
@@ -84,9 +132,16 @@ export default async function SuccessPage({ searchParams }: Props) {
     ? await db.order.findUnique({
         where: { id: orderId },
         select: {
+          id: true,
+          buyerEmail: true,
           status: true,
           event: { select: { slug: true } },
-          tickets: { select: { id: true } }
+          tickets: {
+            select: {
+              id: true,
+              code: true
+            }
+          }
         }
       })
     : null;
@@ -126,11 +181,35 @@ export default async function SuccessPage({ searchParams }: Props) {
           </section>
 
           {isPaid ? (
-            <p className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
-              {emailSent
-                ? "Tus tickets fueron emitidos y enviados por email."
-                : "Tus tickets ya fueron emitidos. Hubo un problema enviando el email; puedes pedir reenvio desde soporte/admin."}
-            </p>
+            <>
+              <p className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+                {emailSent
+                  ? "Tus tickets fueron emitidos y enviados por email."
+                  : "Tus tickets ya fueron emitidos. Hubo un problema enviando el email; puedes descargarlos desde aqui."}
+              </p>
+
+              {order && order.tickets.length > 0 ? (
+                <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-sm font-semibold text-slate-900">Descargar tickets</p>
+                  <div className="mt-3 grid gap-2">
+                    {order.tickets.map((ticket, index) => (
+                      <a
+                        key={ticket.id}
+                        href={`/api/public/orders/${encodeURIComponent(order.id)}/ticket/${encodeURIComponent(ticket.id)}/pdf?email=${encodeURIComponent(order.buyerEmail)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        <span>
+                          Ticket #{index + 1} <span className="font-semibold">({ticket.code})</span>
+                        </span>
+                        <span className="font-semibold text-blue-700">Descargar PDF</span>
+                      </a>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+            </>
           ) : (
             <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
               Los tickets se habilitan cuando Mercado Pago confirme el cobro. Te los enviaremos por email.
