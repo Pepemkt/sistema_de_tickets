@@ -89,8 +89,8 @@ export async function getCurrentViewer(): Promise<Viewer | null> {
   });
 
   if (!session || session.expiresAt < new Date() || !session.user.isActive) {
-    await revokeSessionByToken(token);
-    await clearSessionCookie();
+    // No side effects here: this helper is used from Server Components,
+    // and Next.js forbids mutating cookies during RSC render.
     return null;
   }
 
