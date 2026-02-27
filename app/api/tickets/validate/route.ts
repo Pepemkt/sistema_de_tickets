@@ -10,6 +10,15 @@ const schema = z.object({
   payload: z.string().min(10)
 });
 
+async function getEventScannedCount(eventId: string) {
+  return db.ticket.count({
+    where: {
+      eventId,
+      attendedAt: { not: null }
+    }
+  });
+}
+
 export async function POST(request: Request) {
   const auth = await checkApiRole(["ADMIN", "SCANNER"]);
   if (auth.response) return auth.response;
@@ -32,11 +41,15 @@ export async function POST(request: Request) {
     }
 
     if (ticket.attendedAt) {
+      const eventScannedCount = await getEventScannedCount(ticket.eventId);
       return NextResponse.json({
         status: "already_used",
         ticketCode: ticket.code,
         attendedAt: ticket.attendedAt,
-        attendeeName: ticket.attendeeName
+        attendeeName: ticket.attendeeName,
+        eventId: ticket.eventId,
+        eventName: ticket.event.name,
+        eventScannedCount
       });
     }
 
@@ -54,20 +67,27 @@ export async function POST(request: Request) {
         where: { id: ticket.id },
         select: { code: true, attendeeName: true, attendedAt: true }
       });
+      const eventScannedCount = await getEventScannedCount(ticket.eventId);
 
       return NextResponse.json({
         status: "already_used",
         ticketCode: latest?.code ?? ticket.code,
         attendedAt: latest?.attendedAt ?? now,
-        attendeeName: latest?.attendeeName ?? ticket.attendeeName
+        attendeeName: latest?.attendeeName ?? ticket.attendeeName,
+        eventId: ticket.eventId,
+        eventName: ticket.event.name,
+        eventScannedCount
       });
     }
 
+    const eventScannedCount = await getEventScannedCount(ticket.eventId);
     return NextResponse.json({
       status: "ok",
       ticketCode: ticket.code,
       attendeeName: ticket.attendeeName,
-      eventName: ticket.event.name
+      eventId: ticket.eventId,
+      eventName: ticket.event.name,
+      eventScannedCount
     });
   } catch (error) {
     return NextResponse.json(
