@@ -27,6 +27,7 @@ services:
       - proxy
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.routers.tickets.rule=Host(`${APP_DOMAIN}`)"
       - "traefik.http.routers.tickets.entrypoints=websecure"
       - "traefik.http.routers.tickets.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
