@@ -48,6 +48,20 @@ function markEmailAsSent(key: string) {
   cache.set(key, now);
 }
 
+async function sendTicketsEmailSafe(orderId: string, emailCacheKey: string) {
+  try {
+    await sendOrderTicketsEmail(orderId);
+    markEmailAsSent(emailCacheKey);
+    return { emailSent: true as const };
+  } catch (error) {
+    console.error(`[webhook] email failed for order ${orderId}`, error);
+    return {
+      emailSent: false as const,
+      emailError: error instanceof Error ? error.message : "No se pudo enviar email"
+    };
+  }
+}
+
 function extractPaymentId(searchParams: URLSearchParams, body: unknown) {
   const parsedBody =
     typeof body === "object" && body !== null
@@ -120,19 +134,17 @@ export async function POST(request: Request) {
 
     if (alreadyProcessed) {
       if (wasEmailRecentlySent(emailCacheKey)) {
-        return NextResponse.json({ ok: true, replay: true });
+        return NextResponse.json({ ok: true, replay: true, emailSent: true });
       }
 
-      await sendOrderTicketsEmail(order.id);
-      markEmailAsSent(emailCacheKey);
-      return NextResponse.json({ ok: true });
+      const emailResult = await sendTicketsEmailSafe(order.id, emailCacheKey);
+      return NextResponse.json({ ok: true, replay: true, ...emailResult });
     }
 
     await generateTicketsForPaidOrder(order.id, normalizedPaymentId);
-    await sendOrderTicketsEmail(order.id);
-    markEmailAsSent(emailCacheKey);
+    const emailResult = await sendTicketsEmailSafe(order.id, emailCacheKey);
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, ...emailResult });
   } catch (error) {
     return NextResponse.json(
       {

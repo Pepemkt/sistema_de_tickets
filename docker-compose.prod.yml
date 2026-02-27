@@ -39,6 +39,7 @@ services:
 
 volumes:
   postgres_data:
+    name: tickets_app_postgres_data
 
 networks:
   proxy:

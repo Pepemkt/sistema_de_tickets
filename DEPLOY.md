@@ -35,6 +35,7 @@ Levantar:
 docker network ls | grep proxy || docker network create proxy
 docker compose -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.prod.yml exec app npx prisma db push
+docker compose -f docker-compose.prod.yml exec app npm run config:sync
 docker compose -f docker-compose.prod.yml exec app npm run db:seed
 ```
 
@@ -55,6 +56,7 @@ git reset --hard origin/main
 test -f .env || { echo "Falta .env, abortando."; exit 1; }
 docker compose -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.prod.yml exec app npx prisma db push
+docker compose -f docker-compose.prod.yml exec app npm run config:sync
 ```
 
 Si cambiaste datos de usuarios seed y quieres reaplicarlos:
@@ -73,3 +75,4 @@ Importante:
 - Si en el futuro agregas migraciones Prisma (`prisma/migrations`), usa `prisma migrate deploy` en lugar de `db push`.
 - El contenedor de app no debe publicar `3000:3000` en producción; Traefik enruta internamente por red `proxy`.
 - En producción, las credenciales de Mercado Pago y SMTP guardadas desde `/admin/settings` se persisten en DB y tienen prioridad sobre `.env`.
+- `npm run config:sync` sincroniza en DB los valores existentes en `.env` (solo campos presentes; no borra campos en DB).

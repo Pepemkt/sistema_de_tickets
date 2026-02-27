@@ -122,6 +122,7 @@ Resumen rapido:
 ```bash
 docker compose -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.prod.yml exec app npx prisma db push
+docker compose -f docker-compose.prod.yml exec app npm run config:sync
 ```
 
 `npm run db:seed` en producción es solo para alta/rotación de usuarios iniciales, no en cada deploy.
