@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { centsToCurrency } from "@/lib/utils";
+import { DeleteOrderButton } from "@/components/delete-order-button";
 
 export default async function AdminOrdersPage() {
   const orders = await db.order.findMany({
@@ -8,7 +9,12 @@ export default async function AdminOrdersPage() {
     include: {
       event: true,
       ticketType: true,
-      tickets: true
+      tickets: {
+        select: {
+          id: true,
+          attendedAt: true
+        }
+      }
     },
     take: 200
   });
@@ -55,40 +61,53 @@ export default async function AdminOrdersPage() {
                 <th className="pb-2 pr-3">Total</th>
                 <th className="pb-2 pr-3">Estado</th>
                 <th className="pb-2 pr-3">Tickets</th>
+                <th className="pb-2 pr-3">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
-                <tr key={order.id} className="border-b border-slate-100">
-                  <td className="py-3 pr-3 text-slate-600">{new Date(order.createdAt).toLocaleString("es-AR")}</td>
-                  <td className="py-3 pr-3">
-                    <p className="font-medium text-slate-800">{order.event.name}</p>
-                    <p className="text-xs text-slate-500">{order.id}</p>
-                  </td>
-                  <td className="py-3 pr-3">
-                    <p className="text-slate-700">{order.buyerName}</p>
-                    <p className="text-xs text-slate-500">{order.buyerEmail}</p>
-                  </td>
-                  <td className="py-3 pr-3 text-slate-700">{order.ticketType.name}</td>
-                  <td className="py-3 pr-3 text-slate-700">{order.quantity}</td>
-                  <td className="py-3 pr-3 text-slate-700">{centsToCurrency(order.totalCents)}</td>
-                  <td className="py-3 pr-3">
-                    <span className={`badge ${order.status === "PAID" ? "border-blue-200 bg-blue-50 text-blue-700" : ""}`}>{order.status}</span>
-                  </td>
-                  <td className="py-3 pr-3">
-                    {order.tickets.length > 0 ? (
-                      <Link href={`/admin/orders/${order.id}/preview`} className="btn-secondary">
-                        Ver ({order.tickets.length})
-                      </Link>
-                    ) : (
-                      <span className="text-xs text-slate-500">Sin emitir</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {orders.map((order) => {
+                const attendedTickets = order.tickets.filter((ticket) => ticket.attendedAt !== null).length;
+                const hasAttendedTickets = attendedTickets > 0;
+
+                return (
+                  <tr key={order.id} className="border-b border-slate-100">
+                    <td className="py-3 pr-3 text-slate-600">{new Date(order.createdAt).toLocaleString("es-AR")}</td>
+                    <td className="py-3 pr-3">
+                      <p className="font-medium text-slate-800">{order.event.name}</p>
+                      <p className="text-xs text-slate-500">{order.id}</p>
+                    </td>
+                    <td className="py-3 pr-3">
+                      <p className="text-slate-700">{order.buyerName}</p>
+                      <p className="text-xs text-slate-500">{order.buyerEmail}</p>
+                    </td>
+                    <td className="py-3 pr-3 text-slate-700">{order.ticketType.name}</td>
+                    <td className="py-3 pr-3 text-slate-700">{order.quantity}</td>
+                    <td className="py-3 pr-3 text-slate-700">{centsToCurrency(order.totalCents)}</td>
+                    <td className="py-3 pr-3">
+                      <span className={`badge ${order.status === "PAID" ? "border-blue-200 bg-blue-50 text-blue-700" : ""}`}>{order.status}</span>
+                    </td>
+                    <td className="py-3 pr-3">
+                      {order.tickets.length > 0 ? (
+                        <Link href={`/admin/orders/${order.id}/preview`} className="btn-secondary">
+                          Ver ({order.tickets.length})
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-slate-500">Sin emitir</span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-3">
+                      <DeleteOrderButton orderId={order.id} hasAttendedTickets={hasAttendedTickets} />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
+
+        <p className="mt-3 text-xs text-slate-500">
+          Solo se pueden eliminar ordenes sin tickets validados en acceso.
+        </p>
       </section>
     </div>
   );
