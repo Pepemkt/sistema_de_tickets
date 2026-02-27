@@ -28,11 +28,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.routers.tickets.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.tickets.rule=Host(`${APP_DOMAIN:?APP_DOMAIN_is_required}`)"
       - "traefik.http.routers.tickets.entrypoints=websecure"
       - "traefik.http.routers.tickets.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
       - "traefik.http.services.tickets.loadbalancer.server.port=3000"
-      - "traefik.http.routers.tickets-http.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.tickets-http.rule=Host(`${APP_DOMAIN:?APP_DOMAIN_is_required}`)"
       - "traefik.http.routers.tickets-http.entrypoints=web"
       - "traefik.http.routers.tickets-http.middlewares=tickets-https-redirect"
       - "traefik.http.middlewares.tickets-https-redirect.redirectscheme.scheme=https"

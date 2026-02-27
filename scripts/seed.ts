@@ -8,6 +8,8 @@ async function main() {
   const superAdminUser = process.env.SEED_SUPERADMIN_USERNAME ?? process.env.SEED_ADMIN_USERNAME ?? "admin";
   const superAdminPass = process.env.SEED_SUPERADMIN_PASSWORD ?? process.env.SEED_ADMIN_PASSWORD;
   const createDemoUsers = process.env.SEED_CREATE_DEMO_USERS === "true";
+  const createDemoEvent =
+    (process.env.SEED_CREATE_DEMO_EVENT ?? (process.env.NODE_ENV === "production" ? "false" : "true")) === "true";
   const sellerUser = process.env.SEED_SELLER_USERNAME ?? "seller";
   const sellerPass = process.env.SEED_SELLER_PASSWORD;
   const scannerUser = process.env.SEED_SCANNER_USERNAME ?? "scanner";
@@ -64,35 +66,44 @@ async function main() {
     });
   }
 
-  const event = await prisma.event.create({
-    data: {
-      slug: `demo-${Date.now()}`,
-      name: "Conferencia Tech 2026",
-      description: "Demo inicial para sistema de venta de entradas.",
-      venue: "Cordoba",
-      startsAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-      templateJson: defaultTicketTemplate,
-      ticketTypes: {
-        create: [
-          {
-            name: "General",
-            priceCents: 25000,
-            stock: 300
-          },
-          {
-            name: "VIP",
-            priceCents: 60000,
-            stock: 100
+  if (createDemoEvent) {
+    const existingEvents = await prisma.event.count();
+    if (existingEvents === 0) {
+      const event = await prisma.event.create({
+        data: {
+          slug: `demo-${Date.now()}`,
+          name: "Conferencia Tech 2026",
+          description: "Demo inicial para sistema de venta de entradas.",
+          venue: "Cordoba",
+          startsAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+          templateJson: defaultTicketTemplate,
+          ticketTypes: {
+            create: [
+              {
+                name: "General",
+                priceCents: 25000,
+                stock: 300
+              },
+              {
+                name: "VIP",
+                priceCents: 60000,
+                stock: 100
+              }
+            ]
           }
-        ]
-      }
-    },
-    include: {
-      ticketTypes: true
-    }
-  });
+        },
+        include: {
+          ticketTypes: true
+        }
+      });
 
-  console.log(`Evento demo creado: ${event.id}`);
+      console.log(`Evento demo creado: ${event.id}`);
+    } else {
+      console.log(`Evento demo no creado: ya existen ${existingEvents} evento(s).`);
+    }
+  } else {
+    console.log("Evento demo desactivado por configuracion (SEED_CREATE_DEMO_EVENT=false).");
+  }
   console.log(`Super Admin: ${superAdminUser} / ${superAdminPass}`);
   if (createDemoUsers) {
     console.log(`Seller: ${sellerUser} / ${sellerPass}`);

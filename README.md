@@ -69,6 +69,7 @@ npm run dev
 Opcional en desarrollo:
 
 - Configura `SEED_CREATE_DEMO_USERS="true"` y completa `SEED_SELLER_PASSWORD` + `SEED_SCANNER_PASSWORD` para crear usuarios demo automaticamente.
+- Configura `SEED_CREATE_DEMO_EVENT="true"` para forzar creacion de evento demo si no existen eventos.
 
 ## Flujo principal
 
@@ -121,8 +122,9 @@ Resumen rapido:
 ```bash
 docker compose -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.prod.yml exec app npx prisma db push
-docker compose -f docker-compose.prod.yml exec app npm run db:seed
 ```
+
+`npm run db:seed` en producción es solo para alta/rotación de usuarios iniciales, no en cada deploy.
 
 Webhook Mercado Pago:
 
