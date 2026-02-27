@@ -175,3 +175,30 @@ Validar TODO lo siguiente; si algo falla, abortar deploy:
 - Antes de ejecutar: informar preflight y riesgos.
 - Despues de ejecutar: reportar comandos usados y evidencia de exito/fallo.
 - Si una validacion critica falla: detenerse y pedir confirmacion, sin improvisar bypass.
+
+## 15) Credenciales inmutables (CRITICO)
+
+- Regla absoluta en este proyecto: **no tocar credenciales productivas de Mercado Pago ni SMTP** salvo pedido explicito del dueño.
+- Campos protegidos:
+  - `.env`: `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY`, `MERCADOPAGO_ACCESS_TOKEN`, `MERCADOPAGO_WEBHOOK_SECRET`,
+    `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+  - `PlatformConfig`: `mercadoPagoAccessToken`, `mercadoPagoWebhookSecret`, `smtpHost`, `smtpPort`, `smtpUser`, `smtpPass`, `smtpFrom`, `smtpSecure`
+- Prohibido durante actualizaciones:
+  - ejecutar `cp .env.example .env`
+  - editar `.env` para credenciales
+  - ejecutar `npm run config:sync` sin habilitacion explicita
+  - actualizar credenciales por SQL/manual sin autorizacion explicita
+- Si falta configuracion sensible:
+  - detener deploy y reportar
+  - pedir confirmacion explicita antes de tocar credenciales
+- Falla segura obligatoria:
+  - ante placeholders o valores vacios en credenciales, abortar sync/configuracion.
+
+## 16) Flujo de update (no destructivo)
+
+- En cada update productivo:
+  - `git pull --ff-only`
+  - `docker compose -f docker-compose.prod.yml up -d --build`
+  - `docker compose -f docker-compose.prod.yml exec app npx prisma db push`
+- No ejecutar `npm run config:sync` como paso por defecto.
+- Solo ejecutar `npm run config:sync` con `SYNC_SENSITIVE_CONFIG=true` y aprobacion explicita.
