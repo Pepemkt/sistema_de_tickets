@@ -24,6 +24,18 @@ type NavItem = {
   icon: React.ReactNode;
 };
 
+function isSafeLogoSrc(value: string | null) {
+  if (!value) return false;
+  if (value.startsWith("data:image/")) return true;
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 function NavIcon({ path }: { path: string }) {
   return (
     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -59,6 +71,7 @@ export function AppShell({ viewer, brandLogoUrl, children }: Props) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const safeBrandLogoUrl = isSafeLogoSrc(brandLogoUrl) ? brandLogoUrl : null;
 
   const navItems = useMemo<NavItem[]>(() => {
     const base: NavItem[] = [
@@ -139,9 +152,9 @@ export function AppShell({ viewer, brandLogoUrl, children }: Props) {
           <header className="flex items-center justify-between border-b border-slate-200 px-3 py-2.5">
             <div className="flex items-center gap-2 overflow-hidden">
               <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-50">
-                {brandLogoUrl ? (
+                {safeBrandLogoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={brandLogoUrl} alt="Logo" className="h-6 w-6 rounded object-cover" />
+                  <img src={safeBrandLogoUrl} alt="Logo" className="h-6 w-6 rounded object-cover" />
                 ) : (
                   <BrandMark />
                 )}

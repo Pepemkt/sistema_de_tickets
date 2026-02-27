@@ -5,54 +5,64 @@ import { defaultTicketTemplate } from "../lib/ticket-template";
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminUser = process.env.SEED_ADMIN_USERNAME ?? "admin";
-  const adminPass = process.env.SEED_ADMIN_PASSWORD ?? "admin1234";
+  const superAdminUser = process.env.SEED_SUPERADMIN_USERNAME ?? process.env.SEED_ADMIN_USERNAME ?? "admin";
+  const superAdminPass = process.env.SEED_SUPERADMIN_PASSWORD ?? process.env.SEED_ADMIN_PASSWORD;
+  const createDemoUsers = process.env.SEED_CREATE_DEMO_USERS === "true";
   const sellerUser = process.env.SEED_SELLER_USERNAME ?? "seller";
-  const sellerPass = process.env.SEED_SELLER_PASSWORD ?? "seller1234";
+  const sellerPass = process.env.SEED_SELLER_PASSWORD;
   const scannerUser = process.env.SEED_SCANNER_USERNAME ?? "scanner";
-  const scannerPass = process.env.SEED_SCANNER_PASSWORD ?? "scanner1234";
+  const scannerPass = process.env.SEED_SCANNER_PASSWORD;
+
+  if (!superAdminPass) {
+    throw new Error("Falta SEED_SUPERADMIN_PASSWORD (o SEED_ADMIN_PASSWORD) para crear el superusuario inicial.");
+  }
 
   await prisma.user.upsert({
-    where: { username: adminUser.toLowerCase() },
+    where: { username: superAdminUser.toLowerCase() },
     create: {
-      username: adminUser.toLowerCase(),
-      displayName: "Administrador",
-      passwordHash: await hashPassword(adminPass),
+      username: superAdminUser.toLowerCase(),
+      displayName: "Super Administrador",
+      passwordHash: await hashPassword(superAdminPass),
       role: "ADMIN"
     },
     update: {
-      passwordHash: await hashPassword(adminPass),
+      passwordHash: await hashPassword(superAdminPass),
       role: "ADMIN"
     }
   });
 
-  await prisma.user.upsert({
-    where: { username: sellerUser.toLowerCase() },
-    create: {
-      username: sellerUser.toLowerCase(),
-      displayName: "Ventas",
-      passwordHash: await hashPassword(sellerPass),
-      role: "SELLER"
-    },
-    update: {
-      passwordHash: await hashPassword(sellerPass),
-      role: "SELLER"
+  if (createDemoUsers) {
+    if (!sellerPass || !scannerPass) {
+      throw new Error("SEED_CREATE_DEMO_USERS=true requiere SEED_SELLER_PASSWORD y SEED_SCANNER_PASSWORD.");
     }
-  });
+    await prisma.user.upsert({
+      where: { username: sellerUser.toLowerCase() },
+      create: {
+        username: sellerUser.toLowerCase(),
+        displayName: "Ventas",
+        passwordHash: await hashPassword(sellerPass),
+        role: "SELLER"
+      },
+      update: {
+        passwordHash: await hashPassword(sellerPass),
+        role: "SELLER"
+      }
+    });
 
-  await prisma.user.upsert({
-    where: { username: scannerUser.toLowerCase() },
-    create: {
-      username: scannerUser.toLowerCase(),
-      displayName: "Check-in",
-      passwordHash: await hashPassword(scannerPass),
-      role: "SCANNER"
-    },
-    update: {
-      passwordHash: await hashPassword(scannerPass),
-      role: "SCANNER"
-    }
-  });
+    await prisma.user.upsert({
+      where: { username: scannerUser.toLowerCase() },
+      create: {
+        username: scannerUser.toLowerCase(),
+        displayName: "Check-in",
+        passwordHash: await hashPassword(scannerPass),
+        role: "SCANNER"
+      },
+      update: {
+        passwordHash: await hashPassword(scannerPass),
+        role: "SCANNER"
+      }
+    });
+  }
 
   const event = await prisma.event.create({
     data: {
@@ -83,9 +93,13 @@ async function main() {
   });
 
   console.log(`Evento demo creado: ${event.id}`);
-  console.log(`Admin: ${adminUser} / ${adminPass}`);
-  console.log(`Seller: ${sellerUser} / ${sellerPass}`);
-  console.log(`Scanner: ${scannerUser} / ${scannerPass}`);
+  console.log(`Super Admin: ${superAdminUser} / ${superAdminPass}`);
+  if (createDemoUsers) {
+    console.log(`Seller: ${sellerUser} / ${sellerPass}`);
+    console.log(`Scanner: ${scannerUser} / ${scannerPass}`);
+  } else {
+    console.log("Usuarios SELLER/SCANNER no creados por seed (crearlos desde /admin/users).");
+  }
 }
 
 main()

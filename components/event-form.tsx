@@ -19,7 +19,10 @@ type EventFormProps = {
   eventId?: string;
   initial?: {
     name: string;
+    featuredTag?: string;
     description: string;
+    featureTags?: string[];
+    heroImageUrl?: string;
     venue: string;
     startsAt: string;
     endsAt: string;
@@ -40,7 +43,10 @@ function toLocalInputValue(date: string) {
 export function EventForm({ mode, eventId, initial }: EventFormProps) {
   const router = useRouter();
   const [name, setName] = useState(initial?.name ?? "");
+  const [featuredTag, setFeaturedTag] = useState(initial?.featuredTag ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [featureTags, setFeatureTags] = useState<string[]>(initial?.featureTags?.slice(0, 4) ?? ["", "", "", ""]);
+  const [heroImageUrl, setHeroImageUrl] = useState(initial?.heroImageUrl ?? "");
   const [venue, setVenue] = useState(initial?.venue ?? "");
   const [startsAt, setStartsAt] = useState(initial?.startsAt ? toLocalInputValue(initial.startsAt) : "");
   const [endsAt, setEndsAt] = useState(initial?.endsAt ? toLocalInputValue(initial.endsAt) : "");
@@ -72,6 +78,27 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
     );
   }
 
+  async function onImageFileChange(file: File | null) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setMessage("Selecciona un archivo de imagen valido");
+      return;
+    }
+
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result ?? ""));
+      reader.onerror = () => reject(new Error("No se pudo leer la imagen"));
+      reader.readAsDataURL(file);
+    });
+
+    setHeroImageUrl(dataUrl);
+  }
+
+  function updateFeatureTag(index: number, value: string) {
+    setFeatureTags((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)));
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
@@ -79,7 +106,10 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
 
     const payload = {
       name,
+      featuredTag,
       description,
+      featureTags: featureTags.map((item) => item.trim()).filter(Boolean),
+      heroImageUrl,
       venue,
       startsAt,
       endsAt: endsAt || undefined,
@@ -131,6 +161,16 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
         </div>
 
         <div className="md:col-span-2">
+          <label className="label">Etiqueta destacada del hero</label>
+          <input
+            className="field"
+            value={featuredTag}
+            onChange={(event) => setFeaturedTag(event.target.value)}
+            placeholder="Ej: Evento destacado"
+          />
+        </div>
+
+        <div className="md:col-span-2">
           <label className="label">Descripcion</label>
           <textarea
             className="field min-h-24"
@@ -138,6 +178,45 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
             onChange={(event) => setDescription(event.target.value)}
             placeholder="Describe agenda, line-up o detalles clave"
           />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="label">Imagen del evento</label>
+          <input
+            className="field"
+            type="file"
+            accept="image/*"
+            onChange={(event) => void onImageFileChange(event.target.files?.[0] ?? null)}
+          />
+          <p className="mt-1 text-xs text-slate-500">Sube una imagen para portada publica del evento.</p>
+          {heroImageUrl && (
+            <button type="button" className="btn-secondary mt-2" onClick={() => setHeroImageUrl("")}>
+              Quitar imagen
+            </button>
+          )}
+        </div>
+
+        {heroImageUrl && (
+          <div className="md:col-span-2 overflow-hidden rounded-xl border border-slate-200">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={heroImageUrl} alt="Preview portada del evento" className="h-56 w-full object-cover" />
+          </div>
+        )}
+
+        <div className="md:col-span-2">
+          <label className="label">Etiquetas inferiores (opcionales)</label>
+          <div className="grid gap-2 md:grid-cols-2">
+            {featureTags.map((tag, index) => (
+              <input
+                key={index}
+                className="field"
+                value={tag}
+                onChange={(event) => updateFeatureTag(index, event.target.value)}
+                placeholder={`Etiqueta ${index + 1}`}
+              />
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-slate-500">Puedes dejarlas en blanco y no se mostraran en la landing publica.</p>
         </div>
 
         <div>

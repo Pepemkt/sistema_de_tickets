@@ -116,11 +116,13 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
   }
 
   return (
-    <aside className="panel h-fit p-6">
-      <h2 className="text-xl font-semibold text-slate-900">Comprar entrada</h2>
-      <p className="muted mt-1">{eventName}</p>
+    <aside className="panel h-fit overflow-hidden p-0">
+      <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
+        <h2 className="text-xl font-semibold text-slate-900">Seleccion de entradas</h2>
+        <p className="mt-1 text-sm text-slate-500">{eventName}</p>
+      </div>
 
-      <form onSubmit={onSubmit} className="mt-5 space-y-4">
+      <form onSubmit={onSubmit} className="space-y-4 p-5">
         {ticketTypes.length === 0 && (
           <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
             Este evento no tiene entradas habilitadas para compra online.
@@ -174,7 +176,8 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm">
-          Total: <span className="font-semibold text-blue-700">{centsToCurrency(total)}</span>
+          <p className="text-xs uppercase tracking-wide text-slate-500">Total</p>
+          <p className="text-2xl font-semibold text-blue-700">{centsToCurrency(total)}</p>
         </div>
 
         <button disabled={loading || !selected} className="btn-primary w-full">

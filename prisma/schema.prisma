@@ -29,7 +29,10 @@ model Event {
   id           String       @id @default(cuid())
   slug         String       @unique
   name         String
+  featuredTag  String?
   description  String?
+  featureTags  Json?
+  heroImageUrl String?
   venue        String?
   startsAt     DateTime
   endsAt       DateTime?
@@ -149,6 +152,7 @@ model PlatformConfig {
   smtpFrom                 String?
   smtpSecure               Boolean?
   emailTemplateBuilder     Json?
+  checkoutFeeItems         Json?
   emailTemplateSubject     String?
   emailTemplateHtml        String?
   createdAt                DateTime @default(now())

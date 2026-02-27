@@ -4,7 +4,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { createPreference } from "@/lib/mercadopago";
 import { validateOnlinePurchase } from "@/lib/order-rules";
-import { resolveAppUrl } from "@/lib/platform-config";
+import { resolveAppUrl, resolveCheckoutFeeItems } from "@/lib/platform-config";
+import { calculateCheckoutAmounts } from "@/lib/checkout-fees";
 
 export const runtime = "nodejs";
 const SERIALIZABLE_RETRY_ATTEMPTS = 3;
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
           order: { id: string };
           buyerEmail: string;
           ticketType: { event: { name: string; slug: string }; name: string; priceCents: number };
+          quantity: number;
         }
       | null = null;
 
@@ -68,7 +70,7 @@ export async function POST(request: Request) {
                 eventId: data.eventId,
                 ticketTypeId: data.ticketTypeId,
                 quantity: data.quantity,
-                totalCents: validated.ticketType.priceCents * data.quantity,
+                totalCents: 0,
                 buyerName: data.buyerName,
                 buyerEmail: validated.normalizedEmail,
                 couponId: validated.coupon?.id ?? null
@@ -83,7 +85,8 @@ export async function POST(request: Request) {
                 event: { name: validated.ticketType.event.name, slug: validated.ticketType.event.slug },
                 name: validated.ticketType.name,
                 priceCents: validated.ticketType.priceCents
-              }
+              },
+              quantity: data.quantity
             };
           },
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
@@ -101,20 +104,27 @@ export async function POST(request: Request) {
       throw new Error("No se pudo crear la orden");
     }
 
-    const { order, ticketType, buyerEmail } = transactionResult;
+    const { order, ticketType, buyerEmail, quantity } = transactionResult;
+    const feeItems = await resolveCheckoutFeeItems();
+    const amounts = calculateCheckoutAmounts(ticketType.priceCents * quantity, feeItems);
+
+    await db.order.update({
+      where: { id: order.id },
+      data: { totalCents: amounts.totalCents }
+    });
 
     const appUrl = resolveAppUrl();
     const encodedEventSlug = encodeURIComponent(ticketType.event.slug);
 
     const preference = await createPreference({
-      title: `${ticketType.event.name} - ${ticketType.name}`,
-      unitPrice: ticketType.priceCents / 100,
-      quantity: data.quantity,
+      title: `${ticketType.event.name} - Compra de entradas`,
+      unitPrice: amounts.totalCents / 100,
+      quantity: 1,
       payerEmail: buyerEmail,
       externalReference: order.id,
-      successUrl: `${appUrl}/success?event=${encodedEventSlug}`,
-      failureUrl: `${appUrl}/failure?event=${encodedEventSlug}`,
-      pendingUrl: `${appUrl}/pending?event=${encodedEventSlug}`,
+      successUrl: `${appUrl}/success?event=${encodedEventSlug}&order=${encodeURIComponent(order.id)}`,
+      failureUrl: `${appUrl}/failure?event=${encodedEventSlug}&order=${encodeURIComponent(order.id)}`,
+      pendingUrl: `${appUrl}/pending?event=${encodedEventSlug}&order=${encodeURIComponent(order.id)}`,
       webhookUrl: `${appUrl}/api/mercadopago/webhook`
     });
 

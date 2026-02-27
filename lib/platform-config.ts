@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { defaultEmailTemplate, normalizeEmailTemplate } from "@/lib/email-template";
 import { buildEmailTemplateFromBuilder, defaultEmailTemplateBuilder, normalizeEmailTemplateBuilder } from "@/lib/email-template-builder";
+import { CheckoutFeeItem, normalizeCheckoutFeeItems } from "@/lib/checkout-fees";
 
 const DEFAULT_CONFIG_ID = "default";
 
@@ -81,6 +82,24 @@ export async function upsertEmailTemplateConfig(input: {
       emailTemplateHtml: input.emailTemplateHtml
     }
   });
+}
+
+export async function upsertCheckoutFeeItems(input: { checkoutFeeItems?: CheckoutFeeItem[] }) {
+  return db.platformConfig.upsert({
+    where: { id: DEFAULT_CONFIG_ID },
+    create: {
+      id: DEFAULT_CONFIG_ID,
+      checkoutFeeItems: (input.checkoutFeeItems ?? []) as Prisma.InputJsonValue
+    },
+    update: {
+      checkoutFeeItems: input.checkoutFeeItems as Prisma.InputJsonValue
+    }
+  });
+}
+
+export async function resolveCheckoutFeeItems() {
+  const config = await getPlatformConfig();
+  return normalizeCheckoutFeeItems(config?.checkoutFeeItems);
 }
 
 export async function resolveMercadoPagoAccessToken() {

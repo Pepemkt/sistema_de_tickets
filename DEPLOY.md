@@ -25,6 +25,8 @@ Editar `.env`:
 - `APP_DOMAIN=tickets.aiderbrand.com`
 - `NEXT_PUBLIC_APP_URL=https://tickets.aiderbrand.com`
 - Secrets reales (`QR_SIGNING_SECRET`, SMTP, Mercado Pago).
+- Definir `SEED_SUPERADMIN_USERNAME` y `SEED_SUPERADMIN_PASSWORD` con valores seguros.
+- Mantener `SEED_CREATE_DEMO_USERS="false"` en produccion.
 
 Levantar:
 

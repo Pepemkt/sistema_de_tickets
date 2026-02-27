@@ -49,7 +49,7 @@ npm run db:generate
 npm run db:push
 ```
 
-5. Seed inicial (usuarios + evento demo):
+5. Seed inicial (superusuario + evento demo):
 
 ```bash
 npm run db:seed
@@ -63,10 +63,12 @@ npm run dev
 
 ## Acceso inicial
 
-- Admin: `admin / admin1234`
-- Scanner: `scanner / scanner1234`
+- Super Admin: `SEED_SUPERADMIN_USERNAME / SEED_SUPERADMIN_PASSWORD`
+- Usuarios `SELLER` y `SCANNER`: se crean desde `/admin/users`
 
-Si cambiaste `SEED_*` en `.env`, usa esos valores.
+Opcional en desarrollo:
+
+- Configura `SEED_CREATE_DEMO_USERS="true"` y completa `SEED_SELLER_PASSWORD` + `SEED_SCANNER_PASSWORD` para crear usuarios demo automaticamente.
 
 ## Flujo principal
 

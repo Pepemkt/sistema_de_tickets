@@ -74,9 +74,6 @@ export function LoginForm() {
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <p className="text-xs text-slate-500">
-        Credenciales demo (seed): admin/admin1234, seller/seller1234 y scanner/scanner1234.
-      </p>
     </form>
   );
 }

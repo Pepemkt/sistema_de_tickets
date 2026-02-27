@@ -11,7 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [viewer, branding] = await Promise.all([getCurrentViewer(), readBrandingConfig()]);
+  const [viewer, branding] = await Promise.all([
+    getCurrentViewer().catch(() => null),
+    readBrandingConfig().catch(() => ({ sidebarLogoUrl: null }))
+  ]);
 
   return (
     <html lang="es">

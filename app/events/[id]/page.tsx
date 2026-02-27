@@ -30,6 +30,12 @@ export default async function EventDetailPage({ params }: Props) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <section className="panel p-7">
+        {event.heroImageUrl && (
+          <div className="mb-5 overflow-hidden rounded-xl border border-slate-200">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={event.heroImageUrl} alt={event.name} className="h-56 w-full object-cover" />
+          </div>
+        )}
         <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">
           {new Intl.DateTimeFormat("es-AR", { dateStyle: "full", timeStyle: "short" }).format(event.startsAt)}
         </p>

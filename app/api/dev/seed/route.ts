@@ -9,6 +9,7 @@ export const runtime = "nodejs";
 export async function POST() {
   const auth = await checkApiRole(["ADMIN"]);
   if (auth.response) return auth.response;
+  const createDemoUsers = process.env.SEED_CREATE_DEMO_USERS === "true";
 
   const event = await db.event.create({
     data: {
@@ -36,38 +37,29 @@ export async function POST() {
     include: { ticketTypes: true }
   });
 
-  await db.user.upsert({
-    where: { username: "admin" },
-    create: {
-      username: "admin",
-      displayName: "Administrador",
-      passwordHash: await hashPassword("admin1234"),
-      role: "ADMIN"
-    },
-    update: {}
-  });
+  if (createDemoUsers) {
+    await db.user.upsert({
+      where: { username: "seller" },
+      create: {
+        username: "seller",
+        displayName: "Ventas",
+        passwordHash: await hashPassword("seller1234"),
+        role: "SELLER"
+      },
+      update: {}
+    });
 
-  await db.user.upsert({
-    where: { username: "seller" },
-    create: {
-      username: "seller",
-      displayName: "Ventas",
-      passwordHash: await hashPassword("seller1234"),
-      role: "SELLER"
-    },
-    update: {}
-  });
+    await db.user.upsert({
+      where: { username: "scanner" },
+      create: {
+        username: "scanner",
+        displayName: "Check-in",
+        passwordHash: await hashPassword("scanner1234"),
+        role: "SCANNER"
+      },
+      update: {}
+    });
+  }
 
-  await db.user.upsert({
-    where: { username: "scanner" },
-    create: {
-      username: "scanner",
-      displayName: "Check-in",
-      passwordHash: await hashPassword("scanner1234"),
-      role: "SCANNER"
-    },
-    update: {}
-  });
-
-  return NextResponse.json({ event }, { status: 201 });
+  return NextResponse.json({ event, demoUsersCreated: createDemoUsers }, { status: 201 });
 }

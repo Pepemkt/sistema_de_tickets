@@ -18,7 +18,14 @@ const ticketTypeSchema = z.object({
 
 const createSchema = z.object({
   name: z.string().min(3),
+  featuredTag: z.string().trim().max(40).optional().default(""),
   description: z.string().optional().default(""),
+  featureTags: z.array(z.string().trim().max(30)).max(8).optional().default([]),
+  heroImageUrl: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || value.startsWith("data:image/"), "La imagen debe subirse desde archivo"),
   venue: z.string().min(2),
   startsAt: z.string().min(10),
   endsAt: z.string().optional(),
@@ -87,7 +94,10 @@ export async function POST(request: Request) {
       data: {
         slug,
         name: data.name,
+        featuredTag: data.featuredTag || null,
         description: data.description,
+        featureTags: data.featureTags.filter(Boolean),
+        heroImageUrl: data.heroImageUrl || null,
         venue: data.venue,
         startsAt,
         endsAt,

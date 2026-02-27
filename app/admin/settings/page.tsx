@@ -36,12 +36,37 @@ type EmailTemplateState = {
   updatedAt: string | null;
 };
 
+type CheckoutFeeItemState = {
+  id: string;
+  name: string;
+  mode: "FIXED" | "PERCENT";
+  value: number;
+  enabled: boolean;
+};
+
+function asString(value: unknown, fallback = "") {
+  return typeof value === "string" ? value : fallback;
+}
+
+function asNumber(value: unknown, fallback = 0) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function asBoolean(value: unknown, fallback = false) {
+  return typeof value === "boolean" ? value : fallback;
+}
+
+function getErrorMessage(data: Record<string, unknown>, fallback: string) {
+  return typeof data.error === "string" && data.error.trim() ? data.error : fallback;
+}
+
 export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [savingMp, setSavingMp] = useState(false);
   const [savingSmtp, setSavingSmtp] = useState(false);
   const [savingBranding, setSavingBranding] = useState(false);
   const [savingEmailTemplate, setSavingEmailTemplate] = useState(false);
+  const [savingCheckoutFees, setSavingCheckoutFees] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const [mpState, setMpState] = useState<MercadoPagoState>({
@@ -84,12 +109,14 @@ export default function AdminSettingsPage() {
     updatedAt: null
   });
   const [emailBuilder, setEmailBuilder] = useState<EmailTemplateBuilderConfig>(defaultEmailTemplateBuilder);
+  const [checkoutFeeItems, setCheckoutFeeItems] = useState<CheckoutFeeItemState[]>([]);
+  const [checkoutFeesUpdatedAt, setCheckoutFeesUpdatedAt] = useState<string | null>(null);
 
   async function fetchJsonSafe(url: string) {
     const response = await fetch(url);
     const text = await response.text();
 
-    let data: any = {};
+    let data: Record<string, unknown> = {};
     if (text) {
       try {
         data = JSON.parse(text);
@@ -99,7 +126,7 @@ export default function AdminSettingsPage() {
     }
 
     if (!response.ok) {
-      throw new Error(data?.error ?? `Error cargando ${url}`);
+      throw new Error(getErrorMessage(data, `Error cargando ${url}`));
     }
 
     return data;
@@ -107,7 +134,7 @@ export default function AdminSettingsPage() {
 
   async function parseJsonResponseSafe(response: Response, fallbackError: string) {
     const text = await response.text();
-    let data: any = {};
+    let data: Record<string, unknown> = {};
 
     if (text) {
       try {
@@ -125,28 +152,47 @@ export default function AdminSettingsPage() {
       fetchJsonSafe("/api/admin/settings/mercadopago"),
       fetchJsonSafe("/api/admin/settings/smtp"),
       fetchJsonSafe("/api/admin/settings/branding"),
-      fetchJsonSafe("/api/admin/settings/email-template")
+      fetchJsonSafe("/api/admin/settings/email-template"),
+      fetchJsonSafe("/api/admin/settings/checkout-fees")
     ])
-      .then(([mpData, smtpData, brandingData, emailData]) => {
-        setMpState(mpData);
-        setSmtpState(smtpData);
-        setSmtpHost(smtpData.host ?? "");
-        setSmtpPort(smtpData.port ?? 465);
-        setSmtpUser(smtpData.user ?? "");
-        setSmtpFrom(smtpData.from ?? "");
-        setSmtpSecure(Boolean(smtpData.secure));
+      .then(([mpData, smtpData, brandingData, emailData, checkoutFeesData]) => {
+        const normalizedMpState: MercadoPagoState = {
+          hasAccessToken: asBoolean(mpData.hasAccessToken),
+          hasWebhookSecret: asBoolean(mpData.hasWebhookSecret),
+          updatedAt: typeof mpData.updatedAt === "string" ? mpData.updatedAt : null
+        };
+        const normalizedSmtpState: SmtpState = {
+          configured: asBoolean(smtpData.configured),
+          host: asString(smtpData.host),
+          port: asNumber(smtpData.port, 465),
+          user: asString(smtpData.user),
+          from: asString(smtpData.from),
+          secure: asBoolean(smtpData.secure),
+          hasPassword: asBoolean(smtpData.hasPassword),
+          updatedAt: typeof smtpData.updatedAt === "string" ? smtpData.updatedAt : null
+        };
+
+        setMpState(normalizedMpState);
+        setSmtpState(normalizedSmtpState);
+        setSmtpHost(normalizedSmtpState.host);
+        setSmtpPort(normalizedSmtpState.port);
+        setSmtpUser(normalizedSmtpState.user);
+        setSmtpFrom(normalizedSmtpState.from);
+        setSmtpSecure(normalizedSmtpState.secure);
         setBrandingState({
-          sidebarLogoUrl: brandingData.sidebarLogoUrl ?? null
+          sidebarLogoUrl: typeof brandingData.sidebarLogoUrl === "string" ? brandingData.sidebarLogoUrl : null
         });
-        setSidebarLogoUrl(brandingData.sidebarLogoUrl ?? "");
+        setSidebarLogoUrl(typeof brandingData.sidebarLogoUrl === "string" ? brandingData.sidebarLogoUrl : "");
 
         const builder = normalizeEmailTemplateBuilder(emailData.builder ?? defaultEmailTemplateBuilder);
         setEmailTemplateState({
           builder,
-          tokens: emailData.tokens ?? EMAIL_TEMPLATE_TOKENS,
-          updatedAt: emailData.updatedAt ?? null
+          tokens: Array.isArray(emailData.tokens) ? emailData.tokens.map(String) : EMAIL_TEMPLATE_TOKENS,
+          updatedAt: typeof emailData.updatedAt === "string" ? emailData.updatedAt : null
         });
         setEmailBuilder(builder);
+        setCheckoutFeeItems(Array.isArray(checkoutFeesData.items) ? (checkoutFeesData.items as CheckoutFeeItemState[]) : []);
+        setCheckoutFeesUpdatedAt(typeof checkoutFeesData.updatedAt === "string" ? checkoutFeesData.updatedAt : null);
       })
       .catch((error) => {
         setMessage(error instanceof Error ? error.message : "No se pudo cargar la configuracion");
@@ -201,11 +247,15 @@ export default function AdminSettingsPage() {
     setSavingMp(false);
 
     if (!ok) {
-      setMessage(data.error ?? "No se pudieron guardar las credenciales de Mercado Pago");
+      setMessage(getErrorMessage(data, "No se pudieron guardar las credenciales de Mercado Pago"));
       return;
     }
 
-    setMpState(data);
+    setMpState({
+      hasAccessToken: asBoolean(data.hasAccessToken),
+      hasWebhookSecret: asBoolean(data.hasWebhookSecret),
+      updatedAt: typeof data.updatedAt === "string" ? data.updatedAt : null
+    });
     setAccessToken("");
     setWebhookSecret("");
     setClearAccessToken(false);
@@ -236,11 +286,20 @@ export default function AdminSettingsPage() {
     setSavingSmtp(false);
 
     if (!ok) {
-      setMessage(data.error ?? "No se pudo guardar SMTP");
+      setMessage(getErrorMessage(data, "No se pudo guardar SMTP"));
       return;
     }
 
-    setSmtpState(data);
+    setSmtpState({
+      configured: asBoolean(data.configured),
+      host: asString(data.host),
+      port: asNumber(data.port, 465),
+      user: asString(data.user),
+      from: asString(data.from),
+      secure: asBoolean(data.secure),
+      hasPassword: asBoolean(data.hasPassword),
+      updatedAt: typeof data.updatedAt === "string" ? data.updatedAt : null
+    });
     setSmtpPass("");
     setClearSmtpPassword(false);
     setMessage("SMTP actualizado correctamente");
@@ -264,14 +323,14 @@ export default function AdminSettingsPage() {
     setSavingBranding(false);
 
     if (!ok) {
-      setMessage(data.error ?? "No se pudo guardar branding");
+      setMessage(getErrorMessage(data, "No se pudo guardar branding"));
       return;
     }
 
     setBrandingState({
-      sidebarLogoUrl: data.sidebarLogoUrl ?? null
+      sidebarLogoUrl: typeof data.sidebarLogoUrl === "string" ? data.sidebarLogoUrl : null
     });
-    setSidebarLogoUrl(data.sidebarLogoUrl ?? "");
+    setSidebarLogoUrl(typeof data.sidebarLogoUrl === "string" ? data.sidebarLogoUrl : "");
     setMessage("Logo lateral actualizado");
   }
 
@@ -290,18 +349,59 @@ export default function AdminSettingsPage() {
     setSavingEmailTemplate(false);
 
     if (!ok) {
-      setMessage(data.error ?? "No se pudo guardar la plantilla de email");
+      setMessage(getErrorMessage(data, "No se pudo guardar la plantilla de email"));
       return;
     }
 
     const builder = normalizeEmailTemplateBuilder(data.builder ?? emailBuilder);
     setEmailTemplateState({
       builder,
-      tokens: data.tokens ?? EMAIL_TEMPLATE_TOKENS,
-      updatedAt: data.updatedAt ?? null
+      tokens: Array.isArray(data.tokens) ? data.tokens.map(String) : EMAIL_TEMPLATE_TOKENS,
+      updatedAt: typeof data.updatedAt === "string" ? data.updatedAt : null
     });
     setEmailBuilder(builder);
     setMessage("Plantilla de email actualizada correctamente");
+  }
+
+  async function onSubmitCheckoutFees(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSavingCheckoutFees(true);
+    setMessage(null);
+
+    const res = await fetch("/api/admin/settings/checkout-fees", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: checkoutFeeItems })
+    });
+
+    const { ok, data } = await parseJsonResponseSafe(res, "Respuesta invalida guardando cargos");
+    setSavingCheckoutFees(false);
+
+    if (!ok) {
+      setMessage(getErrorMessage(data, "No se pudieron guardar los cargos"));
+      return;
+    }
+
+    setCheckoutFeeItems(Array.isArray(data.items) ? (data.items as CheckoutFeeItemState[]) : []);
+    setCheckoutFeesUpdatedAt(typeof data.updatedAt === "string" ? data.updatedAt : null);
+    setMessage("Cargos de checkout actualizados");
+  }
+
+  function addCheckoutFeeItem() {
+    setCheckoutFeeItems((current) => [...current, { id: crypto.randomUUID(), name: "", mode: "PERCENT", value: 0, enabled: true }]);
+  }
+
+  function removeCheckoutFeeItem(id: string) {
+    setCheckoutFeeItems((current) => current.filter((item) => item.id !== id));
+  }
+
+  function updateCheckoutFeeItem(id: string, key: keyof CheckoutFeeItemState, value: string | number | boolean) {
+    setCheckoutFeeItems((current) =>
+      current.map((item) => {
+        if (item.id !== id) return item;
+        return { ...item, [key]: value };
+      })
+    );
   }
 
   function resetEmailTemplate() {
@@ -498,6 +598,72 @@ export default function AdminSettingsPage() {
               </div>
             </form>
           </>
+        )}
+      </section>
+
+      <section className="panel p-6">
+        <h2 className="section-title">Cargos del checkout</h2>
+        <p className="muted mt-1">Define recargos configurables por item (monto fijo o porcentaje). Si no hay items activos, no se agrega ningun recargo.</p>
+
+        {loading ? (
+          <p className="mt-6 text-sm text-slate-500">Cargando configuracion...</p>
+        ) : (
+          <form onSubmit={onSubmitCheckoutFees} className="mt-6 space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+              Ultima actualizacion: {checkoutFeesUpdatedAt ? new Date(checkoutFeesUpdatedAt).toLocaleString("es-AR") : "Sin cambios"}
+            </div>
+
+            <div className="space-y-3">
+              {checkoutFeeItems.map((item) => (
+                <div key={item.id} className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-12">
+                  <div className="md:col-span-4">
+                    <label className="label">Nombre</label>
+                    <input className="field" value={item.name} onChange={(event) => updateCheckoutFeeItem(item.id, "name", event.target.value)} required />
+                  </div>
+                  <div className="md:col-span-3">
+                    <label className="label">Tipo</label>
+                    <select className="field" value={item.mode} onChange={(event) => updateCheckoutFeeItem(item.id, "mode", event.target.value as "FIXED" | "PERCENT")}>
+                      <option value="PERCENT">Porcentaje (%)</option>
+                      <option value="FIXED">Monto fijo (ARS)</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="label">Valor</label>
+                    <input
+                      className="field"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={item.value}
+                      onChange={(event) => updateCheckoutFeeItem(item.id, "value", Number(event.target.value))}
+                      required
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="label">Activo</label>
+                    <label className="mt-2 flex items-center gap-2 text-sm text-slate-700">
+                      <input type="checkbox" checked={item.enabled} onChange={(event) => updateCheckoutFeeItem(item.id, "enabled", event.target.checked)} />
+                      Habilitado
+                    </label>
+                  </div>
+                  <div className="md:col-span-1 md:pt-6">
+                    <button type="button" className="btn-secondary w-full" onClick={() => removeCheckoutFeeItem(item.id)}>
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="btn-secondary" onClick={addCheckoutFeeItem}>
+                Agregar item
+              </button>
+              <button className="btn-primary" disabled={savingCheckoutFees}>
+                {savingCheckoutFees ? "Guardando..." : "Guardar cargos"}
+              </button>
+            </div>
+          </form>
         )}
       </section>
 

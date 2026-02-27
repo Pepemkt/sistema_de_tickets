@@ -82,6 +82,12 @@ export function SalesConsole() {
 
   const selectedEvent = useMemo(() => events.find((item) => item.id === eventId) ?? null, [events, eventId]);
   const selectedCouponEvent = useMemo(() => events.find((item) => item.id === couponEventId) ?? null, [events, couponEventId]);
+  const selectedTicketType = useMemo(
+    () => selectedEvent?.ticketTypes.find((item) => item.id === ticketTypeId) ?? null,
+    [selectedEvent, ticketTypeId]
+  );
+  const attendeesPreview = useMemo(() => parseAttendees(attendeesText), [attendeesText]);
+  const previewTotalCents = (selectedTicketType?.priceCents ?? 0) * attendeesPreview.length;
 
   async function readJsonSafe(response: Response) {
     const raw = await response.text();
@@ -304,52 +310,85 @@ export function SalesConsole() {
   return (
     <div className="space-y-6">
       <section className="panel p-6">
-        <h2 className="section-title">Emision masiva manual</h2>
-        <p className="muted mt-1">Crea entradas especiales (expositor, invitado, staff) sin pasar por checkout publico.</p>
+        <h2 className="section-title">Terminal de ventas manuales</h2>
+        <p className="muted mt-1">Emite tickets de forma manual con una experiencia de caja mas clara para el equipo.</p>
 
         {loading ? (
           <p className="mt-5 text-sm text-slate-500">Cargando datos...</p>
         ) : (
-          <form onSubmit={onManualIssue} className="mt-5 space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="label">Evento</label>
-                <select className="field" value={eventId} onChange={(event) => setEventId(event.target.value)} required>
-                  {events.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} ({new Date(item.startsAt).toLocaleDateString("es-AR")})
-                    </option>
-                  ))}
-                </select>
-              </div>
+          <form onSubmit={onManualIssue} className="mt-5 grid gap-4 lg:grid-cols-[1fr_360px]">
+            <div className="space-y-4">
+              <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <h3 className="text-base font-semibold text-slate-900">Informacion del cliente</h3>
+                <p className="mt-1 text-xs text-slate-500">Carga asistentes en formato Nombre,Email (uno por linea).</p>
+                <textarea
+                  className="field mt-3 min-h-44 font-mono text-xs"
+                  value={attendeesText}
+                  onChange={(event) => setAttendeesText(event.target.value)}
+                  placeholder={"Ana Perez,ana@email.com\nJuan Gomez,juan@email.com"}
+                  required
+                />
+              </section>
 
-              <div>
-                <label className="label">Tipo de ticket</label>
-                <select className="field" value={ticketTypeId} onChange={(event) => setTicketTypeId(event.target.value)} required>
-                  {(selectedEvent?.ticketTypes ?? []).map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} - {centsToCurrency(item.priceCents)} [{item.saleMode}]
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <h3 className="text-base font-semibold text-slate-900">Seleccionar entradas</h3>
+                <div className="mt-3 grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="label">Evento</label>
+                    <select className="field" value={eventId} onChange={(event) => setEventId(event.target.value)} required>
+                      {events.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name} ({new Date(item.startsAt).toLocaleDateString("es-AR")})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="label">Tipo de ticket</label>
+                    <select className="field" value={ticketTypeId} onChange={(event) => setTicketTypeId(event.target.value)} required>
+                      {(selectedEvent?.ticketTypes ?? []).map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name} - {centsToCurrency(item.priceCents)} [{item.saleMode}]
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </section>
             </div>
 
-            <div>
-              <label className="label">Asistentes (Nombre,Email por linea)</label>
-              <textarea
-                className="field min-h-44 font-mono text-xs"
-                value={attendeesText}
-                onChange={(event) => setAttendeesText(event.target.value)}
-                placeholder={"Ana Perez,ana@email.com\nJuan Gomez,juan@email.com"}
-                required
-              />
-              <p className="mt-2 text-xs text-slate-500">Cada linea genera un ticket. Se emite una orden pagada manual.</p>
-            </div>
+            <aside className="rounded-2xl border border-slate-200 bg-white p-4">
+              <h3 className="text-base font-semibold text-slate-900">Resumen de orden</h3>
+              <p className="mt-1 text-xs text-slate-500">{selectedEvent?.name ?? "Sin evento seleccionado"}</p>
 
-            <button className="btn-primary" disabled={savingIssue || !eventId || !ticketTypeId}>
-              {savingIssue ? "Emitiendo..." : "Emitir entradas masivas"}
-            </button>
+              <div className="mt-4 space-y-2 border-b border-slate-200 pb-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-600">Ticket</span>
+                  <span className="font-medium text-slate-900">{selectedTicketType?.name ?? "-"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-600">Cantidad</span>
+                  <span className="font-medium text-slate-900">{attendeesPreview.length}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-600">Precio unitario</span>
+                  <span className="font-medium text-slate-900">
+                    {selectedTicketType ? centsToCurrency(selectedTicketType.priceCents) : "-"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between">
+                <p className="text-sm text-slate-600">Total</p>
+                <p className="text-2xl font-semibold text-blue-700">{centsToCurrency(previewTotalCents)}</p>
+              </div>
+
+              <button className="btn-primary mt-4 w-full" disabled={savingIssue || !eventId || !ticketTypeId}>
+                {savingIssue ? "Emitiendo..." : "Emitir y procesar venta"}
+              </button>
+              <p className="mt-2 text-xs text-slate-500">Se crea una orden pagada manual y se emiten tickets para cada asistente.</p>
+            </aside>
           </form>
         )}
       </section>

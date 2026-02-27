@@ -57,7 +57,10 @@ export default async function EditEventPage({ params }: Props) {
           eventId={event.id}
           initial={{
             name: event.name,
+            featuredTag: event.featuredTag ?? "",
             description: event.description ?? "",
+            featureTags: Array.isArray(event.featureTags) ? event.featureTags.map((item) => String(item)) : [],
+            heroImageUrl: event.heroImageUrl ?? "",
             venue: event.venue ?? "",
             startsAt: event.startsAt.toISOString(),
             endsAt: event.endsAt ? event.endsAt.toISOString() : "",

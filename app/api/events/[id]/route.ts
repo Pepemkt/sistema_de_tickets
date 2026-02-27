@@ -21,7 +21,14 @@ const updateTicketTypeSchema = z.object({
 
 const updateSchema = z.object({
   name: z.string().min(3),
+  featuredTag: z.string().trim().max(40).optional().default(""),
   description: z.string().optional().default(""),
+  featureTags: z.array(z.string().trim().max(30)).max(8).optional().default([]),
+  heroImageUrl: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || value.startsWith("data:image/"), "La imagen debe subirse desde archivo"),
   venue: z.string().min(2),
   startsAt: z.string().min(10),
   endsAt: z.string().optional(),
@@ -37,7 +44,10 @@ export async function GET(_request: Request, { params }: Params) {
       id: true,
       slug: true,
       name: true,
+      featuredTag: true,
       description: true,
+      featureTags: true,
+      heroImageUrl: true,
       venue: true,
       startsAt: true,
       endsAt: true,
@@ -157,7 +167,10 @@ export async function PUT(request: Request, { params }: Params) {
         where: { id: existingEvent.id },
         data: {
           name: data.name,
+          featuredTag: data.featuredTag || null,
           description: data.description,
+          featureTags: data.featureTags.filter(Boolean),
+          heroImageUrl: data.heroImageUrl || null,
           venue: data.venue,
           startsAt,
           endsAt
