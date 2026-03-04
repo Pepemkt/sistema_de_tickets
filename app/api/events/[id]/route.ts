@@ -31,6 +31,7 @@ const updateSchema = z.object({
     .optional()
     .refine((value) => !value || value.startsWith("data:image/"), "La imagen debe subirse desde archivo"),
   venue: z.string().min(2),
+  status: z.enum(["ACTIVE", "UPCOMING", "DRAFT"]).optional().default("ACTIVE"),
   startsAt: z.string().min(10),
   endsAt: z.string().optional(),
   ticketTypes: z.array(updateTicketTypeSchema).min(1)
@@ -55,6 +56,7 @@ export async function GET(_request: Request, { params }: Params) {
       featureTags: true,
       heroImageUrl: true,
       venue: true,
+      status: true,
       startsAt: true,
       endsAt: true,
       createdAt: true,
@@ -180,6 +182,7 @@ export async function PUT(request: Request, { params }: Params) {
           featureTags: data.featureTags.filter(Boolean),
           heroImageUrl: data.heroImageUrl || null,
           venue: data.venue,
+          status: data.status,
           startsAt,
           endsAt
         },
@@ -201,6 +204,44 @@ export async function PUT(request: Request, { params }: Params) {
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "No se pudo actualizar evento"
+      },
+      { status: 400 }
+    );
+  }
+}
+
+export async function DELETE(_request: Request, { params }: Params) {
+  const auth = await checkApiRole(["ADMIN", "MANAGER"]);
+  if (auth.response) return auth.response;
+  const viewer = auth.viewer!;
+
+  try {
+    const { id } = await params;
+    await requireViewerEventAccess(viewer, id);
+
+    const existing = await db.event.findUnique({
+      where: { id },
+      select: { id: true }
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Evento no encontrado" }, { status: 404 });
+    }
+
+    await db.$transaction(async (tx) => {
+      await tx.ticket.deleteMany({ where: { eventId: id } });
+      await tx.emailDeliveryLog.deleteMany({ where: { eventId: id } });
+      await tx.order.deleteMany({ where: { eventId: id } });
+      await tx.coupon.deleteMany({ where: { eventId: id } });
+      await tx.ticketType.deleteMany({ where: { eventId: id } });
+      await tx.eventManagerScope.deleteMany({ where: { eventId: id } });
+      await tx.event.delete({ where: { id } });
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "No se pudo eliminar el evento"
       },
       { status: 400 }
     );

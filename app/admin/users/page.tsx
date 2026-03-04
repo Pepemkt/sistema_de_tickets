@@ -20,6 +20,10 @@ type EventItem = {
   startsAt: string;
 };
 
+function roleSupportsEventAssignments(role: "ADMIN" | "MANAGER" | "SELLER" | "SCANNER") {
+  return role === "MANAGER" || role === "SELLER" || role === "SCANNER";
+}
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -65,7 +69,7 @@ export default function AdminUsersPage() {
         displayName,
         password,
         role,
-        managedEventIds: role === "MANAGER" ? managedEventIds : []
+        managedEventIds: roleSupportsEventAssignments(role) ? managedEventIds : []
       })
     });
 
@@ -143,7 +147,7 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       <section className="panel p-6">
         <h2 className="section-title">Usuarios y roles</h2>
-        <p className="muted mt-1">Admin tiene acceso total. Manager administra eventos asignados. Seller opera ventas/cupones y scanner valida accesos.</p>
+        <p className="muted mt-1">Admin tiene acceso total. Manager, Seller y Scanner pueden limitarse por eventos asignados.</p>
 
         <form onSubmit={createUser} className="mt-5 grid gap-3 md:grid-cols-6">
           <input className="field" placeholder="usuario" value={username} onChange={(event) => setUsername(event.target.value)} required />
@@ -163,7 +167,7 @@ export default function AdminUsersPage() {
             <option value="ADMIN">ADMIN</option>
           </select>
           <div className="md:col-span-2">
-            {role === "MANAGER" ? (
+            {roleSupportsEventAssignments(role) ? (
               <select
                 className="field h-24"
                 multiple
@@ -180,7 +184,7 @@ export default function AdminUsersPage() {
                 ))}
               </select>
             ) : (
-              <p className="mt-2 text-xs text-slate-500">Asignacion de eventos aplica solo para MANAGER.</p>
+              <p className="mt-2 text-xs text-slate-500">ADMIN no requiere asignacion: tiene acceso global.</p>
             )}
           </div>
           <button className="btn-primary" disabled={saving}>
@@ -215,7 +219,7 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="py-3 pr-3">
                       <p className="text-sm font-medium text-slate-700">{user.role}</p>
-                      {user.role === "MANAGER" && (
+                      {roleSupportsEventAssignments(user.role) && (
                         <div className="mt-2">
                           <select
                             className="field h-20 py-1 text-xs"

@@ -27,6 +27,7 @@ const createSchema = z.object({
     .optional()
     .refine((value) => !value || value.startsWith("data:image/"), "La imagen debe subirse desde archivo"),
   venue: z.string().min(2),
+  status: z.enum(["ACTIVE", "UPCOMING", "DRAFT"]).optional().default("ACTIVE"),
   startsAt: z.string().min(10),
   endsAt: z.string().optional(),
   ticketTypes: z.array(ticketTypeSchema).min(1).optional(),
@@ -101,6 +102,7 @@ export async function POST(request: Request) {
           featureTags: data.featureTags.filter(Boolean),
           heroImageUrl: data.heroImageUrl || null,
           venue: data.venue,
+          status: data.status,
           startsAt,
           endsAt,
           templateJson: defaultTicketTemplate,

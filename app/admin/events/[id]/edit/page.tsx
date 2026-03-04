@@ -67,6 +67,7 @@ export default async function EditEventPage({ params }: Props) {
             featureTags: Array.isArray(event.featureTags) ? event.featureTags.map((item) => String(item)) : [],
             heroImageUrl: event.heroImageUrl ?? "",
             venue: event.venue ?? "",
+            status: event.status,
             startsAt: event.startsAt.toISOString(),
             endsAt: event.endsAt ? event.endsAt.toISOString() : "",
             ticketTypes: event.ticketTypes.map((item) => ({

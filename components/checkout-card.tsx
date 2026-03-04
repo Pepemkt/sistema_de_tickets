@@ -26,6 +26,8 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
   const [ticketTypeId, setTicketTypeId] = useState(ticketTypes[0]?.id ?? "");
   const [quantity, setQuantity] = useState(1);
   const [couponCode, setCouponCode] = useState("");
+  const [quote, setQuote] = useState<{ subtotalCents: number; discountCents: number; totalCents: number } | null>(null);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [simLoading, setSimLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +36,9 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
 
   const selected = useMemo(() => ticketTypes.find((item) => item.id === ticketTypeId), [ticketTypeId, ticketTypes]);
   const total = (selected?.priceCents ?? 0) * quantity;
+  const previewTotal = quote?.totalCents ?? total;
+  const previewSubtotal = quote?.subtotalCents ?? total;
+  const previewDiscount = quote?.discountCents ?? 0;
 
   useEffect(() => {
     if (!selected) return;
@@ -44,6 +49,63 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
       setQuantity(1);
     }
   }, [selected, quantity]);
+
+  useEffect(() => {
+    if (!selected) {
+      setQuote(null);
+      setQuoteError(null);
+      return;
+    }
+
+    const normalizedEmail = buyerEmail.trim().toLowerCase();
+    const buyerEmailForQuote = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) ? normalizedEmail : undefined;
+    const normalizedCoupon = couponCode.trim();
+    if (!normalizedCoupon && selected.saleMode === "COUPON_ONLY") {
+      setQuote(null);
+      setQuoteError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/orders/quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventId,
+            ticketTypeId,
+            quantity,
+            buyerEmail: buyerEmailForQuote,
+            couponCode: normalizedCoupon || undefined
+          }),
+          signal: controller.signal
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setQuote(null);
+          setQuoteError(typeof data.error === "string" ? data.error : "No se pudo validar el cupon");
+          return;
+        }
+
+        setQuote({
+          subtotalCents: typeof data.subtotalCents === "number" ? data.subtotalCents : total,
+          discountCents: typeof data.discountCents === "number" ? data.discountCents : 0,
+          totalCents: typeof data.totalCents === "number" ? data.totalCents : total
+        });
+        setQuoteError(null);
+      } catch (requestError) {
+        if (requestError instanceof Error && requestError.name === "AbortError") return;
+        setQuote(null);
+        setQuoteError("No se pudo validar el cupon en este momento");
+      }
+    }, 250);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [buyerEmail, couponCode, eventId, quantity, selected, ticketTypeId, total]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -184,8 +246,11 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Total</p>
-          <p className="text-2xl font-semibold text-blue-700">{centsToCurrency(total)}</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">Subtotal</p>
+          <p className="text-base font-semibold text-slate-700">{centsToCurrency(previewSubtotal)}</p>
+          {previewDiscount > 0 && <p className="mt-1 text-sm font-semibold text-emerald-700">Descuento: -{centsToCurrency(previewDiscount)}</p>}
+          <p className="mt-2 text-xs uppercase tracking-wide text-slate-500">Total final</p>
+          <p className="text-2xl font-semibold text-blue-700">{centsToCurrency(previewTotal)}</p>
         </div>
 
         <button disabled={loading || !selected} className="btn-primary w-full">
@@ -199,6 +264,7 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
         )}
 
         {error && <p className="text-sm text-red-700">{error}</p>}
+        {quoteError && <p className="text-sm text-red-700">{quoteError}</p>}
         {success && <p className="text-sm text-emerald-700">{success}</p>}
       </form>
     </aside>

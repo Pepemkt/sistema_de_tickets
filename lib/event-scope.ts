@@ -6,8 +6,8 @@ type ViewerWithRole = {
   role: UserRole;
 };
 
-export function isManagerRole(role: UserRole) {
-  return role === "MANAGER";
+export function isEventScopedRole(role: UserRole) {
+  return role === "MANAGER" || role === "SELLER" || role === "SCANNER";
 }
 
 export async function listManagedEventIds(userId: string) {
@@ -20,7 +20,7 @@ export async function listManagedEventIds(userId: string) {
 }
 
 export async function getScopedEventIdsForViewer(viewer: ViewerWithRole) {
-  if (!isManagerRole(viewer.role)) {
+  if (!isEventScopedRole(viewer.role)) {
     return null;
   }
 
@@ -28,21 +28,13 @@ export async function getScopedEventIdsForViewer(viewer: ViewerWithRole) {
 }
 
 export async function viewerCanAccessEvent(viewer: ViewerWithRole, eventId: string) {
-  if (!isManagerRole(viewer.role)) {
+  if (!isEventScopedRole(viewer.role)) {
     return true;
   }
 
-  const scope = await db.eventManagerScope.findUnique({
-    where: {
-      userId_eventId: {
-        userId: viewer.id,
-        eventId
-      }
-    },
-    select: { id: true }
-  });
-
-  return Boolean(scope);
+  const scopedIds = await getScopedEventIdsForViewer(viewer);
+  if (!scopedIds) return true;
+  return scopedIds.includes(eventId);
 }
 
 export async function requireViewerEventAccess(
@@ -55,4 +47,3 @@ export async function requireViewerEventAccess(
     throw new Error(errorMessage);
   }
 }
-

@@ -6,6 +6,10 @@ import { hashPassword } from "@/lib/password";
 
 export const runtime = "nodejs";
 
+function roleSupportsEventAssignments(role: "ADMIN" | "MANAGER" | "SELLER" | "SCANNER") {
+  return role === "MANAGER" || role === "SELLER" || role === "SCANNER";
+}
+
 type Params = {
   params: Promise<{ id: string }>;
 };
@@ -78,8 +82,8 @@ export async function PATCH(request: Request, { params }: Params) {
     const nextRole = target.role;
     const managedEventIds = data.managedEventIds ? Array.from(new Set(data.managedEventIds)) : undefined;
 
-    if (managedEventIds && managedEventIds.length > 0 && nextRole !== "MANAGER") {
-      throw new Error("Solo los usuarios MANAGER pueden tener eventos asignados");
+    if (managedEventIds && managedEventIds.length > 0 && !roleSupportsEventAssignments(nextRole)) {
+      throw new Error("Solo MANAGER, SELLER o SCANNER pueden tener eventos asignados");
     }
 
     if (managedEventIds && managedEventIds.length > 0) {
@@ -107,7 +111,7 @@ export async function PATCH(request: Request, { params }: Params) {
         }
       });
 
-      if (nextRole !== "MANAGER") {
+      if (!roleSupportsEventAssignments(nextRole)) {
         await tx.eventManagerScope.deleteMany({ where: { userId: id } });
       } else if (managedEventIds !== undefined) {
         await tx.eventManagerScope.deleteMany({ where: { userId: id } });

@@ -10,6 +10,7 @@ type EventItem = {
   id: string;
   slug: string;
   name: string;
+  status: "ACTIVE" | "UPCOMING" | "DRAFT";
   description: string | null;
   venue: string | null;
   startsAt: Date;
@@ -34,8 +35,15 @@ function eventPublicUrl(appUrl: string, slug: string) {
   return `${base}/e/${slug}`;
 }
 
+function getStatusLabel(status: EventItem["status"]) {
+  if (status === "ACTIVE") return "Activo";
+  if (status === "UPCOMING") return "Proximamente";
+  return "Borrador";
+}
+
 function EventActions({ viewerRole, eventId, publicUrl }: { viewerRole: ViewerRole; eventId: string; publicUrl: string }) {
   const [copied, setCopied] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function onCopy() {
     try {
@@ -44,6 +52,25 @@ function EventActions({ viewerRole, eventId, publicUrl }: { viewerRole: ViewerRo
       setTimeout(() => setCopied(false), 1400);
     } catch {
       setCopied(false);
+    }
+  }
+
+  async function onDeleteEvent() {
+    if (!confirm("Vas a eliminar el evento y todos sus datos asociados. Esta accion no se puede deshacer. Continuar?")) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/events/${eventId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const message = typeof data.error === "string" ? data.error : "No se pudo eliminar el evento";
+        alert(message);
+        setDeleting(false);
+        return;
+      }
+      window.location.reload();
+    } catch {
+      alert("No se pudo eliminar el evento");
+      setDeleting(false);
     }
   }
 
@@ -59,6 +86,11 @@ function EventActions({ viewerRole, eventId, publicUrl }: { viewerRole: ViewerRo
         <Link href={`/admin/events/${eventId}/edit`} className="btn-secondary">
           Editar
         </Link>
+      )}
+      {(viewerRole === "ADMIN" || viewerRole === "MANAGER") && (
+        <button type="button" className="btn-secondary" onClick={() => void onDeleteEvent()} disabled={deleting}>
+          {deleting ? "Eliminando..." : "Eliminar"}
+        </button>
       )}
     </div>
   );
@@ -131,6 +163,7 @@ export function EventsPanel({ viewerRole, appUrl, events }: Props) {
               <article key={event.id} className="panel p-6">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{dateFormatter.format(new Date(event.startsAt))}</p>
                 <h2 className="mt-1 text-xl font-semibold text-slate-900">{event.name}</h2>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Estado: {getStatusLabel(event.status)}</p>
                 <p className="mt-1 text-sm text-slate-600">{event.venue ?? "Lugar por confirmar"}</p>
                 <p className="mt-3 line-clamp-2 text-sm text-slate-600">{event.description ?? "Sin descripcion"}</p>
                 <div className="mt-4 flex items-end justify-between gap-3">
@@ -155,6 +188,7 @@ export function EventsPanel({ viewerRole, appUrl, events }: Props) {
                   <th className="px-3 py-2">Evento</th>
                   <th className="px-3 py-2">Fecha</th>
                   <th className="px-3 py-2">Lugar</th>
+                  <th className="px-3 py-2">Estado</th>
                   <th className="px-3 py-2">Precio base</th>
                   <th className="px-3 py-2">Acciones</th>
                 </tr>
@@ -173,6 +207,7 @@ export function EventsPanel({ viewerRole, appUrl, events }: Props) {
                       </td>
                       <td className="px-3 py-3 text-slate-700">{dateFormatter.format(new Date(event.startsAt))}</td>
                       <td className="px-3 py-3 text-slate-700">{event.venue ?? "-"}</td>
+                      <td className="px-3 py-3 text-slate-700">{getStatusLabel(event.status)}</td>
                       <td className="px-3 py-3 font-medium text-slate-900">
                         {fromType ? centsToCurrency(fromType.priceCents) : "Interno"}
                       </td>

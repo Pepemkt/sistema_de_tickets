@@ -6,6 +6,10 @@ import { hashPassword } from "@/lib/password";
 
 export const runtime = "nodejs";
 
+function roleSupportsEventAssignments(role: "ADMIN" | "MANAGER" | "SELLER" | "SCANNER") {
+  return role === "MANAGER" || role === "SELLER" || role === "SCANNER";
+}
+
 const createSchema = z.object({
   username: z.string().trim().min(3).max(32).regex(/^[a-zA-Z0-9._-]+$/),
   displayName: z.string().max(60).optional(),
@@ -66,7 +70,11 @@ export async function POST(request: Request) {
     const data = createSchema.parse(await request.json());
     const managedEventIds = Array.from(new Set(data.managedEventIds));
 
-    if (data.role === "MANAGER" && managedEventIds.length > 0) {
+    if (managedEventIds.length > 0 && !roleSupportsEventAssignments(data.role)) {
+      throw new Error("Solo MANAGER, SELLER o SCANNER pueden tener eventos asignados");
+    }
+
+    if (managedEventIds.length > 0) {
       const existingEvents = await db.event.count({
         where: { id: { in: managedEventIds } }
       });
@@ -83,7 +91,7 @@ export async function POST(request: Request) {
         passwordHash: await hashPassword(data.password),
         role: data.role,
         managedEventRefs:
-          data.role === "MANAGER" && managedEventIds.length > 0
+          roleSupportsEventAssignments(data.role) && managedEventIds.length > 0
             ? {
                 create: managedEventIds.map((eventId) => ({
                   eventId

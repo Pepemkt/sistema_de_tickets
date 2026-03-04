@@ -24,6 +24,7 @@ type EventFormProps = {
     featureTags?: string[];
     heroImageUrl?: string;
     venue: string;
+    status?: "ACTIVE" | "UPCOMING" | "DRAFT";
     startsAt: string;
     endsAt: string;
     ticketTypes: TicketTypeInput[];
@@ -48,6 +49,7 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
   const [featureTags, setFeatureTags] = useState<string[]>(initial?.featureTags?.slice(0, 4) ?? ["", "", "", ""]);
   const [heroImageUrl, setHeroImageUrl] = useState(initial?.heroImageUrl ?? "");
   const [venue, setVenue] = useState(initial?.venue ?? "");
+  const [status, setStatus] = useState<"ACTIVE" | "UPCOMING" | "DRAFT">(initial?.status ?? "ACTIVE");
   const [startsAt, setStartsAt] = useState(initial?.startsAt ? toLocalInputValue(initial.startsAt) : "");
   const [endsAt, setEndsAt] = useState(initial?.endsAt ? toLocalInputValue(initial.endsAt) : "");
   const [ticketTypes, setTicketTypes] = useState<TicketTypeInput[]>(
@@ -111,6 +113,7 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
       featureTags: featureTags.map((item) => item.trim()).filter(Boolean),
       heroImageUrl,
       venue,
+      status,
       startsAt,
       endsAt: endsAt || undefined,
       ticketTypes: ticketTypes.map((item) => ({
@@ -222,6 +225,15 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
         <div>
           <label className="label">Lugar</label>
           <input className="field" value={venue} onChange={(event) => setVenue(event.target.value)} required />
+        </div>
+
+        <div>
+          <label className="label">Estado del evento</label>
+          <select className="field" value={status} onChange={(event) => setStatus(event.target.value as "ACTIVE" | "UPCOMING" | "DRAFT")}>
+            <option value="ACTIVE">Activo</option>
+            <option value="UPCOMING">Proximamente</option>
+            <option value="DRAFT">Borrador</option>
+          </select>
         </div>
 
         <div>

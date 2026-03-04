@@ -20,9 +20,12 @@ export default async function PublicEventPage({ params }: Props) {
   });
 
   if (!event) notFound();
+  if (event.status === "DRAFT") notFound();
 
   const visibleTicketTypes = event.ticketTypes.filter((type) => type.saleMode !== "HIDDEN");
   const startingPrice = visibleTicketTypes[0]?.priceCents ?? 0;
+  const isActive = event.status === "ACTIVE";
+  const isUpcoming = event.status === "UPCOMING";
 
   return (
     <div className="bg-slate-100">
@@ -53,6 +56,11 @@ export default async function PublicEventPage({ params }: Props) {
             <p className="inline-flex rounded-full border border-white/20 bg-blue-600/25 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white">
               {event.featuredTag?.trim() || "Evento destacado"}
             </p>
+            {isUpcoming && (
+              <p className="mt-3 inline-flex rounded-full border border-amber-200/80 bg-amber-100/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-900">
+                Proximamente
+              </p>
+            )}
             <h1 className="mt-4 max-w-2xl text-5xl font-semibold leading-tight text-white">{event.name}</h1>
             <p className="mt-3 text-sm text-white/85">
               {new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short" }).format(event.startsAt)} · {event.venue ?? "Lugar por confirmar"}
@@ -62,9 +70,13 @@ export default async function PublicEventPage({ params }: Props) {
                 <p className="text-xs uppercase tracking-wide text-blue-100">Desde</p>
                 <p className="text-2xl font-semibold">{startingPrice > 0 ? centsToCurrency(startingPrice) : "Gratis"}</p>
               </div>
-              <Link href={`/e/${event.slug}/checkout`} className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900">
-                Comprar entradas
-              </Link>
+              {isActive ? (
+                <Link href={`/e/${event.slug}/checkout`} className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900">
+                  Comprar entradas
+                </Link>
+              ) : (
+                <span className="rounded-xl bg-white/80 px-5 py-3 text-sm font-semibold text-slate-700">Compra no habilitada aun</span>
+              )}
             </div>
           </div>
         </div>
@@ -106,9 +118,15 @@ export default async function PublicEventPage({ params }: Props) {
           </div>
 
           <div className="mt-5">
-            <Link href={`/e/${event.slug}/checkout`} className="btn-primary w-full text-center">
-              Ir al checkout
-            </Link>
+            {isActive ? (
+              <Link href={`/e/${event.slug}/checkout`} className="btn-primary w-full text-center">
+                Ir al checkout
+              </Link>
+            ) : (
+              <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                Este evento esta en estado {isUpcoming ? "Proximamente" : event.status} y aun no admite compras online.
+              </p>
+            )}
           </div>
         </aside>
       </section>

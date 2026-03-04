@@ -37,6 +37,12 @@ enum TicketSaleMode {
   HIDDEN
 }
 
+enum EventStatus {
+  ACTIVE
+  UPCOMING
+  DRAFT
+}
+
 model Event {
   id                 String             @id @default(cuid())
   slug               String             @unique
@@ -46,6 +52,7 @@ model Event {
   featureTags        Json?
   heroImageUrl       String?
   venue              String?
+  status             EventStatus        @default(ACTIVE)
   startsAt           DateTime
   endsAt             DateTime?
   templateJson       Json?

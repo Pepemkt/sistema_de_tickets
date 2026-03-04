@@ -6,7 +6,7 @@ type ValidateOnlinePurchaseInput = {
   eventId: string;
   ticketTypeId: string;
   quantity: number;
-  buyerEmail: string;
+  buyerEmail?: string | null;
   couponCode?: string | null;
 };
 
@@ -21,12 +21,12 @@ function normalizeCouponCode(code: string | null | undefined) {
 }
 
 export async function validateOnlinePurchase(tx: TxClient, input: ValidateOnlinePurchaseInput) {
-  const normalizedEmail = normalizeBuyerEmail(input.buyerEmail);
+  const normalizedEmail = input.buyerEmail ? normalizeBuyerEmail(input.buyerEmail) : "";
   const normalizedCouponCode = normalizeCouponCode(input.couponCode);
 
   const ticketType = await tx.ticketType.findUnique({
     where: { id: input.ticketTypeId },
-    include: { event: { select: { name: true, slug: true } } }
+    include: { event: { select: { name: true, slug: true, status: true } } }
   });
 
   if (!ticketType || ticketType.eventId !== input.eventId) {
@@ -35,6 +35,10 @@ export async function validateOnlinePurchase(tx: TxClient, input: ValidateOnline
 
   if (ticketType.saleMode === TicketSaleMode.HIDDEN) {
     throw new Error("Esta entrada no esta disponible para compra online");
+  }
+
+  if (ticketType.event.status !== "ACTIVE") {
+    throw new Error("Este evento aun no esta habilitado para compra online");
   }
 
   let coupon: { id: string; maxUses: number; discountType: CouponDiscountType | null; discountValue: number | null } | null = null;
@@ -87,7 +91,7 @@ export async function validateOnlinePurchase(tx: TxClient, input: ValidateOnline
     throw new Error(`Este ticket permite hasta ${ticketType.maxPerOrder} por operacion`);
   }
 
-  if (ticketType.maxPerEmail) {
+  if (ticketType.maxPerEmail && normalizedEmail) {
     const existingByEmail = await tx.order.aggregate({
       _sum: { quantity: true },
       where: {
