@@ -49,8 +49,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await checkApiRole(["ADMIN"]);
+  const auth = await checkApiRole(["ADMIN", "MANAGER"]);
   if (auth.response) return auth.response;
+  const actor = auth.viewer!;
 
   try {
     const data = createSchema.parse(await request.json());
@@ -90,30 +91,43 @@ export async function POST(request: Request) {
 
     const slug = `${slugify(data.name)}-${Math.random().toString(36).slice(2, 7)}`;
 
-    const event = await db.event.create({
-      data: {
-        slug,
-        name: data.name,
-        featuredTag: data.featuredTag || null,
-        description: data.description,
-        featureTags: data.featureTags.filter(Boolean),
-        heroImageUrl: data.heroImageUrl || null,
-        venue: data.venue,
-        startsAt,
-        endsAt,
-        templateJson: defaultTicketTemplate,
-        ticketTypes: {
-          create: ticketTypes.map((item) => ({
-            name: item.name,
-            priceCents: Math.round(item.price * 100),
-            stock: item.stock,
-            saleMode: item.saleMode ?? "PUBLIC",
-            maxPerOrder: item.maxPerOrder ?? null,
-            maxPerEmail: item.maxPerEmail ?? null
-          }))
-        }
-      },
-      include: { ticketTypes: true }
+    const event = await db.$transaction(async (tx) => {
+      const createdEvent = await tx.event.create({
+        data: {
+          slug,
+          name: data.name,
+          featuredTag: data.featuredTag || null,
+          description: data.description,
+          featureTags: data.featureTags.filter(Boolean),
+          heroImageUrl: data.heroImageUrl || null,
+          venue: data.venue,
+          startsAt,
+          endsAt,
+          templateJson: defaultTicketTemplate,
+          ticketTypes: {
+            create: ticketTypes.map((item) => ({
+              name: item.name,
+              priceCents: Math.round(item.price * 100),
+              stock: item.stock,
+              saleMode: item.saleMode ?? "PUBLIC",
+              maxPerOrder: item.maxPerOrder ?? null,
+              maxPerEmail: item.maxPerEmail ?? null
+            }))
+          }
+        },
+        include: { ticketTypes: true }
+      });
+
+      if (actor.role === "MANAGER") {
+        await tx.eventManagerScope.create({
+          data: {
+            userId: actor.id,
+            eventId: createdEvent.id
+          }
+        });
+      }
+
+      return createdEvent;
     });
 
     return NextResponse.json({ event }, { status: 201 });

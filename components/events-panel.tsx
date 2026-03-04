@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { centsToCurrency } from "@/lib/utils";
 
-type ViewerRole = "ADMIN" | "SELLER" | "SCANNER";
+type ViewerRole = "ADMIN" | "MANAGER" | "SELLER" | "SCANNER";
 
 type EventItem = {
   id: string;
@@ -55,7 +55,7 @@ function EventActions({ viewerRole, eventId, publicUrl }: { viewerRole: ViewerRo
       <button type="button" className="btn-secondary" onClick={() => void onCopy()}>
         {copied ? "Copiado" : "Copiar link"}
       </button>
-      {viewerRole === "ADMIN" && (
+      {(viewerRole === "ADMIN" || viewerRole === "MANAGER") && (
         <Link href={`/admin/events/${eventId}/edit`} className="btn-secondary">
           Editar
         </Link>
@@ -102,7 +102,7 @@ export function EventsPanel({ viewerRole, appUrl, events }: Props) {
               </button>
             </div>
 
-            {viewerRole === "ADMIN" && (
+            {(viewerRole === "ADMIN" || viewerRole === "MANAGER") && (
               <Link href="/admin/events/new" className="btn-primary">
                 Nuevo evento
               </Link>
@@ -114,7 +114,7 @@ export function EventsPanel({ viewerRole, appUrl, events }: Props) {
       {events.length === 0 ? (
         <section className="panel p-8">
           <p className="text-slate-600">Aun no hay eventos publicados.</p>
-          {viewerRole === "ADMIN" && (
+          {(viewerRole === "ADMIN" || viewerRole === "MANAGER") && (
             <Link href="/admin/events/new" className="btn-primary mt-4 inline-flex">
               Crear primer evento
             </Link>

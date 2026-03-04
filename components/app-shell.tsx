@@ -8,7 +8,7 @@ import { LogoutButton } from "@/components/logout-button";
 type Viewer = {
   username: string;
   displayName: string | null;
-  role: "ADMIN" | "SELLER" | "SCANNER";
+  role: "ADMIN" | "MANAGER" | "SELLER" | "SCANNER";
 };
 
 type Props = {
@@ -82,7 +82,7 @@ export function AppShell({ viewer, brandLogoUrl, children }: Props) {
       }
     ];
 
-    if (viewer.role === "ADMIN" || viewer.role === "SELLER") {
+    if (viewer.role === "ADMIN" || viewer.role === "MANAGER" || viewer.role === "SELLER") {
       base.push({
         href: "/sales",
         label: "Ventas especiales",
@@ -90,7 +90,7 @@ export function AppShell({ viewer, brandLogoUrl, children }: Props) {
       });
     }
 
-    if (viewer.role === "ADMIN" || viewer.role === "SCANNER") {
+    if (viewer.role === "ADMIN" || viewer.role === "MANAGER" || viewer.role === "SCANNER") {
       base.push({
         href: "/scan",
         label: "Check-in",
@@ -98,7 +98,7 @@ export function AppShell({ viewer, brandLogoUrl, children }: Props) {
       });
     }
 
-    if (viewer.role === "ADMIN") {
+    if (viewer.role === "ADMIN" || viewer.role === "MANAGER") {
       base.unshift({
         href: "/admin",
         label: "Dashboard",
@@ -121,7 +121,12 @@ export function AppShell({ viewer, brandLogoUrl, children }: Props) {
           href: "/admin/analytics",
           label: "Analytics",
           icon: <NavIcon path="M5 19V9m7 10V5m7 14v-7" />
-        },
+        }
+      );
+    }
+
+    if (viewer.role === "ADMIN") {
+      base.push(
         {
           href: "/admin/users",
           label: "Usuarios",
@@ -229,17 +234,17 @@ export function AppShell({ viewer, brandLogoUrl, children }: Props) {
           </div>
 
           <div className="flex items-center gap-2">
-            {viewer.role === "ADMIN" && (
+            {(viewer.role === "ADMIN" || viewer.role === "MANAGER") && (
               <Link href="/admin/events/new" className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
                 Nuevo evento
               </Link>
             )}
-            {(viewer.role === "ADMIN" || viewer.role === "SELLER") && (
+            {(viewer.role === "ADMIN" || viewer.role === "MANAGER" || viewer.role === "SELLER") && (
               <Link href="/sales" className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
                 Ventas especiales
               </Link>
             )}
-            {(viewer.role === "ADMIN" || viewer.role === "SCANNER") && (
+            {(viewer.role === "ADMIN" || viewer.role === "MANAGER" || viewer.role === "SCANNER") && (
               <Link href="/scan" className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
                 Check-in
               </Link>

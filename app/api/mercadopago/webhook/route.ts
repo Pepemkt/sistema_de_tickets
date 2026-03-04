@@ -50,7 +50,7 @@ function markEmailAsSent(key: string) {
 
 async function sendTicketsEmailSafe(orderId: string, emailCacheKey: string) {
   try {
-    await sendOrderTicketsEmail(orderId);
+    await sendOrderTicketsEmail(orderId, { trigger: "WEBHOOK" });
     markEmailAsSent(emailCacheKey);
     return { emailSent: true as const };
   } catch (error) {

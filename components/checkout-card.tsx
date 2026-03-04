@@ -22,6 +22,7 @@ type Props = {
 export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulation = true }: Props) {
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
+  const [buyerPhone, setBuyerPhone] = useState("");
   const [ticketTypeId, setTicketTypeId] = useState(ticketTypes[0]?.id ?? "");
   const [quantity, setQuantity] = useState(1);
   const [couponCode, setCouponCode] = useState("");
@@ -60,6 +61,7 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
           quantity,
           buyerName,
           buyerEmail,
+          buyerPhone: buyerPhone.trim() || undefined,
           couponCode: couponCode.trim() || undefined
         })
       });
@@ -95,6 +97,7 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
         quantity,
         buyerName,
         buyerEmail,
+        buyerPhone: buyerPhone.trim() || undefined,
         couponCode: couponCode.trim() || undefined,
         sendEmail: true
       })
@@ -137,6 +140,11 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
         <div>
           <label className="label">Email</label>
           <input type="email" value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} required className="field" />
+        </div>
+
+        <div>
+          <label className="label">Telefono</label>
+          <input value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} className="field" placeholder="+54 11 5555 5555" />
         </div>
 
         <div>

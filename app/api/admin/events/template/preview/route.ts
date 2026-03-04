@@ -15,7 +15,7 @@ const previewTemplateSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const auth = await checkApiRole(["ADMIN"]);
+  const auth = await checkApiRole(["ADMIN", "MANAGER"]);
   if (auth.response) return auth.response;
 
   try {

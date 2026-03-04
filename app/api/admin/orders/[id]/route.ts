@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkApiRole } from "@/lib/api-auth";
 import { db } from "@/lib/db";
+import { requireViewerEventAccess } from "@/lib/event-scope";
 
 type Params = {
   params: Promise<{ id: string }>;
@@ -9,11 +10,22 @@ type Params = {
 export const runtime = "nodejs";
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const auth = await checkApiRole(["ADMIN"]);
+  const auth = await checkApiRole(["ADMIN", "MANAGER"]);
   if (auth.response) return auth.response;
+  const viewer = auth.viewer!;
 
   try {
     const { id } = await params;
+    const orderRef = await db.order.findUnique({
+      where: { id },
+      select: { id: true, eventId: true }
+    });
+
+    if (!orderRef) {
+      return NextResponse.json({ error: "Orden no encontrada" }, { status: 404 });
+    }
+
+    await requireViewerEventAccess(viewer, orderRef.eventId);
 
     const result = await db.$transaction(async (tx) => {
       const order = await tx.order.findUnique({

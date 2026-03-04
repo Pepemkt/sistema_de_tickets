@@ -2,13 +2,23 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { centsToCurrency } from "@/lib/utils";
 import { DeleteOrderButton } from "@/components/delete-order-button";
+import { requirePageRole } from "@/lib/auth";
+import { getScopedEventIdsForViewer } from "@/lib/event-scope";
 
 export default async function AdminOrdersPage() {
+  const viewer = await requirePageRole(["ADMIN", "MANAGER"]);
+  const scopedEventIds = await getScopedEventIdsForViewer(viewer);
+
   const orders = await db.order.findMany({
+    where: scopedEventIds ? { eventId: { in: scopedEventIds } } : undefined,
     orderBy: { createdAt: "desc" },
     include: {
       event: true,
       ticketType: true,
+      emailDeliveries: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      },
       tickets: {
         select: {
           id: true,
@@ -79,6 +89,7 @@ export default async function AdminOrdersPage() {
                     <td className="py-3 pr-3">
                       <p className="text-slate-700">{order.buyerName}</p>
                       <p className="text-xs text-slate-500">{order.buyerEmail}</p>
+                      <p className="text-xs text-slate-500">{order.buyerPhone ?? "Sin telefono"}</p>
                     </td>
                     <td className="py-3 pr-3 text-slate-700">{order.ticketType.name}</td>
                     <td className="py-3 pr-3 text-slate-700">{order.quantity}</td>
@@ -94,6 +105,14 @@ export default async function AdminOrdersPage() {
                       ) : (
                         <span className="text-xs text-slate-500">Sin emitir</span>
                       )}
+                      <p className="mt-1 text-xs text-slate-500">
+                        Email:{" "}
+                        {order.emailDeliveries[0]
+                          ? order.emailDeliveries[0].status === "SENT"
+                            ? `Enviado (${new Date(order.emailDeliveries[0].createdAt).toLocaleString("es-AR")})`
+                            : `Fallo (${new Date(order.emailDeliveries[0].createdAt).toLocaleString("es-AR")})`
+                          : "Sin envios"}
+                      </p>
                     </td>
                     <td className="py-3 pr-3">
                       <DeleteOrderButton orderId={order.id} hasAttendedTickets={hasAttendedTickets} />

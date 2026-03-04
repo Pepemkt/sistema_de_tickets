@@ -6,7 +6,7 @@ export default async function LoginPage() {
   const viewer = await getCurrentViewer();
 
   if (viewer) {
-    redirect(viewer.role === "ADMIN" ? "/admin" : viewer.role === "SELLER" ? "/sales" : "/scan");
+    redirect(viewer.role === "ADMIN" || viewer.role === "MANAGER" ? "/admin" : viewer.role === "SELLER" ? "/sales" : "/scan");
   }
 
   return (

@@ -15,8 +15,20 @@ enum OrderStatus {
 
 enum UserRole {
   ADMIN
+  MANAGER
   SELLER
   SCANNER
+}
+
+enum CouponDiscountType {
+  FIXED_PRICE
+  FIXED_DISCOUNT
+  PERCENT
+}
+
+enum EmailDeliveryStatus {
+  SENT
+  FAILED
 }
 
 enum TicketSaleMode {
@@ -26,23 +38,25 @@ enum TicketSaleMode {
 }
 
 model Event {
-  id           String       @id @default(cuid())
-  slug         String       @unique
-  name         String
-  featuredTag  String?
-  description  String?
-  featureTags  Json?
-  heroImageUrl String?
-  venue        String?
-  startsAt     DateTime
-  endsAt       DateTime?
-  templateJson Json?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  ticketTypes  TicketType[]
-  coupons      Coupon[]
-  orders       Order[]
-  tickets      Ticket[]
+  id                 String             @id @default(cuid())
+  slug               String             @unique
+  name               String
+  featuredTag        String?
+  description        String?
+  featureTags        Json?
+  heroImageUrl       String?
+  venue              String?
+  startsAt           DateTime
+  endsAt             DateTime?
+  templateJson       Json?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  ticketTypes        TicketType[]
+  coupons            Coupon[]
+  orders             Order[]
+  tickets            Ticket[]
+  managerAssignments EventManagerScope[]
+  emailDeliveries    EmailDeliveryLog[]
 }
 
 model TicketType {
@@ -63,38 +77,44 @@ model TicketType {
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  eventId         String
-  ticketTypeId    String
-  quantity        Int
-  totalCents      Int
-  buyerName       String
-  buyerEmail      String
-  couponId        String?
-  status          OrderStatus @default(PENDING)
-  mercadoPagoRef  String?
-  mercadoPagoInit String?
-  mercadoPagoPay  String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  event           Event       @relation(fields: [eventId], references: [id])
-  ticketType      TicketType  @relation(fields: [ticketTypeId], references: [id])
-  coupon          Coupon?     @relation(fields: [couponId], references: [id])
-  tickets         Ticket[]
+  id                String             @id @default(cuid())
+  eventId           String
+  ticketTypeId      String
+  quantity          Int
+  totalCents        Int
+  subtotalCents     Int                @default(0)
+  discountCents     Int                @default(0)
+  buyerName         String
+  buyerEmail        String
+  buyerPhone        String?
+  couponId          String?
+  status            OrderStatus        @default(PENDING)
+  mercadoPagoRef    String?
+  mercadoPagoInit   String?
+  mercadoPagoPay    String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  event             Event              @relation(fields: [eventId], references: [id])
+  ticketType        TicketType         @relation(fields: [ticketTypeId], references: [id])
+  coupon            Coupon?            @relation(fields: [couponId], references: [id])
+  tickets           Ticket[]
+  emailDeliveries   EmailDeliveryLog[]
 }
 
 model Coupon {
-  id           String     @id @default(cuid())
-  code         String     @unique
+  id           String              @id @default(cuid())
+  code         String              @unique
   eventId      String
   ticketTypeId String?
   maxUses      Int
-  usedCount    Int        @default(0)
-  isActive     Boolean    @default(true)
+  usedCount    Int                 @default(0)
+  isActive     Boolean             @default(true)
   expiresAt    DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  event        Event      @relation(fields: [eventId], references: [id])
+  discountType CouponDiscountType?
+  discountValue Int?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  event        Event               @relation(fields: [eventId], references: [id])
   ticketType   TicketType? @relation(fields: [ticketTypeId], references: [id])
   orders       Order[]
 
@@ -119,15 +139,16 @@ model Ticket {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  username     String    @unique
-  displayName  String?
-  passwordHash String
-  role         UserRole  @default(SCANNER)
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  sessions     Session[]
+  id               String              @id @default(cuid())
+  username         String              @unique
+  displayName      String?
+  passwordHash     String
+  role             UserRole            @default(SCANNER)
+  isActive         Boolean             @default(true)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  sessions         Session[]
+  managedEventRefs EventManagerScope[]
 }
 
 model Session {
@@ -139,6 +160,36 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
+}
+
+model EventManagerScope {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([eventId])
+}
+
+model EmailDeliveryLog {
+  id                String              @id @default(cuid())
+  orderId           String
+  eventId           String
+  recipientEmail    String
+  status            EmailDeliveryStatus
+  trigger           String
+  providerMessageId String?
+  errorMessage      String?
+  createdAt         DateTime            @default(now())
+  order             Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  event             Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
+  @@index([orderId, createdAt])
 }
 
 model PlatformConfig {

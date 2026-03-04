@@ -2,13 +2,18 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { EventForm } from "@/components/event-form";
+import { requirePageRole } from "@/lib/auth";
+import { requireViewerEventAccess } from "@/lib/event-scope";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
 export default async function EditEventPage({ params }: Props) {
+  const viewer = await requirePageRole(["ADMIN", "MANAGER"]);
   const { id } = await params;
+
+  await requireViewerEventAccess(viewer, id);
 
   const event = await db.event.findUnique({
     where: { id },

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { checkApiRole } from "@/lib/api-auth";
 import { generateTicketPdf } from "@/lib/pdf";
 import { normalizeTicketTemplate } from "@/lib/ticket-template";
+import { requireViewerEventAccess } from "@/lib/event-scope";
 
 type Params = {
   params: Promise<{ id: string; ticketId: string }>;
@@ -11,8 +12,9 @@ type Params = {
 export const runtime = "nodejs";
 
 export async function GET(_request: Request, { params }: Params) {
-  const auth = await checkApiRole(["ADMIN"]);
+  const auth = await checkApiRole(["ADMIN", "MANAGER"]);
   if (auth.response) return auth.response;
+  const viewer = auth.viewer!;
 
   const { id, ticketId } = await params;
 
@@ -31,6 +33,8 @@ export async function GET(_request: Request, { params }: Params) {
   if (!order || order.tickets.length === 0) {
     return NextResponse.json({ error: "Ticket no encontrado" }, { status: 404 });
   }
+
+  await requireViewerEventAccess(viewer, order.eventId);
 
   const ticket = order.tickets[0];
   const template = normalizeTicketTemplate(order.event.templateJson);

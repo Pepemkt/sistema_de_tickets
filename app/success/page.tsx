@@ -86,7 +86,7 @@ async function reconcileOrderFromMercadoPagoReturn(orderId: string, paymentId: s
       }
 
       try {
-        await sendOrderTicketsEmail(order.id);
+        await sendOrderTicketsEmail(order.id, { trigger: "SUCCESS_PAGE" });
         markEmailAsSent(emailCacheKey);
         return { confirmed: true as const, emailSent: true as const };
       } catch (error) {
@@ -98,7 +98,7 @@ async function reconcileOrderFromMercadoPagoReturn(orderId: string, paymentId: s
     await generateTicketsForPaidOrder(order.id, normalizedPaymentId);
 
     try {
-      await sendOrderTicketsEmail(order.id);
+      await sendOrderTicketsEmail(order.id, { trigger: "SUCCESS_PAGE" });
       markEmailAsSent(emailCacheKey);
       return { confirmed: true as const, emailSent: true as const };
     } catch (error) {

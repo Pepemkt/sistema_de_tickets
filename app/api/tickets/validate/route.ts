@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { checkApiRole } from "@/lib/api-auth";
 import { verifyTicketPayload } from "@/lib/ticket-signature";
+import { viewerCanAccessEvent } from "@/lib/event-scope";
 
 export const runtime = "nodejs";
 
@@ -20,8 +21,9 @@ async function getEventScannedCount(eventId: string) {
 }
 
 export async function POST(request: Request) {
-  const auth = await checkApiRole(["ADMIN", "SCANNER"]);
+  const auth = await checkApiRole(["ADMIN", "MANAGER", "SCANNER"]);
   if (auth.response) return auth.response;
+  const viewer = auth.viewer!;
 
   try {
     const { payload } = schema.parse(await request.json());
@@ -38,6 +40,11 @@ export async function POST(request: Request) {
 
     if (!ticket) {
       return NextResponse.json({ status: "error", message: "Ticket no encontrado" }, { status: 404 });
+    }
+
+    const hasAccess = await viewerCanAccessEvent(viewer, ticket.eventId);
+    if (!hasAccess) {
+      return NextResponse.json({ status: "error", message: "Sin permisos para validar este evento" }, { status: 403 });
     }
 
     if (ticket.attendedAt) {

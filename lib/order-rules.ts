@@ -1,4 +1,4 @@
-import { OrderStatus, Prisma, TicketSaleMode } from "@prisma/client";
+import { CouponDiscountType, OrderStatus, Prisma, TicketSaleMode } from "@prisma/client";
 
 type TxClient = Prisma.TransactionClient;
 
@@ -37,7 +37,7 @@ export async function validateOnlinePurchase(tx: TxClient, input: ValidateOnline
     throw new Error("Esta entrada no esta disponible para compra online");
   }
 
-  let coupon: { id: string; maxUses: number } | null = null;
+  let coupon: { id: string; maxUses: number; discountType: CouponDiscountType | null; discountValue: number | null } | null = null;
 
   if (normalizedCouponCode) {
     const couponRecord = await tx.coupon.findUnique({
@@ -73,7 +73,9 @@ export async function validateOnlinePurchase(tx: TxClient, input: ValidateOnline
 
     coupon = {
       id: couponRecord.id,
-      maxUses: couponRecord.maxUses
+      maxUses: couponRecord.maxUses,
+      discountType: couponRecord.discountType,
+      discountValue: couponRecord.discountValue
     };
   }
 
@@ -118,9 +120,29 @@ export async function validateOnlinePurchase(tx: TxClient, input: ValidateOnline
     throw new Error("No hay stock suficiente");
   }
 
+  const baseSubtotalCents = ticketType.priceCents * input.quantity;
+  let discountedSubtotalCents = baseSubtotalCents;
+
+  if (coupon?.discountType && coupon.discountValue !== null) {
+    if (coupon.discountType === "FIXED_PRICE") {
+      const fixedUnitPrice = Math.max(0, coupon.discountValue);
+      discountedSubtotalCents = Math.min(baseSubtotalCents, fixedUnitPrice * input.quantity);
+    } else if (coupon.discountType === "FIXED_DISCOUNT") {
+      discountedSubtotalCents = Math.max(0, baseSubtotalCents - Math.max(0, coupon.discountValue));
+    } else if (coupon.discountType === "PERCENT") {
+      const percent = Math.min(Math.max(coupon.discountValue, 0), 100);
+      discountedSubtotalCents = Math.max(0, baseSubtotalCents - Math.round(baseSubtotalCents * (percent / 100)));
+    }
+  }
+
+  const discountCents = Math.max(0, baseSubtotalCents - discountedSubtotalCents);
+
   return {
     ticketType,
     normalizedEmail,
-    coupon
+    coupon,
+    baseSubtotalCents,
+    discountedSubtotalCents,
+    discountCents
   };
 }

@@ -4,6 +4,7 @@ import { buildEmailTemplateVariables, renderEmailTemplate } from "@/lib/email-te
 import { resolveEmailTemplateConfig, resolveSmtpConfig } from "@/lib/platform-config";
 import { getPaidOrderWithTickets } from "@/lib/tickets";
 import { normalizeTicketTemplate } from "@/lib/ticket-template";
+import { db } from "@/lib/db";
 
 function explainSmtpError(error: unknown, context: { host: string; port: number; secure: boolean }) {
   const raw = error instanceof Error ? error.message : "Error SMTP desconocido";
@@ -62,60 +63,93 @@ async function createTransporter() {
   }
 }
 
-export async function sendOrderTicketsEmail(orderId: string) {
+export async function sendOrderTicketsEmail(orderId: string, options?: { trigger?: string }) {
   const order = await getPaidOrderWithTickets(orderId);
   if (!order || order.tickets.length === 0) {
     return;
   }
 
-  const { transporter, from } = await createTransporter();
-  const emailTemplate = await resolveEmailTemplateConfig();
-  const template = normalizeTicketTemplate(order.event.templateJson);
-  const variables = buildEmailTemplateVariables({
-    buyerName: order.buyerName,
-    buyerEmail: order.buyerEmail,
-    eventName: order.event.name,
-    startsAt: order.event.startsAt,
-    venue: order.event.venue,
-    orderId: order.id,
-    quantity: order.quantity,
-    ticketCount: order.tickets.length,
-    totalCents: order.totalCents,
-    supportEmail: from
-  });
-  const rendered = renderEmailTemplate(emailTemplate, variables);
+  const trigger = options?.trigger?.trim() || "SYSTEM";
 
-  const attachments = await Promise.all(
-    order.tickets.map(async (ticket) => {
-      const pdf = await generateTicketPdf({
-        eventName: ticket.event.name,
-        venue: ticket.event.venue,
-        startsAt: ticket.event.startsAt,
-        ticketType: ticket.ticketType.name,
-        attendeeName: ticket.attendeeName,
-        attendeeEmail: ticket.attendeeEmail,
-        code: ticket.code,
-        qrPayload: ticket.qrPayload,
-        orderCode: order.id,
-        quantity: order.quantity,
-        purchaseDate: order.createdAt,
-        template
+  try {
+    const { transporter, from } = await createTransporter();
+    const emailTemplate = await resolveEmailTemplateConfig();
+    const template = normalizeTicketTemplate(order.event.templateJson);
+    const variables = buildEmailTemplateVariables({
+      buyerName: order.buyerName,
+      buyerEmail: order.buyerEmail,
+      eventName: order.event.name,
+      startsAt: order.event.startsAt,
+      venue: order.event.venue,
+      orderId: order.id,
+      quantity: order.quantity,
+      ticketCount: order.tickets.length,
+      totalCents: order.totalCents,
+      supportEmail: from
+    });
+    const rendered = renderEmailTemplate(emailTemplate, variables);
+
+    const attachments = await Promise.all(
+      order.tickets.map(async (ticket) => {
+        const pdf = await generateTicketPdf({
+          eventName: ticket.event.name,
+          venue: ticket.event.venue,
+          startsAt: ticket.event.startsAt,
+          ticketType: ticket.ticketType.name,
+          attendeeName: ticket.attendeeName,
+          attendeeEmail: ticket.attendeeEmail,
+          code: ticket.code,
+          qrPayload: ticket.qrPayload,
+          orderCode: order.id,
+          quantity: order.quantity,
+          purchaseDate: order.createdAt,
+          template
+        });
+
+        return {
+          filename: `entrada-${ticket.code}.pdf`,
+          content: pdf,
+          contentType: "application/pdf"
+        };
+      })
+    );
+
+    const info = await transporter.sendMail({
+      messageId: `<tickets-${order.id}@aiderbrand.local>`,
+      from,
+      to: order.buyerEmail,
+      subject: rendered.subject,
+      html: rendered.html,
+      attachments
+    });
+
+    await db.emailDeliveryLog.create({
+      data: {
+        orderId: order.id,
+        eventId: order.eventId,
+        recipientEmail: order.buyerEmail,
+        status: "SENT",
+        trigger,
+        providerMessageId: typeof info.messageId === "string" ? info.messageId : null
+      }
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "No se pudo enviar email";
+    try {
+      await db.emailDeliveryLog.create({
+        data: {
+          orderId: order.id,
+          eventId: order.eventId,
+          recipientEmail: order.buyerEmail,
+          status: "FAILED",
+          trigger,
+          errorMessage: message
+        }
       });
+    } catch {
+      // Ignore logging errors to preserve original failure context.
+    }
 
-      return {
-        filename: `entrada-${ticket.code}.pdf`,
-        content: pdf,
-        contentType: "application/pdf"
-      };
-    })
-  );
-
-  await transporter.sendMail({
-    messageId: `<tickets-${order.id}@aiderbrand.local>`,
-    from,
-    to: order.buyerEmail,
-    subject: rendered.subject,
-    html: rendered.html,
-    attachments
-  });
+    throw error;
+  }
 }

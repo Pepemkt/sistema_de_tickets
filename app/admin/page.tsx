@@ -1,8 +1,15 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { centsToCurrency } from "@/lib/utils";
+import { requirePageRole } from "@/lib/auth";
+import { getScopedEventIdsForViewer } from "@/lib/event-scope";
 
 export default async function AdminDashboardPage() {
+  const viewer = await requirePageRole(["ADMIN", "MANAGER"]);
+  const scopedEventIds = await getScopedEventIdsForViewer(viewer);
+  const eventWhere = scopedEventIds ? { id: { in: scopedEventIds } } : undefined;
+  const orderWhere = scopedEventIds ? { eventId: { in: scopedEventIds } } : undefined;
+
   const [
     totalEvents,
     totalOrders,
@@ -10,41 +17,44 @@ export default async function AdminDashboardPage() {
     totalTickets,
     attendedTickets,
     paidRevenue,
-    activeUsers,
-    recentOrders,
-    recentUsers
+    recentOrders
   ] = await Promise.all([
-    db.event.count(),
-    db.order.count(),
-    db.order.count({ where: { status: "PAID" } }),
-    db.ticket.count(),
-    db.ticket.count({ where: { NOT: { attendedAt: null } } }),
+    db.event.count({ where: eventWhere }),
+    db.order.count({ where: orderWhere }),
+    db.order.count({ where: { ...(orderWhere ?? {}), status: "PAID" } }),
+    db.ticket.count({ where: orderWhere ? { eventId: { in: scopedEventIds ?? [] } } : undefined }),
+    db.ticket.count({ where: { ...(orderWhere ? { eventId: { in: scopedEventIds ?? [] } } : {}), NOT: { attendedAt: null } } }),
     db.order.aggregate({
-      where: { status: "PAID" },
+      where: { ...(orderWhere ?? {}), status: "PAID" },
       _sum: { totalCents: true }
     }),
-    db.user.count({ where: { isActive: true } }),
     db.order.findMany({
       take: 8,
       orderBy: { createdAt: "desc" },
+      where: orderWhere,
       include: {
         event: { select: { name: true } },
         ticketType: { select: { name: true } }
       }
-    }),
-    db.user.findMany({
-      take: 8,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        role: true,
-        isActive: true,
-        createdAt: true
-      }
     })
   ]);
+
+  const isAdmin = viewer.role === "ADMIN";
+  const activeUsers = isAdmin ? await db.user.count({ where: { isActive: true } }) : 0;
+  const recentUsers = isAdmin
+    ? await db.user.findMany({
+        take: 8,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          role: true,
+          isActive: true,
+          createdAt: true
+        }
+      })
+    : [];
 
   const totalRevenueCents = paidRevenue._sum.totalCents ?? 0;
   const attendanceRate = totalTickets > 0 ? Math.round((attendedTickets / totalTickets) * 100) : 0;
@@ -83,7 +93,7 @@ export default async function AdminDashboardPage() {
         </article>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className={`grid gap-4 ${isAdmin ? "lg:grid-cols-2" : "lg:grid-cols-1"}`}>
         <article className="panel p-5">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
@@ -139,46 +149,48 @@ export default async function AdminDashboardPage() {
           )}
         </article>
 
-        <article className="panel p-5">
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">Usuarios del panel</h2>
-              <p className="text-sm text-slate-500">Activos: {activeUsers}</p>
+        {isAdmin && (
+          <article className="panel p-5">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Usuarios del panel</h2>
+                <p className="text-sm text-slate-500">Activos: {activeUsers}</p>
+              </div>
+              <Link href="/admin/users" className="btn-secondary">
+                Gestionar
+              </Link>
             </div>
-            <Link href="/admin/users" className="btn-secondary">
-              Gestionar
-            </Link>
-          </div>
 
-          {recentUsers.length === 0 ? (
-            <p className="muted">No hay usuarios creados.</p>
-          ) : (
-            <div className="space-y-2">
-              {recentUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-900">{user.displayName ?? user.username}</p>
-                    <p className="truncate text-xs text-slate-500">
-                      @{user.username} · {user.role}
-                    </p>
+            {recentUsers.length === 0 ? (
+              <p className="muted">No hay usuarios creados.</p>
+            ) : (
+              <div className="space-y-2">
+                {recentUsers.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-slate-900">{user.displayName ?? user.username}</p>
+                      <p className="truncate text-xs text-slate-500">
+                        @{user.username} · {user.role}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                          user.isActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {user.isActive ? "Activo" : "Inactivo"}
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        {new Intl.DateTimeFormat("es-AR", { dateStyle: "short" }).format(user.createdAt)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                        user.isActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"
-                      }`}
-                    >
-                      {user.isActive ? "Activo" : "Inactivo"}
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      {new Intl.DateTimeFormat("es-AR", { dateStyle: "short" }).format(user.createdAt)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </article>
+                ))}
+              </div>
+            )}
+          </article>
+        )}
       </section>
     </div>
   );

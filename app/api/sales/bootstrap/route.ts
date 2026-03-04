@@ -2,15 +2,19 @@ import { NextResponse } from "next/server";
 import { checkApiRole } from "@/lib/api-auth";
 import { OrderStatus } from "@prisma/client";
 import { db } from "@/lib/db";
+import { getScopedEventIdsForViewer } from "@/lib/event-scope";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const auth = await checkApiRole(["ADMIN", "SELLER"]);
+  const auth = await checkApiRole(["ADMIN", "MANAGER", "SELLER"]);
   if (auth.response) return auth.response;
+  const viewer = auth.viewer!;
+  const scopedEventIds = await getScopedEventIdsForViewer(viewer);
 
   const [events, coupons] = await Promise.all([
     db.event.findMany({
+      where: scopedEventIds ? { id: { in: scopedEventIds } } : undefined,
       orderBy: { startsAt: "asc" },
       select: {
         id: true,
@@ -32,6 +36,7 @@ export async function GET() {
       }
     }),
     db.coupon.findMany({
+      where: scopedEventIds ? { eventId: { in: scopedEventIds } } : undefined,
       orderBy: { createdAt: "desc" },
       take: 200,
       select: {
@@ -43,6 +48,8 @@ export async function GET() {
         usedCount: true,
         isActive: true,
         expiresAt: true,
+        discountType: true,
+        discountValue: true,
         createdAt: true,
         event: {
           select: {
@@ -61,6 +68,7 @@ export async function GET() {
   const couponUsage = await db.order.groupBy({
     by: ["couponId"],
     where: {
+      ...(scopedEventIds ? { eventId: { in: scopedEventIds } } : {}),
       couponId: { not: null },
       status: { in: [OrderStatus.PENDING, OrderStatus.PAID] }
     },
@@ -77,4 +85,3 @@ export async function GET() {
     }))
   });
 }
-

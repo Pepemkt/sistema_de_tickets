@@ -6,6 +6,8 @@ import { checkApiRole } from "@/lib/api-auth";
 import { generateTicketsForPaidOrder } from "@/lib/tickets";
 import { sendOrderTicketsEmail } from "@/lib/email";
 import { validateOnlinePurchase } from "@/lib/order-rules";
+import { resolveCheckoutFeeItems } from "@/lib/platform-config";
+import { calculateCheckoutAmounts } from "@/lib/checkout-fees";
 
 export const runtime = "nodejs";
 
@@ -15,6 +17,13 @@ const schema = z.object({
   quantity: z.number().int().min(1).max(100),
   buyerName: z.string().min(2),
   buyerEmail: z.string().email(),
+  buyerPhone: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal(""))
+    .transform((value) => (value?.trim() ? value.trim() : undefined))
+    .refine((value) => !value || (value.length >= 6 && value.length <= 30 && /^[0-9+().\-\s]+$/.test(value)), "Telefono invalido"),
   couponCode: z.string().trim().max(40).optional(),
   sendEmail: z.boolean().optional().default(true)
 });
@@ -29,6 +38,8 @@ export async function POST(request: Request) {
 
   try {
     const data = schema.parse(await request.json());
+
+    const feeItems = await resolveCheckoutFeeItems();
 
     const order = await db.$transaction(async (tx) => {
       const validated = await validateOnlinePurchase(tx, {
@@ -56,14 +67,19 @@ export async function POST(request: Request) {
         }
       }
 
+      const amounts = calculateCheckoutAmounts(validated.discountedSubtotalCents, feeItems);
+
       return tx.order.create({
         data: {
           eventId: data.eventId,
           ticketTypeId: data.ticketTypeId,
           quantity: data.quantity,
-          totalCents: validated.ticketType.priceCents * data.quantity,
+          totalCents: amounts.totalCents,
+          subtotalCents: validated.baseSubtotalCents,
+          discountCents: validated.discountCents,
           buyerName: data.buyerName,
           buyerEmail: validated.normalizedEmail,
+          buyerPhone: data.buyerPhone ?? null,
           couponId: validated.coupon?.id ?? null
         }
       });
@@ -76,7 +92,7 @@ export async function POST(request: Request) {
 
     if (data.sendEmail) {
       try {
-        await sendOrderTicketsEmail(order.id);
+        await sendOrderTicketsEmail(order.id, { trigger: "DEV_SIMULATION" });
         emailSent = true;
       } catch (error) {
         emailError = error instanceof Error ? error.message : "No se pudo enviar email";

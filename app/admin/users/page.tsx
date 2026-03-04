@@ -6,15 +6,23 @@ type UserItem = {
   id: string;
   username: string;
   displayName: string | null;
-  role: "ADMIN" | "SELLER" | "SCANNER";
+  role: "ADMIN" | "MANAGER" | "SELLER" | "SCANNER";
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  managedEventIds: string[];
   _count?: { sessions: number };
+};
+
+type EventItem = {
+  id: string;
+  name: string;
+  startsAt: string;
 };
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserItem[]>([]);
+  const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -22,7 +30,8 @@ export default function AdminUsersPage() {
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"ADMIN" | "SELLER" | "SCANNER">("SCANNER");
+  const [role, setRole] = useState<"ADMIN" | "MANAGER" | "SELLER" | "SCANNER">("SCANNER");
+  const [managedEventIds, setManagedEventIds] = useState<string[]>([]);
 
   async function loadUsers() {
     setLoading(true);
@@ -36,6 +45,7 @@ export default function AdminUsersPage() {
     }
 
     setUsers(data.users);
+    setEvents(Array.isArray(data.events) ? (data.events as EventItem[]) : []);
   }
 
   useEffect(() => {
@@ -54,7 +64,8 @@ export default function AdminUsersPage() {
         username,
         displayName,
         password,
-        role
+        role,
+        managedEventIds: role === "MANAGER" ? managedEventIds : []
       })
     });
 
@@ -70,6 +81,7 @@ export default function AdminUsersPage() {
     setDisplayName("");
     setPassword("");
     setRole("SCANNER");
+    setManagedEventIds([]);
     setMessage("Usuario creado");
     void loadUsers();
   }
@@ -91,21 +103,20 @@ export default function AdminUsersPage() {
     void loadUsers();
   }
 
-  async function setUserRole(user: UserItem, nextRole: "ADMIN" | "SELLER" | "SCANNER") {
-    if (user.role === nextRole) return;
+  async function setUserManagedEvents(user: UserItem, nextEventIds: string[]) {
     const res = await fetch(`/api/admin/users/${user.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role: nextRole })
+      body: JSON.stringify({ managedEventIds: nextEventIds })
     });
 
     const data = await res.json();
     if (!res.ok) {
-      setMessage(data.error ?? "No se pudo cambiar rol");
+      setMessage(data.error ?? "No se pudieron actualizar eventos asignados");
       return;
     }
 
-    setMessage(`Rol actualizado para ${user.username}`);
+    setMessage(`Eventos actualizados para ${user.username}`);
     void loadUsers();
   }
 
@@ -132,9 +143,9 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       <section className="panel p-6">
         <h2 className="section-title">Usuarios y roles</h2>
-        <p className="muted mt-1">Admin tiene acceso total. Seller opera ventas/cupones y scanner valida accesos.</p>
+        <p className="muted mt-1">Admin tiene acceso total. Manager administra eventos asignados. Seller opera ventas/cupones y scanner valida accesos.</p>
 
-        <form onSubmit={createUser} className="mt-5 grid gap-3 md:grid-cols-5">
+        <form onSubmit={createUser} className="mt-5 grid gap-3 md:grid-cols-6">
           <input className="field" placeholder="usuario" value={username} onChange={(event) => setUsername(event.target.value)} required />
           <input className="field" placeholder="nombre visible" value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
           <input
@@ -145,11 +156,33 @@ export default function AdminUsersPage() {
             onChange={(event) => setPassword(event.target.value)}
             required
           />
-          <select className="field" value={role} onChange={(event) => setRole(event.target.value as "ADMIN" | "SELLER" | "SCANNER")}>
+          <select className="field" value={role} onChange={(event) => setRole(event.target.value as "ADMIN" | "MANAGER" | "SELLER" | "SCANNER")}>
             <option value="SCANNER">SCANNER</option>
             <option value="SELLER">SELLER</option>
+            <option value="MANAGER">MANAGER</option>
             <option value="ADMIN">ADMIN</option>
           </select>
+          <div className="md:col-span-2">
+            {role === "MANAGER" ? (
+              <select
+                className="field h-24"
+                multiple
+                value={managedEventIds}
+                onChange={(event) => {
+                  const values = Array.from(event.currentTarget.selectedOptions).map((option) => option.value);
+                  setManagedEventIds(values);
+                }}
+              >
+                {events.map((eventItem) => (
+                  <option key={eventItem.id} value={eventItem.id}>
+                    {eventItem.name} ({new Date(eventItem.startsAt).toLocaleDateString("es-AR")})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="mt-2 text-xs text-slate-500">Asignacion de eventos aplica solo para MANAGER.</p>
+            )}
+          </div>
           <button className="btn-primary" disabled={saving}>
             {saving ? "Guardando..." : "Crear usuario"}
           </button>
@@ -181,15 +214,26 @@ export default function AdminUsersPage() {
                       <p className="text-xs text-slate-500">{user.displayName ?? "Sin nombre"}</p>
                     </td>
                     <td className="py-3 pr-3">
-                      <select
-                        className="field h-9 py-1 text-sm"
-                        value={user.role}
-                        onChange={(event) => void setUserRole(user, event.target.value as "ADMIN" | "SELLER" | "SCANNER")}
-                      >
-                        <option value="SCANNER">SCANNER</option>
-                        <option value="SELLER">SELLER</option>
-                        <option value="ADMIN">ADMIN</option>
-                      </select>
+                      <p className="text-sm font-medium text-slate-700">{user.role}</p>
+                      {user.role === "MANAGER" && (
+                        <div className="mt-2">
+                          <select
+                            className="field h-20 py-1 text-xs"
+                            multiple
+                            value={user.managedEventIds}
+                            onChange={(event) => {
+                              const values = Array.from(event.currentTarget.selectedOptions).map((option) => option.value);
+                              void setUserManagedEvents(user, values);
+                            }}
+                          >
+                            {events.map((eventItem) => (
+                              <option key={eventItem.id} value={eventItem.id}>
+                                {eventItem.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </td>
                     <td className="py-3 pr-3">{user.isActive ? "Activo" : "Inactivo"}</td>
                     <td className="py-3 pr-3">{user._count?.sessions ?? 0}</td>

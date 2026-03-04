@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { checkApiRole } from "@/lib/api-auth";
+import { requireViewerEventAccess } from "@/lib/event-scope";
 
 type Params = {
   params: Promise<{ id: string }>;
@@ -36,7 +37,12 @@ const updateSchema = z.object({
 });
 
 export async function GET(_request: Request, { params }: Params) {
+  const auth = await checkApiRole(["ADMIN", "MANAGER"]);
+  if (auth.response) return auth.response;
+  const viewer = auth.viewer!;
+
   const { id } = await params;
+  await requireViewerEventAccess(viewer, id);
 
   const event = await db.event.findUnique({
     where: { id },
@@ -78,11 +84,13 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function PUT(request: Request, { params }: Params) {
-  const auth = await checkApiRole(["ADMIN"]);
+  const auth = await checkApiRole(["ADMIN", "MANAGER"]);
   if (auth.response) return auth.response;
+  const viewer = auth.viewer!;
 
   try {
     const { id } = await params;
+    await requireViewerEventAccess(viewer, id);
     const data = updateSchema.parse(await request.json());
 
     const startsAt = new Date(data.startsAt);

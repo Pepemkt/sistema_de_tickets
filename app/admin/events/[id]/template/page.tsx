@@ -2,13 +2,18 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { normalizeTicketTemplate } from "@/lib/ticket-template";
 import { TemplateEditor } from "@/components/template-editor";
+import { requirePageRole } from "@/lib/auth";
+import { requireViewerEventAccess } from "@/lib/event-scope";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
 export default async function EventTemplatePage({ params }: Props) {
+  const viewer = await requirePageRole(["ADMIN", "MANAGER"]);
   const { id } = await params;
+
+  await requireViewerEventAccess(viewer, id);
 
   const event = await db.event.findUnique({
     where: { id },

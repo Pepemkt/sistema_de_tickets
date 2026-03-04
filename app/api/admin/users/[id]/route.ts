@@ -11,10 +11,11 @@ type Params = {
 };
 
 const patchSchema = z.object({
-  role: z.enum(["ADMIN", "SELLER", "SCANNER"]).optional(),
+  role: z.enum(["ADMIN", "MANAGER", "SELLER", "SCANNER"]).optional(),
   isActive: z.boolean().optional(),
   password: z.string().min(6).max(100).optional(),
-  displayName: z.string().max(60).nullable().optional()
+  displayName: z.string().max(60).nullable().optional(),
+  managedEventIds: z.array(z.string().min(1)).optional()
 });
 
 export async function PATCH(request: Request, { params }: Params) {
@@ -25,6 +26,10 @@ export async function PATCH(request: Request, { params }: Params) {
   try {
     const { id } = await params;
     const data = patchSchema.parse(await request.json());
+
+    if (data.role !== undefined) {
+      throw new Error("El rol no se puede modificar desde edicion. Crea un usuario nuevo con el rol deseado.");
+    }
 
     if (id === actor.id && data.isActive === false) {
       throw new Error("No puedes desactivar tu propio usuario");
@@ -46,7 +51,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const removesAdminPrivileges =
       target.role === "ADMIN" &&
       target.isActive &&
-      (data.role === "SCANNER" || data.role === "SELLER" || data.isActive === false);
+      ((data.role !== undefined && data.role !== "ADMIN") || data.isActive === false);
 
     if (removesAdminPrivileges) {
       const activeAdminCount = await db.user.count({
@@ -59,7 +64,7 @@ export async function PATCH(request: Request, { params }: Params) {
     }
 
     const updateData: {
-      role?: "ADMIN" | "SELLER" | "SCANNER";
+      role?: "ADMIN" | "MANAGER" | "SELLER" | "SCANNER";
       isActive?: boolean;
       displayName?: string | null;
       passwordHash?: string;
@@ -70,25 +75,71 @@ export async function PATCH(request: Request, { params }: Params) {
     if (data.displayName !== undefined) updateData.displayName = data.displayName;
     if (data.password) updateData.passwordHash = await hashPassword(data.password);
 
-    const user = await db.user.update({
-      where: { id },
-      data: updateData,
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true
+    const nextRole = target.role;
+    const managedEventIds = data.managedEventIds ? Array.from(new Set(data.managedEventIds)) : undefined;
+
+    if (managedEventIds && managedEventIds.length > 0 && nextRole !== "MANAGER") {
+      throw new Error("Solo los usuarios MANAGER pueden tener eventos asignados");
+    }
+
+    if (managedEventIds && managedEventIds.length > 0) {
+      const existingEvents = await db.event.count({
+        where: { id: { in: managedEventIds } }
+      });
+
+      if (existingEvents !== managedEventIds.length) {
+        throw new Error("Hay eventos asignados que no existen");
       }
+    }
+
+    const user = await db.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
+        where: { id },
+        data: updateData,
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      });
+
+      if (nextRole !== "MANAGER") {
+        await tx.eventManagerScope.deleteMany({ where: { userId: id } });
+      } else if (managedEventIds !== undefined) {
+        await tx.eventManagerScope.deleteMany({ where: { userId: id } });
+        if (managedEventIds.length > 0) {
+          await tx.eventManagerScope.createMany({
+            data: managedEventIds.map((eventId) => ({
+              userId: id,
+              eventId
+            })),
+            skipDuplicates: true
+          });
+        }
+      }
+
+      return updatedUser;
     });
 
     if (data.isActive === false) {
       await db.session.deleteMany({ where: { userId: id } });
     }
 
-    return NextResponse.json({ user });
+    const managedRefs = await db.eventManagerScope.findMany({
+      where: { userId: id },
+      select: { eventId: true }
+    });
+
+    return NextResponse.json({
+      user: {
+        ...user,
+        managedEventIds: managedRefs.map((item) => item.eventId)
+      }
+    });
   } catch (error) {
     return NextResponse.json(
       {

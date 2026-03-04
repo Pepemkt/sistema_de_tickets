@@ -24,6 +24,7 @@ type Props = {
 export function PublicCheckout({ eventId, eventName, eventDateText, ticketTypes, feeItems }: Props) {
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
+  const [buyerPhone, setBuyerPhone] = useState("");
   const [ticketTypeId, setTicketTypeId] = useState(ticketTypes[0]?.id ?? "");
   const [quantity, setQuantity] = useState(1);
   const [couponCode, setCouponCode] = useState("");
@@ -53,6 +54,7 @@ export function PublicCheckout({ eventId, eventName, eventDateText, ticketTypes,
           quantity,
           buyerName,
           buyerEmail,
+          buyerPhone: buyerPhone.trim() || undefined,
           couponCode: couponCode.trim() || undefined
         })
       });
@@ -84,7 +86,7 @@ export function PublicCheckout({ eventId, eventName, eventDateText, ticketTypes,
           <p className="mt-1 text-sm text-slate-500">
             {eventName} · {eventDateText}
           </p>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
             <div>
               <label className="label">Nombre completo</label>
               <input className="field" value={buyerName} onChange={(event) => setBuyerName(event.target.value)} required />
@@ -92,6 +94,10 @@ export function PublicCheckout({ eventId, eventName, eventDateText, ticketTypes,
             <div>
               <label className="label">Email</label>
               <input className="field" type="email" value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} required />
+            </div>
+            <div>
+              <label className="label">Telefono</label>
+              <input className="field" value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} placeholder="+54 11 5555 5555" />
             </div>
           </div>
         </section>

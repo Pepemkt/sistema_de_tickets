@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
 import { centsToCurrency } from "@/lib/utils";
+import { requirePageRole } from "@/lib/auth";
+import { getScopedEventIdsForViewer } from "@/lib/event-scope";
 
 function groupSalesByDay(orders: Array<{ createdAt: Date; totalCents: number; status: string }>) {
   const map = new Map<string, number>();
@@ -16,8 +18,14 @@ function groupSalesByDay(orders: Array<{ createdAt: Date; totalCents: number; st
 }
 
 export default async function AnalyticsPage() {
+  const viewer = await requirePageRole(["ADMIN", "MANAGER"]);
+  const scopedEventIds = await getScopedEventIdsForViewer(viewer);
+  const eventWhere = scopedEventIds ? { id: { in: scopedEventIds } } : undefined;
+  const orderWhere = scopedEventIds ? { eventId: { in: scopedEventIds } } : undefined;
+
   const [events, orders] = await Promise.all([
     db.event.findMany({
+      where: eventWhere,
       include: {
         _count: { select: { tickets: true } },
         tickets: { where: { NOT: { attendedAt: null } }, select: { id: true } },
@@ -25,6 +33,7 @@ export default async function AnalyticsPage() {
       }
     }),
     db.order.findMany({
+      where: orderWhere,
       orderBy: { createdAt: "asc" },
       select: { createdAt: true, totalCents: true, status: true }
     })

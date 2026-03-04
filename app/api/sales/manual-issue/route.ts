@@ -5,6 +5,7 @@ import { OrderStatus } from "@prisma/client";
 import { checkApiRole } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { buildQrPayload } from "@/lib/ticket-signature";
+import { requireViewerEventAccess } from "@/lib/event-scope";
 
 export const runtime = "nodejs";
 
@@ -24,12 +25,13 @@ function normalizeEmail(value: string) {
 }
 
 export async function POST(request: Request) {
-  const auth = await checkApiRole(["ADMIN", "SELLER"]);
+  const auth = await checkApiRole(["ADMIN", "MANAGER", "SELLER"]);
   if (auth.response) return auth.response;
   const actor = auth.viewer!;
 
   try {
     const data = schema.parse(await request.json());
+    await requireViewerEventAccess(actor, data.eventId);
     const attendees = data.attendees.map((item) => ({
       name: item.name.trim(),
       email: normalizeEmail(item.email)
@@ -76,6 +78,8 @@ export async function POST(request: Request) {
           ticketTypeId: data.ticketTypeId,
           quantity: attendees.length,
           totalCents: ticketType.priceCents * attendees.length,
+          subtotalCents: ticketType.priceCents * attendees.length,
+          discountCents: 0,
           buyerName: `Emision manual (${actor.username})`,
           buyerEmail: attendees[0]?.email ?? `${actor.username}@manual.local`,
           status: OrderStatus.PAID,

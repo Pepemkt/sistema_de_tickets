@@ -31,6 +31,8 @@ type CouponItem = {
   reservedUses?: number;
   isActive: boolean;
   expiresAt: string | null;
+  discountType: "FIXED_PRICE" | "FIXED_DISCOUNT" | "PERCENT" | null;
+  discountValue: number | null;
   createdAt: string;
   event: { name: string };
   ticketType: { name: string } | null;
@@ -79,6 +81,8 @@ export function SalesConsole() {
   const [couponTicketTypeId, setCouponTicketTypeId] = useState("");
   const [couponMaxUses, setCouponMaxUses] = useState(50);
   const [couponExpiresAt, setCouponExpiresAt] = useState("");
+  const [couponDiscountType, setCouponDiscountType] = useState<"FIXED_PRICE" | "FIXED_DISCOUNT" | "PERCENT">("PERCENT");
+  const [couponDiscountValue, setCouponDiscountValue] = useState(10);
 
   const selectedEvent = useMemo(() => events.find((item) => item.id === eventId) ?? null, [events, eventId]);
   const selectedCouponEvent = useMemo(() => events.find((item) => item.id === couponEventId) ?? null, [events, couponEventId]);
@@ -222,6 +226,27 @@ export function SalesConsole() {
       return;
     }
 
+    if (couponDiscountType === "PERCENT" && (couponDiscountValue < 1 || couponDiscountValue > 100)) {
+      setSavingCoupon(false);
+      setMessage("El porcentaje debe estar entre 1 y 100");
+      return;
+    }
+
+    if (couponDiscountType === "FIXED_DISCOUNT" && couponDiscountValue < 1) {
+      setSavingCoupon(false);
+      setMessage("El descuento fijo debe ser mayor a 0");
+      return;
+    }
+
+    if (couponDiscountType === "FIXED_PRICE" && couponDiscountValue < 0) {
+      setSavingCoupon(false);
+      setMessage("El precio fijo no puede ser negativo");
+      return;
+    }
+
+    const normalizedDiscountValue =
+      couponDiscountType === "PERCENT" ? Math.round(couponDiscountValue) : Math.round(couponDiscountValue * 100);
+
     const res = await fetch("/api/sales/coupons", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -230,7 +255,9 @@ export function SalesConsole() {
         eventId: couponEventId,
         ticketTypeId: couponTicketTypeId || null,
         maxUses: couponMaxUses,
-        expiresAt: expiresAtDate ? expiresAtDate.toISOString() : null
+        expiresAt: expiresAtDate ? expiresAtDate.toISOString() : null,
+        discountType: couponDiscountType,
+        discountValue: normalizedDiscountValue
       })
     });
 
@@ -247,6 +274,8 @@ export function SalesConsole() {
     setCouponMaxUses(50);
     setCouponExpiresAt("");
     setCouponTicketTypeId("");
+    setCouponDiscountType("PERCENT");
+    setCouponDiscountValue(10);
     const createdCouponCode =
       data.coupon && typeof data.coupon === "object" && "code" in data.coupon && typeof data.coupon.code === "string"
         ? data.coupon.code
@@ -436,6 +465,39 @@ export function SalesConsole() {
               </div>
 
               <div>
+                <label className="label">Tipo de descuento</label>
+                <select
+                  className="field"
+                  value={couponDiscountType}
+                  onChange={(event) => setCouponDiscountType(event.target.value as "FIXED_PRICE" | "FIXED_DISCOUNT" | "PERCENT")}
+                >
+                  <option value="FIXED_PRICE">Precio fijo final</option>
+                  <option value="FIXED_DISCOUNT">Descuento fijo</option>
+                  <option value="PERCENT">Descuento porcentaje</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="label">
+                  {couponDiscountType === "PERCENT"
+                    ? "Porcentaje (%)"
+                    : couponDiscountType === "FIXED_DISCOUNT"
+                      ? "Descuento fijo (ARS)"
+                      : "Precio fijo (ARS)"}
+                </label>
+                <input
+                  className="field"
+                  type="number"
+                  min={couponDiscountType === "PERCENT" ? 1 : 0}
+                  max={couponDiscountType === "PERCENT" ? 100 : undefined}
+                  step={couponDiscountType === "PERCENT" ? 1 : 0.01}
+                  value={couponDiscountValue}
+                  onChange={(event) => setCouponDiscountValue(Number(event.target.value))}
+                  required
+                />
+              </div>
+
+              <div>
                 <label className="label">Vencimiento (opcional)</label>
                 <input
                   className="field"
@@ -460,6 +522,7 @@ export function SalesConsole() {
                     <th className="pb-2 pr-3">Codigo</th>
                     <th className="pb-2 pr-3">Evento / Ticket</th>
                     <th className="pb-2 pr-3">Uso</th>
+                    <th className="pb-2 pr-3">Descuento</th>
                     <th className="pb-2 pr-3">Vence</th>
                     <th className="pb-2 pr-3">Estado</th>
                     <th className="pb-2 pr-3">Acciones</th>
@@ -477,6 +540,15 @@ export function SalesConsole() {
                         </td>
                         <td className="py-3 pr-3 text-slate-700">
                           {used}/{coupon.maxUses}
+                        </td>
+                        <td className="py-3 pr-3 text-slate-700">
+                          {coupon.discountType === "PERCENT"
+                            ? `${coupon.discountValue ?? 0}%`
+                            : coupon.discountType === "FIXED_DISCOUNT"
+                              ? `-${centsToCurrency(coupon.discountValue ?? 0)}`
+                              : coupon.discountType === "FIXED_PRICE"
+                                ? centsToCurrency(coupon.discountValue ?? 0)
+                                : "Sin descuento"}
                         </td>
                         <td className="py-3 pr-3 text-slate-700">{coupon.expiresAt ? new Date(coupon.expiresAt).toLocaleString("es-AR") : "Sin vencimiento"}</td>
                         <td className="py-3 pr-3">

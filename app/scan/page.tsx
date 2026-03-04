@@ -9,7 +9,7 @@ export default async function ScanPage() {
     redirect("/login?next=/scan");
   }
 
-  if (viewer.role !== "ADMIN" && viewer.role !== "SCANNER") {
+  if (viewer.role !== "ADMIN" && viewer.role !== "MANAGER" && viewer.role !== "SCANNER") {
     redirect("/");
   }
 

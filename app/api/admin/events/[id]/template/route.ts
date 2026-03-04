@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { checkApiRole } from "@/lib/api-auth";
 import { ticketTemplateSchema } from "@/lib/ticket-template";
+import { requireViewerEventAccess } from "@/lib/event-scope";
 
 export const runtime = "nodejs";
 
@@ -10,11 +11,13 @@ type Params = {
 };
 
 export async function PUT(request: Request, { params }: Params) {
-  const auth = await checkApiRole(["ADMIN"]);
+  const auth = await checkApiRole(["ADMIN", "MANAGER"]);
   if (auth.response) return auth.response;
+  const viewer = auth.viewer!;
 
   try {
     const { id } = await params;
+    await requireViewerEventAccess(viewer, id);
     const data = ticketTemplateSchema.parse(await request.json());
 
     const event = await db.event.update({

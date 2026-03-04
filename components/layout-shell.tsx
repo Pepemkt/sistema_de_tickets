@@ -6,7 +6,7 @@ import { AppShell } from "@/components/app-shell";
 type Viewer = {
   username: string;
   displayName: string | null;
-  role: "ADMIN" | "SELLER" | "SCANNER";
+  role: "ADMIN" | "MANAGER" | "SELLER" | "SCANNER";
 };
 
 type Props = {

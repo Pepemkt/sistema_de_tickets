@@ -3,13 +3,14 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requirePageRole } from "@/lib/auth";
 import { centsToCurrency } from "@/lib/utils";
+import { requireViewerEventAccess } from "@/lib/event-scope";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
 export default async function OrderPreviewPage({ params }: Props) {
-  await requirePageRole(["ADMIN"]);
+  const viewer = await requirePageRole(["ADMIN", "MANAGER"]);
   const { id } = await params;
 
   const order = await db.order.findUnique({
@@ -17,11 +18,16 @@ export default async function OrderPreviewPage({ params }: Props) {
     include: {
       event: true,
       ticketType: true,
+      emailDeliveries: {
+        orderBy: { createdAt: "desc" },
+        take: 20
+      },
       tickets: true
     }
   });
 
   if (!order) notFound();
+  await requireViewerEventAccess(viewer, order.eventId);
 
   return (
     <section className="space-y-6">
@@ -36,8 +42,29 @@ export default async function OrderPreviewPage({ params }: Props) {
           <p><span className="font-semibold">Tipo:</span> {order.ticketType.name}</p>
           <p><span className="font-semibold">Comprador:</span> {order.buyerName}</p>
           <p><span className="font-semibold">Email:</span> {order.buyerEmail}</p>
+          <p><span className="font-semibold">Telefono:</span> {order.buyerPhone ?? "Sin telefono"}</p>
           <p><span className="font-semibold">Cantidad:</span> {order.quantity}</p>
           <p><span className="font-semibold">Total:</span> {centsToCurrency(order.totalCents)}</p>
+        </div>
+      </div>
+
+      <div className="panel p-6">
+        <h2 className="text-lg font-semibold text-slate-900">Envios de email</h2>
+        <div className="mt-4 space-y-2">
+          {order.emailDeliveries.length === 0 ? (
+            <p className="text-sm text-slate-500">Aun no hay envios registrados.</p>
+          ) : (
+            order.emailDeliveries.map((log) => (
+              <div key={log.id} className="rounded-lg border border-slate-200 p-3 text-sm">
+                <p className="font-semibold text-slate-800">
+                  {log.status === "SENT" ? "Enviado" : "Fallo"} · {new Date(log.createdAt).toLocaleString("es-AR")}
+                </p>
+                <p className="text-slate-600">Destino: {log.recipientEmail}</p>
+                <p className="text-slate-600">Origen: {log.trigger}</p>
+                {log.errorMessage ? <p className="text-red-700">Error: {log.errorMessage}</p> : null}
+              </div>
+            ))
+          )}
         </div>
       </div>
 

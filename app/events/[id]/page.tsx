@@ -3,14 +3,17 @@ import { requireAnyPageRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { centsToCurrency } from "@/lib/utils";
 import { CheckoutCard } from "@/components/checkout-card";
+import { requireViewerEventAccess } from "@/lib/event-scope";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
 export default async function EventDetailPage({ params }: Props) {
-  await requireAnyPageRole();
+  const viewer = await requireAnyPageRole();
   const { id } = await params;
+
+  await requireViewerEventAccess(viewer, id);
 
   const event = await db.event.findUnique({
     where: { id },

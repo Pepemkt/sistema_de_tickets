@@ -16,6 +16,13 @@ const schema = z.object({
   quantity: z.number().int().min(1).max(100),
   buyerName: z.string().min(2),
   buyerEmail: z.string().email(),
+  buyerPhone: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal(""))
+    .transform((value) => (value?.trim() ? value.trim() : undefined))
+    .refine((value) => !value || (value.length >= 6 && value.length <= 30 && /^[0-9+().\-\s]+$/.test(value)), "Telefono invalido"),
   couponCode: z.string().trim().max(40).optional()
 });
 
@@ -32,7 +39,9 @@ export async function POST(request: Request) {
           order: { id: string };
           buyerEmail: string;
           ticketType: { event: { name: string; slug: string }; name: string; priceCents: number };
-          quantity: number;
+          subtotalCents: number;
+          discountCents: number;
+          discountedSubtotalCents: number;
         }
       | null = null;
 
@@ -71,8 +80,11 @@ export async function POST(request: Request) {
                 ticketTypeId: data.ticketTypeId,
                 quantity: data.quantity,
                 totalCents: 0,
+                subtotalCents: validated.baseSubtotalCents,
+                discountCents: validated.discountCents,
                 buyerName: data.buyerName,
                 buyerEmail: validated.normalizedEmail,
+                buyerPhone: data.buyerPhone ?? null,
                 couponId: validated.coupon?.id ?? null
               },
               select: { id: true }
@@ -86,7 +98,9 @@ export async function POST(request: Request) {
                 name: validated.ticketType.name,
                 priceCents: validated.ticketType.priceCents
               },
-              quantity: data.quantity
+              subtotalCents: validated.baseSubtotalCents,
+              discountCents: validated.discountCents,
+              discountedSubtotalCents: validated.discountedSubtotalCents
             };
           },
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
@@ -104,9 +118,9 @@ export async function POST(request: Request) {
       throw new Error("No se pudo crear la orden");
     }
 
-    const { order, ticketType, buyerEmail, quantity } = transactionResult;
+    const { order, ticketType, buyerEmail, discountedSubtotalCents } = transactionResult;
     const feeItems = await resolveCheckoutFeeItems();
-    const amounts = calculateCheckoutAmounts(ticketType.priceCents * quantity, feeItems);
+    const amounts = calculateCheckoutAmounts(discountedSubtotalCents, feeItems);
 
     await db.order.update({
       where: { id: order.id },

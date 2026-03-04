@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { checkApiRole } from "@/lib/api-auth";
 import { db } from "@/lib/db";
+import { getScopedEventIdsForViewer, requireViewerEventAccess } from "@/lib/event-scope";
 
 export const runtime = "nodejs";
 
@@ -11,14 +12,19 @@ const createSchema = z.object({
   eventId: z.string().min(1),
   ticketTypeId: z.string().optional().nullable(),
   maxUses: z.number().int().min(1).max(100000),
-  expiresAt: z.string().datetime().optional().nullable()
+  expiresAt: z.string().datetime().optional().nullable(),
+  discountType: z.enum(["FIXED_PRICE", "FIXED_DISCOUNT", "PERCENT"]),
+  discountValue: z.number().int().min(0).max(100000000)
 });
 
 export async function GET() {
-  const auth = await checkApiRole(["ADMIN", "SELLER"]);
+  const auth = await checkApiRole(["ADMIN", "MANAGER", "SELLER"]);
   if (auth.response) return auth.response;
+  const viewer = auth.viewer!;
+  const scopedEventIds = await getScopedEventIdsForViewer(viewer);
 
   const coupons = await db.coupon.findMany({
+    where: scopedEventIds ? { eventId: { in: scopedEventIds } } : undefined,
     orderBy: { createdAt: "desc" },
     take: 300,
     include: {
@@ -35,11 +41,21 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await checkApiRole(["ADMIN", "SELLER"]);
+  const auth = await checkApiRole(["ADMIN", "MANAGER", "SELLER"]);
   if (auth.response) return auth.response;
+  const viewer = auth.viewer!;
 
   try {
     const data = createSchema.parse(await request.json());
+    await requireViewerEventAccess(viewer, data.eventId);
+
+    if (data.discountType === "PERCENT" && (data.discountValue < 1 || data.discountValue > 100)) {
+      throw new Error("El descuento porcentual debe estar entre 1 y 100");
+    }
+
+    if (data.discountType === "FIXED_DISCOUNT" && data.discountValue < 1) {
+      throw new Error("El descuento fijo debe ser mayor a 0");
+    }
 
     const code = data.code.trim().toUpperCase();
     const event = await db.event.findUnique({
@@ -70,7 +86,9 @@ export async function POST(request: Request) {
         maxUses: data.maxUses,
         usedCount: 0,
         isActive: true,
-        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null
+        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+        discountType: data.discountType,
+        discountValue: data.discountValue
       },
       include: {
         event: {

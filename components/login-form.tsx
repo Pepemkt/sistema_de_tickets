@@ -39,7 +39,7 @@ export function LoginForm() {
     }
 
     const next = resolveSafeNextPath(params.get("next"));
-    router.push(next ?? (data.user.role === "ADMIN" ? "/admin" : data.user.role === "SELLER" ? "/sales" : "/scan"));
+    router.push(next ?? (data.user.role === "ADMIN" || data.user.role === "MANAGER" ? "/admin" : data.user.role === "SELLER" ? "/sales" : "/scan"));
     router.refresh();
   }
 
