@@ -120,21 +120,58 @@ export async function resolveSmtpConfig() {
   const envHost = process.env.SMTP_HOST?.trim() ?? "";
   const envPortRaw = process.env.SMTP_PORT?.trim() ?? "";
   const envPort = envPortRaw ? Number(envPortRaw) : null;
+  const envPortValid = envPort && Number.isFinite(envPort) ? envPort : null;
   const envUser = process.env.SMTP_USER?.trim() ?? "";
   const envPass = process.env.SMTP_PASS?.trim() ?? "";
   const envFrom = process.env.SMTP_FROM?.trim() ?? "";
-
-  const host = envHost || config?.smtpHost || "";
-  const port = envPort && Number.isFinite(envPort) ? envPort : config?.smtpPort || 587;
-  const user = envUser || config?.smtpUser || "";
-  const pass = envPass || config?.smtpPass || "";
-  const from = envFrom || config?.smtpFrom || "";
   const envSecure =
     process.env.SMTP_SECURE === undefined
       ? null
       : ["1", "true", "yes", "on"].includes(process.env.SMTP_SECURE.toLowerCase());
-  const resolvedSecure = config?.smtpSecure ?? envSecure ?? port === 465;
-  const secure = port === 465 ? true : resolvedSecure;
+
+  const dbHost = config?.smtpHost?.trim() ?? "";
+  const dbUser = config?.smtpUser?.trim() ?? "";
+  const dbPass = config?.smtpPass?.trim() ?? "";
+  const dbFrom = config?.smtpFrom?.trim() ?? "";
+  const dbPort = config?.smtpPort ?? null;
+  const dbSecure = config?.smtpSecure ?? null;
+
+  const envConfigured = Boolean(envHost && envUser && envPass && envFrom);
+  const dbConfigured = Boolean(dbHost && dbUser && dbPass && dbFrom);
+
+  let host = "";
+  let port = 587;
+  let user = "";
+  let pass = "";
+  let from = "";
+  let secure = false;
+
+  if (envConfigured) {
+    host = envHost;
+    user = envUser;
+    pass = envPass;
+    from = envFrom;
+    port = envPortValid ?? (envSecure === true ? 465 : 587);
+    secure = envSecure ?? port === 465;
+  } else if (dbConfigured) {
+    host = dbHost;
+    user = dbUser;
+    pass = dbPass;
+    from = dbFrom;
+    port = dbPort ?? (dbSecure === true ? 465 : 587);
+    secure = dbSecure ?? port === 465;
+  } else {
+    host = envHost || dbHost || "";
+    user = envUser || dbUser || "";
+    pass = envPass || dbPass || "";
+    from = envFrom || dbFrom || "";
+    port = envPortValid ?? dbPort ?? 587;
+    secure = envSecure ?? dbSecure ?? port === 465;
+  }
+
+  if (port === 465) {
+    secure = true;
+  }
 
   return {
     host,

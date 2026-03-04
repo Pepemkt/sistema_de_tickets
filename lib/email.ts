@@ -18,6 +18,10 @@ function explainSmtpError(error: unknown, context: { host: string; port: number;
     return `Error de certificado TLS en SMTP (${context.host}:${context.port}). Revisa SSL/TLS del proveedor.`;
   }
 
+  if (lower.includes("wrong version number")) {
+    return `Handshake TLS invalido en SMTP (${context.host}:${context.port}, secure=${context.secure}). Revisa combinacion puerto/SSL (465->secure=true, 587->secure=false).`;
+  }
+
   if (lower.includes("authentication") || lower.includes("auth")) {
     return "Credenciales SMTP invalidas (usuario/password).";
   }
