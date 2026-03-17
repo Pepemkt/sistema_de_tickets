@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { sendOrderTicketsEmail } from "@/lib/email";
 import { getPayment } from "@/lib/mercadopago";
 import { generateTicketsForPaidOrder } from "@/lib/tickets";
+import { VisitTracker } from "@/components/visit-tracker";
 
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -152,6 +153,7 @@ export default async function SuccessPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-slate-200/50 px-4 py-8 sm:px-6">
+      <VisitTracker step="success" eventSlug={finalEventSlug} />
       <div className="mx-auto w-full max-w-3xl rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="p-8 sm:p-10">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requirePageRole } from "@/lib/auth";
+import { getOrderKindBadgeClass, getOrderKindLabel } from "@/lib/order-kind";
 import { centsToCurrency } from "@/lib/utils";
 import { requireViewerEventAccess } from "@/lib/event-scope";
 
@@ -32,12 +33,16 @@ export default async function OrderPreviewPage({ params }: Props) {
   return (
     <section className="space-y-6">
       <div className="panel p-6">
-        <h1 className="section-title">Preview de compra simulada</h1>
+        <h1 className="section-title">Detalle de orden</h1>
         <p className="muted mt-1">Orden {order.id}</p>
       </div>
 
       <div className="panel p-6">
         <div className="grid gap-3 md:grid-cols-2">
+          <p>
+            <span className="font-semibold">Canal:</span>{" "}
+            <span className={`badge ${getOrderKindBadgeClass(order.kind)}`}>{getOrderKindLabel(order.kind)}</span>
+          </p>
           <p><span className="font-semibold">Evento:</span> {order.event.name}</p>
           <p><span className="font-semibold">Tipo:</span> {order.ticketType.name}</p>
           <p><span className="font-semibold">Comprador:</span> {order.buyerName}</p>
@@ -73,6 +78,8 @@ export default async function OrderPreviewPage({ params }: Props) {
         <div className="mt-4 space-y-3">
           {order.tickets.map((ticket) => (
             <article key={ticket.id} className="rounded-xl border border-slate-200 p-4">
+              <p className="text-sm text-slate-700"><span className="font-semibold">Asistente:</span> {ticket.attendeeName}</p>
+              <p className="text-sm text-slate-700"><span className="font-semibold">Email:</span> {ticket.attendeeEmail}</p>
               <p className="text-sm text-slate-700"><span className="font-semibold">Codigo:</span> {ticket.code}</p>
               <p className="text-sm text-slate-700"><span className="font-semibold">QR payload:</span> {ticket.qrPayload}</p>
               <div className="mt-3 flex gap-2">

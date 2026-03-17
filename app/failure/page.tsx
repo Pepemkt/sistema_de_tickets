@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { VisitTracker } from "@/components/visit-tracker";
 
 type Props = {
   searchParams?: Promise<{ event?: string | string[] }>;
@@ -16,6 +17,7 @@ export default async function FailurePage({ searchParams }: Props) {
 
   return (
     <section className="panel p-7">
+      <VisitTracker step="failure" eventSlug={eventSlug} />
       <h1 className="section-title text-red-700">Pago rechazado</h1>
       <p className="mt-2 text-slate-700">No se pudo completar la operacion. Puedes volver al evento e intentarlo nuevamente.</p>
       {eventUrl ? (

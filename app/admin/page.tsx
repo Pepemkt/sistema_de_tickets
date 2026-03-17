@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { getOrderKindBadgeClass, getOrderKindLabel, ORDER_KIND } from "@/lib/order-kind";
 import { centsToCurrency } from "@/lib/utils";
 import { requirePageRole } from "@/lib/auth";
 import { getScopedEventIdsForViewer } from "@/lib/event-scope";
@@ -9,10 +10,13 @@ export default async function AdminDashboardPage() {
   const scopedEventIds = await getScopedEventIdsForViewer(viewer);
   const eventWhere = scopedEventIds ? { id: { in: scopedEventIds } } : undefined;
   const orderWhere = scopedEventIds ? { eventId: { in: scopedEventIds } } : undefined;
+  const commercialOrderWhere = { ...(orderWhere ?? {}), kind: { not: ORDER_KIND.INVITATION } };
 
   const [
     totalEvents,
     totalOrders,
+    invitationOrders,
+    commercialOrders,
     paidOrders,
     totalTickets,
     attendedTickets,
@@ -21,11 +25,13 @@ export default async function AdminDashboardPage() {
   ] = await Promise.all([
     db.event.count({ where: eventWhere }),
     db.order.count({ where: orderWhere }),
-    db.order.count({ where: { ...(orderWhere ?? {}), status: "PAID" } }),
+    db.order.count({ where: { ...(orderWhere ?? {}), kind: ORDER_KIND.INVITATION } }),
+    db.order.count({ where: commercialOrderWhere }),
+    db.order.count({ where: { ...commercialOrderWhere, status: "PAID" } }),
     db.ticket.count({ where: orderWhere ? { eventId: { in: scopedEventIds ?? [] } } : undefined }),
     db.ticket.count({ where: { ...(orderWhere ? { eventId: { in: scopedEventIds ?? [] } } : {}), NOT: { attendedAt: null } } }),
     db.order.aggregate({
-      where: { ...(orderWhere ?? {}), status: "PAID" },
+      where: { ...commercialOrderWhere, status: "PAID" },
       _sum: { totalCents: true }
     }),
     db.order.findMany({
@@ -58,11 +64,11 @@ export default async function AdminDashboardPage() {
 
   const totalRevenueCents = paidRevenue._sum.totalCents ?? 0;
   const attendanceRate = totalTickets > 0 ? Math.round((attendedTickets / totalTickets) * 100) : 0;
-  const paidRate = totalOrders > 0 ? Math.round((paidOrders / totalOrders) * 100) : 0;
+  const paidRate = commercialOrders > 0 ? Math.round((paidOrders / commercialOrders) * 100) : 0;
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         <article className="panel p-4">
           <p className="text-xs uppercase text-slate-500">Eventos</p>
           <p className="mt-1 text-2xl font-semibold text-slate-900">{totalEvents}</p>
@@ -72,9 +78,13 @@ export default async function AdminDashboardPage() {
           <p className="mt-1 text-2xl font-semibold text-slate-900">{totalOrders}</p>
         </article>
         <article className="panel p-4">
-          <p className="text-xs uppercase text-slate-500">Pagadas</p>
+          <p className="text-xs uppercase text-slate-500">Ventas pagadas</p>
           <p className="mt-1 text-2xl font-semibold text-blue-700">{paidOrders}</p>
           <p className="text-xs text-slate-500">{paidRate}% conversion</p>
+        </article>
+        <article className="panel p-4">
+          <p className="text-xs uppercase text-slate-500">Invitaciones</p>
+          <p className="mt-1 text-2xl font-semibold text-fuchsia-700">{invitationOrders}</p>
         </article>
         <article className="panel p-4">
           <p className="text-xs uppercase text-slate-500">Ingresos</p>
@@ -98,7 +108,7 @@ export default async function AdminDashboardPage() {
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Actividad de ordenes</h2>
-              <p className="text-sm text-slate-500">Ultimas compras y su estado.</p>
+              <p className="text-sm text-slate-500">Ultimas ordenes y su estado.</p>
             </div>
             <Link href="/admin/orders" className="btn-secondary">
               Ver todas
@@ -114,6 +124,7 @@ export default async function AdminDashboardPage() {
                   <tr className="border-b border-slate-200 text-left text-slate-500">
                     <th className="pb-2 pr-3">Evento</th>
                     <th className="pb-2 pr-3">Ticket</th>
+                    <th className="pb-2 pr-3">Canal</th>
                     <th className="pb-2 pr-3">Estado</th>
                     <th className="pb-2 pr-3">Total</th>
                     <th className="pb-2 pr-3">Fecha</th>
@@ -124,6 +135,9 @@ export default async function AdminDashboardPage() {
                     <tr key={order.id} className="border-b border-slate-100">
                       <td className="py-2.5 pr-3 text-slate-800">{order.event.name}</td>
                       <td className="py-2.5 pr-3 text-slate-600">{order.ticketType.name}</td>
+                      <td className="py-2.5 pr-3">
+                        <span className={`badge ${getOrderKindBadgeClass(order.kind)}`}>{getOrderKindLabel(order.kind)}</span>
+                      </td>
                       <td className="py-2.5 pr-3">
                         <span
                           className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${

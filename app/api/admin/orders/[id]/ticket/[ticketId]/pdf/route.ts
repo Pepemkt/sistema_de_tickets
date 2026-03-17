@@ -12,7 +12,7 @@ type Params = {
 export const runtime = "nodejs";
 
 export async function GET(_request: Request, { params }: Params) {
-  const auth = await checkApiRole(["ADMIN", "MANAGER"]);
+  const auth = await checkApiRole(["ADMIN", "MANAGER", "SELLER"]);
   if (auth.response) return auth.response;
   const viewer = auth.viewer!;
 

@@ -3,7 +3,6 @@ import { checkApiRole } from "@/lib/api-auth";
 import { defaultEmailTemplate, EMAIL_TEMPLATE_TOKENS } from "@/lib/email-template";
 import {
   buildEmailTemplateFromBuilder,
-  defaultEmailTemplateBuilder,
   normalizeEmailTemplateBuilder
 } from "@/lib/email-template-builder";
 import { getPlatformConfig, upsertEmailTemplateConfig } from "@/lib/platform-config";

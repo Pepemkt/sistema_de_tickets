@@ -1,13 +1,14 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/lib/db";
 import { checkApiRole } from "@/lib/api-auth";
+import { db } from "@/lib/db";
 import { generateTicketsForPaidOrder } from "@/lib/tickets";
 import { sendOrderTicketsEmail } from "@/lib/email";
 import { validateOnlinePurchase } from "@/lib/order-rules";
 import { resolveCheckoutFeeItems } from "@/lib/platform-config";
 import { calculateCheckoutAmounts } from "@/lib/checkout-fees";
+import { ORDER_KIND } from "@/lib/order-kind";
 
 export const runtime = "nodejs";
 
@@ -73,6 +74,7 @@ export async function POST(request: Request) {
         data: {
           eventId: data.eventId,
           ticketTypeId: data.ticketTypeId,
+          kind: ORDER_KIND.ONLINE,
           quantity: data.quantity,
           totalCents: amounts.totalCents,
           subtotalCents: validated.baseSubtotalCents,

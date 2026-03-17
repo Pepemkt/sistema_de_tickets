@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { PublicCheckout } from "@/components/public-checkout";
 import { resolveCheckoutFeeItems } from "@/lib/platform-config";
+import { VisitTracker } from "@/components/visit-tracker";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -28,6 +29,7 @@ export default async function PublicEventCheckoutPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-6 sm:px-6">
+      <VisitTracker step="checkout" eventSlug={slug} />
       <div className="mx-auto mb-6 flex w-full max-w-6xl items-center justify-between">
         <Link href={`/e/${event.slug}`} className="btn-secondary">
           Volver al evento
@@ -38,6 +40,7 @@ export default async function PublicEventCheckoutPage({ params }: Props) {
         {isActive ? (
           <PublicCheckout
             eventId={event.id}
+            eventSlug={event.slug}
             eventName={event.name}
             eventDateText={new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short" }).format(event.startsAt)}
             ticketTypes={visibleTicketTypes.map((type) => ({

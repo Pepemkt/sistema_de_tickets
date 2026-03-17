@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { centsToCurrency } from "@/lib/utils";
+import { VisitTracker } from "@/components/visit-tracker";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -29,6 +30,7 @@ export default async function PublicEventPage({ params }: Props) {
 
   return (
     <div className="bg-slate-100">
+      <VisitTracker step="event_page" eventSlug={event.slug} />
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="text-lg font-bold text-slate-900">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { VisitTracker } from "@/components/visit-tracker";
 
 type Props = {
   searchParams?: Promise<{ event?: string | string[] }>;
@@ -16,6 +17,7 @@ export default async function PendingPage({ searchParams }: Props) {
 
   return (
     <section className="panel p-7">
+      <VisitTracker step="pending" eventSlug={eventSlug} />
       <h1 className="section-title text-amber-700">Pago pendiente</h1>
       <p className="mt-2 text-slate-700">Tu pago esta en revision. Emitiremos las entradas cuando el cobro pase a estado aprobado.</p>
       {eventUrl ? (

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { getOrderKindBadgeClass, getOrderKindLabel, isCommercialOrderKind, ORDER_KIND } from "@/lib/order-kind";
 import { centsToCurrency } from "@/lib/utils";
 import { DeleteOrderButton } from "@/components/delete-order-button";
 import { requirePageRole } from "@/lib/auth";
@@ -29,21 +30,26 @@ export default async function AdminOrdersPage() {
     take: 200
   });
 
-  const paidOrders = orders.filter((order) => order.status === "PAID");
+  const paidOrders = orders.filter((order) => order.status === "PAID" && isCommercialOrderKind(order.kind));
+  const invitationOrders = orders.filter((order) => order.kind === ORDER_KIND.INVITATION);
   const pendingOrders = orders.filter((order) => order.status === "PENDING");
   const revenue = paidOrders.reduce((sum, order) => sum + order.totalCents, 0);
   const totalTickets = orders.reduce((sum, order) => sum + order.tickets.length, 0);
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 md:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-5">
         <article className="panel p-4">
           <p className="muted">Ordenes</p>
           <p className="mt-1 text-3xl font-semibold text-slate-900">{orders.length}</p>
         </article>
         <article className="panel p-4">
-          <p className="muted">Pagadas</p>
+          <p className="muted">Ventas pagadas</p>
           <p className="mt-1 text-3xl font-semibold text-blue-700">{paidOrders.length}</p>
+        </article>
+        <article className="panel p-4">
+          <p className="muted">Invitaciones</p>
+          <p className="mt-1 text-3xl font-semibold text-fuchsia-700">{invitationOrders.length}</p>
         </article>
         <article className="panel p-4">
           <p className="muted">Pendientes</p>
@@ -66,6 +72,7 @@ export default async function AdminOrdersPage() {
                 <th className="pb-2 pr-3">Fecha</th>
                 <th className="pb-2 pr-3">Evento</th>
                 <th className="pb-2 pr-3">Comprador</th>
+                <th className="pb-2 pr-3">Canal</th>
                 <th className="pb-2 pr-3">Tipo</th>
                 <th className="pb-2 pr-3">Cantidad</th>
                 <th className="pb-2 pr-3">Total</th>
@@ -90,6 +97,9 @@ export default async function AdminOrdersPage() {
                       <p className="text-slate-700">{order.buyerName}</p>
                       <p className="text-xs text-slate-500">{order.buyerEmail}</p>
                       <p className="text-xs text-slate-500">{order.buyerPhone ?? "Sin telefono"}</p>
+                    </td>
+                    <td className="py-3 pr-3">
+                      <span className={`badge ${getOrderKindBadgeClass(order.kind)}`}>{getOrderKindLabel(order.kind)}</span>
                     </td>
                     <td className="py-3 pr-3 text-slate-700">{order.ticketType.name}</td>
                     <td className="py-3 pr-3 text-slate-700">{order.quantity}</td>

@@ -13,6 +13,12 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum OrderKind {
+  ONLINE
+  MANUAL
+  INVITATION
+}
+
 enum UserRole {
   ADMIN
   MANAGER
@@ -87,6 +93,7 @@ model Order {
   id                String             @id @default(cuid())
   eventId           String
   ticketTypeId      String
+  kind              OrderKind          @default(ONLINE)
   quantity          Int
   totalCents        Int
   subtotalCents     Int                @default(0)
@@ -197,6 +204,21 @@ model EmailDeliveryLog {
 
   @@index([eventId, createdAt])
   @@index([orderId, createdAt])
+}
+
+model PageView {
+  id           String   @id @default(cuid())
+  sessionId    String   // Anonymous browser session ID (sessionStorage)
+  step         String   // Public journey step or checkout interaction
+  eventSlug    String   // Slug of the visited event
+  pathname     String?
+  referrerHost String?
+  deviceType   String?
+  createdAt    DateTime @default(now())
+
+  @@index([eventSlug, step, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([createdAt])
 }
 
 model PlatformConfig {

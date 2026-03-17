@@ -31,8 +31,10 @@ Regla dura:
 - Nunca sobrescribir `.env` si ya existe.
 - Nunca exponer `3000:3000` en produccion.
 - Ejecutar deploy solo con:
-  - `docker compose -f docker-compose.prod.yml up -d --build`
-  - `docker compose -f docker-compose.prod.yml exec app npx prisma db push`
+  - `docker compose -f docker-compose.prod.yml build app`
+  - `docker compose -f docker-compose.prod.yml up -d db`
+  - `docker compose -f docker-compose.prod.yml run --rm app npx prisma db push`
+  - `docker compose -f docker-compose.prod.yml up -d app`
 
 ## 4) Comandos prohibidos sin confirmacion explicita
 
@@ -76,8 +78,10 @@ Validar TODO lo siguiente; si algo falla, abortar deploy:
 - Se permite `cp .env.example .env` solo si `.env` no existe.
 - Completar secretos reales y dominio final HTTPS.
 - Ejecutar:
-  - `docker compose -f docker-compose.prod.yml up -d --build`
-  - `docker compose -f docker-compose.prod.yml exec app npx prisma db push`
+  - `docker compose -f docker-compose.prod.yml build app`
+  - `docker compose -f docker-compose.prod.yml up -d db`
+  - `docker compose -f docker-compose.prod.yml run --rm app npx prisma db push`
+  - `docker compose -f docker-compose.prod.yml up -d app`
 - `npm run db:seed` solo si se requiere alta inicial de usuarios.
 
 ### 7.2 Actualizaciones futuras
@@ -85,8 +89,10 @@ Validar TODO lo siguiente; si algo falla, abortar deploy:
 - Actualizar codigo sin comandos destructivos.
 - Verificar que `.env` exista y permanezca intacto.
 - Ejecutar:
-  - `docker compose -f docker-compose.prod.yml up -d --build`
-  - `docker compose -f docker-compose.prod.yml exec app npx prisma db push`
+  - `docker compose -f docker-compose.prod.yml build app`
+  - `docker compose -f docker-compose.prod.yml up -d db`
+  - `docker compose -f docker-compose.prod.yml run --rm app npx prisma db push`
+  - `docker compose -f docker-compose.prod.yml up -d app`
 - No ejecutar seed por defecto.
 
 ## 8) Prisma y seed
@@ -198,7 +204,9 @@ Validar TODO lo siguiente; si algo falla, abortar deploy:
 
 - En cada update productivo:
   - `git pull --ff-only`
-  - `docker compose -f docker-compose.prod.yml up -d --build`
-  - `docker compose -f docker-compose.prod.yml exec app npx prisma db push`
+  - `docker compose -f docker-compose.prod.yml build app`
+  - `docker compose -f docker-compose.prod.yml up -d db`
+  - `docker compose -f docker-compose.prod.yml run --rm app npx prisma db push`
+  - `docker compose -f docker-compose.prod.yml up -d app`
 - No ejecutar `npm run config:sync` como paso por defecto.
 - Solo ejecutar `npm run config:sync` con `SYNC_SENSITIVE_CONFIG=true` y aprobacion explicita.

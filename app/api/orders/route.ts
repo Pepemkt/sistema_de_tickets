@@ -6,6 +6,7 @@ import { createPreference } from "@/lib/mercadopago";
 import { validateOnlinePurchase } from "@/lib/order-rules";
 import { resolveAppUrl, resolveCheckoutFeeItems } from "@/lib/platform-config";
 import { calculateCheckoutAmounts } from "@/lib/checkout-fees";
+import { ORDER_KIND } from "@/lib/order-kind";
 
 export const runtime = "nodejs";
 const SERIALIZABLE_RETRY_ATTEMPTS = 3;
@@ -78,6 +79,7 @@ export async function POST(request: Request) {
               data: {
                 eventId: data.eventId,
                 ticketTypeId: data.ticketTypeId,
+                kind: ORDER_KIND.ONLINE,
                 quantity: data.quantity,
                 totalCents: 0,
                 subtotalCents: validated.baseSubtotalCents,

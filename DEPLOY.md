@@ -33,9 +33,10 @@ Levantar:
 
 ```bash
 docker network ls | grep proxy || docker network create proxy
-docker compose -f docker-compose.prod.yml up -d --build
-docker compose -f docker-compose.prod.yml exec app npx prisma db push
-docker compose -f docker-compose.prod.yml exec app npm run config:sync
+docker compose -f docker-compose.prod.yml build app
+docker compose -f docker-compose.prod.yml up -d db
+docker compose -f docker-compose.prod.yml run --rm app npx prisma db push
+docker compose -f docker-compose.prod.yml up -d app
 docker compose -f docker-compose.prod.yml exec app npm run db:seed
 ```
 
@@ -51,12 +52,12 @@ curl -I https://tickets.aiderbrand.com
 
 ```bash
 cd /opt/tickets-app
-git fetch --all
-git reset --hard origin/main
+git pull --ff-only
 test -f .env || { echo "Falta .env, abortando."; exit 1; }
-docker compose -f docker-compose.prod.yml up -d --build
-docker compose -f docker-compose.prod.yml exec app npx prisma db push
-docker compose -f docker-compose.prod.yml exec app npm run config:sync
+docker compose -f docker-compose.prod.yml build app
+docker compose -f docker-compose.prod.yml up -d db
+docker compose -f docker-compose.prod.yml run --rm app npx prisma db push
+docker compose -f docker-compose.prod.yml up -d app
 ```
 
 Si cambiaste datos de usuarios seed y quieres reaplicarlos:
@@ -69,10 +70,12 @@ Importante:
 
 - No ejecutar `cp .env.example .env` durante updates.
 - No ejecutar seed en cada deploy, salvo que quieras rotar/reaplicar usuarios iniciales.
+- No ejecutar `npm run config:sync` durante updates normales.
+- No usar `git reset --hard` para actualizar el VPS.
 
 ## Notas
 
 - Si en el futuro agregas migraciones Prisma (`prisma/migrations`), usa `prisma migrate deploy` en lugar de `db push`.
 - El contenedor de app no debe publicar `3000:3000` en producción; Traefik enruta internamente por red `proxy`.
 - En producción, las credenciales de Mercado Pago y SMTP guardadas desde `/admin/settings` se persisten en DB y tienen prioridad sobre `.env`.
-- `npm run config:sync` sincroniza en DB los valores existentes en `.env` (solo campos presentes; no borra campos en DB).
+- `npm run config:sync` es una operación manual para sincronizar secretos desde `.env`; no forma parte del flujo normal de deploy.

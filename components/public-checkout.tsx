@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { centsToCurrency } from "@/lib/utils";
 import { CheckoutFeeItem, calculateCheckoutAmounts } from "@/lib/checkout-fees";
+import { trackAnalyticsStep } from "@/lib/analytics-client";
 
 type TicketType = {
   id: string;
@@ -15,13 +16,14 @@ type TicketType = {
 
 type Props = {
   eventId: string;
+  eventSlug: string;
   eventName: string;
   eventDateText: string;
   ticketTypes: TicketType[];
   feeItems: CheckoutFeeItem[];
 };
 
-export function PublicCheckout({ eventId, eventName, eventDateText, ticketTypes, feeItems }: Props) {
+export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, ticketTypes, feeItems }: Props) {
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
   const [buyerPhone, setBuyerPhone] = useState("");
@@ -37,6 +39,7 @@ export function PublicCheckout({ eventId, eventName, eventDateText, ticketTypes,
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasTrackedCheckoutStarted = useRef(false);
 
   const selected = useMemo(() => ticketTypes.find((item) => item.id === ticketTypeId) ?? null, [ticketTypeId, ticketTypes]);
   const subtotal = (selected?.priceCents ?? 0) * quantity;
@@ -107,14 +110,24 @@ export function PublicCheckout({ eventId, eventName, eventDateText, ticketTypes,
   }, [buyerEmail, couponCode, eventId, fallbackAmounts.totalCents, quantity, selected, subtotal, ticketTypeId]);
 
   function changeQuantity(delta: number) {
+    trackCheckoutStarted();
     const next = Math.max(1, quantity + delta);
     if (selected?.maxPerOrder && next > selected.maxPerOrder) return;
     setQuantity(next);
   }
 
+  function trackCheckoutStarted() {
+    if (hasTrackedCheckoutStarted.current) return;
+    hasTrackedCheckoutStarted.current = true;
+    trackAnalyticsStep({ step: "checkout_started", eventSlug });
+  }
+
   async function createOrder() {
     setError(null);
     setLoading(true);
+    trackCheckoutStarted();
+    trackAnalyticsStep({ step: "checkout_submit", eventSlug, transport: "beacon" });
+
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -131,13 +144,16 @@ export function PublicCheckout({ eventId, eventName, eventDateText, ticketTypes,
       });
       const data = await res.json();
       if (!res.ok) {
+        trackAnalyticsStep({ step: "checkout_error", eventSlug });
         setError(data.error ?? "No se pudo crear la compra");
         return;
       }
       if (data.initPoint) {
+        trackAnalyticsStep({ step: "checkout_redirect", eventSlug, transport: "beacon" });
         window.location.href = data.initPoint;
       }
     } catch {
+      trackAnalyticsStep({ step: "checkout_error", eventSlug });
       setError("No se pudo conectar con el servidor");
     } finally {
       setLoading(false);
@@ -160,15 +176,40 @@ export function PublicCheckout({ eventId, eventName, eventDateText, ticketTypes,
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             <div>
               <label className="label">Nombre completo</label>
-              <input className="field" value={buyerName} onChange={(event) => setBuyerName(event.target.value)} required />
+              <input
+                className="field"
+                value={buyerName}
+                onChange={(event) => {
+                  trackCheckoutStarted();
+                  setBuyerName(event.target.value);
+                }}
+                required
+              />
             </div>
             <div>
               <label className="label">Email</label>
-              <input className="field" type="email" value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} required />
+              <input
+                className="field"
+                type="email"
+                value={buyerEmail}
+                onChange={(event) => {
+                  trackCheckoutStarted();
+                  setBuyerEmail(event.target.value);
+                }}
+                required
+              />
             </div>
             <div>
               <label className="label">Telefono</label>
-              <input className="field" value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} placeholder="+54 11 5555 5555" />
+              <input
+                className="field"
+                value={buyerPhone}
+                onChange={(event) => {
+                  trackCheckoutStarted();
+                  setBuyerPhone(event.target.value);
+                }}
+                placeholder="+54 11 5555 5555"
+              />
             </div>
           </div>
         </section>
@@ -182,7 +223,10 @@ export function PublicCheckout({ eventId, eventName, eventDateText, ticketTypes,
                 <button
                   key={type.id}
                   type="button"
-                  onClick={() => setTicketTypeId(type.id)}
+                  onClick={() => {
+                    trackCheckoutStarted();
+                    setTicketTypeId(type.id);
+                  }}
                   className={`w-full rounded-xl border p-4 text-left transition ${
                     active ? "border-blue-500 bg-blue-50" : "border-slate-200 bg-slate-50 hover:bg-slate-100"
                   }`}
@@ -232,7 +276,15 @@ export function PublicCheckout({ eventId, eventName, eventDateText, ticketTypes,
           )}
           <div className="pt-2">
             <label className="label">Codigo de cupon</label>
-            <input className="field" value={couponCode} onChange={(event) => setCouponCode(event.target.value.toUpperCase())} required={selected?.saleMode === "COUPON_ONLY"} />
+            <input
+              className="field"
+              value={couponCode}
+              onChange={(event) => {
+                trackCheckoutStarted();
+                setCouponCode(event.target.value.toUpperCase());
+              }}
+              required={selected?.saleMode === "COUPON_ONLY"}
+            />
             {quoteError && <p className="mt-1 text-xs text-red-700">{quoteError}</p>}
           </div>
           <div className="flex items-center justify-between border-t border-slate-200 pt-3">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { centsToCurrency } from "@/lib/utils";
 
 type ViewerRole = "ADMIN" | "MANAGER" | "SELLER" | "SCANNER";
@@ -14,6 +14,7 @@ type EventItem = {
   description: string | null;
   venue: string | null;
   startsAt: Date;
+  startsAtLabel: string;
   ticketTypes: Array<{
     id: string;
     name: string;
@@ -98,14 +99,6 @@ function EventActions({ viewerRole, eventId, publicUrl }: { viewerRole: ViewerRo
 
 export function EventsPanel({ viewerRole, appUrl, events }: Props) {
   const [mode, setMode] = useState<ViewMode>("cards");
-  const dateFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat("es-AR", {
-        dateStyle: "medium",
-        timeStyle: "short"
-      }),
-    []
-  );
 
   return (
     <div className="space-y-6">
@@ -161,7 +154,7 @@ export function EventsPanel({ viewerRole, appUrl, events }: Props) {
 
             return (
               <article key={event.id} className="panel p-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{dateFormatter.format(new Date(event.startsAt))}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{event.startsAtLabel}</p>
                 <h2 className="mt-1 text-xl font-semibold text-slate-900">{event.name}</h2>
                 <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Estado: {getStatusLabel(event.status)}</p>
                 <p className="mt-1 text-sm text-slate-600">{event.venue ?? "Lugar por confirmar"}</p>
@@ -205,7 +198,7 @@ export function EventsPanel({ viewerRole, appUrl, events }: Props) {
                         <p className="font-medium text-slate-900">{event.name}</p>
                         <p className="text-xs text-slate-500">/{event.slug}</p>
                       </td>
-                      <td className="px-3 py-3 text-slate-700">{dateFormatter.format(new Date(event.startsAt))}</td>
+                      <td className="px-3 py-3 text-slate-700">{event.startsAtLabel}</td>
                       <td className="px-3 py-3 text-slate-700">{event.venue ?? "-"}</td>
                       <td className="px-3 py-3 text-slate-700">{getStatusLabel(event.status)}</td>
                       <td className="px-3 py-3 font-medium text-slate-900">

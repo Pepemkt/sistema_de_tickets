@@ -120,12 +120,14 @@ Flujo recomendado documentado en:
 Resumen rapido:
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d --build
-docker compose -f docker-compose.prod.yml exec app npx prisma db push
-docker compose -f docker-compose.prod.yml exec app npm run config:sync
+docker compose -f docker-compose.prod.yml build app
+docker compose -f docker-compose.prod.yml up -d db
+docker compose -f docker-compose.prod.yml run --rm app npx prisma db push
+docker compose -f docker-compose.prod.yml up -d app
 ```
 
 `npm run db:seed` en producción es solo para alta/rotación de usuarios iniciales, no en cada deploy.
+`npm run config:sync` no se ejecuta en deploys normales porque puede tocar configuración sensible.
 
 Webhook Mercado Pago:
 
