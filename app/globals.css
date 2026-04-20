@@ -76,6 +76,26 @@
     @apply inline-flex cursor-pointer items-center justify-center rounded-md bg-danger-500 px-4 py-2 text-body-s font-semibold text-onaccent shadow-sm transition-all duration-base ease-tactile hover:bg-danger-700 active:translate-y-px active:shadow-[var(--shadow-inset)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus-danger)] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
+  /* Small / icon modifiers — used by chrome (topbar CTAs, LogoutButton iconOnly).
+     Pattern: tighter padding, caption type, rounded-sm (10px). Same hover/active/
+     focus/disabled semantics as the base primitive they modify. */
+
+  .btn-primary--sm {
+    @apply inline-flex cursor-pointer items-center justify-center rounded-sm bg-forest-600 px-3 py-1.5 text-caption font-semibold text-onprimary shadow-sm transition-all duration-base ease-tactile hover:bg-forest-700 hover:shadow-md active:translate-y-px active:shadow-[var(--shadow-inset)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secondary--sm {
+    @apply inline-flex cursor-pointer items-center justify-center rounded-sm border border-[color:var(--border-strong)] bg-surface px-3 py-1.5 text-caption font-medium text-primary transition-all duration-base ease-tactile hover:border-[color:var(--border-focus)] hover:bg-sunken active:shadow-[var(--shadow-inset)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-ghost--sm {
+    @apply inline-flex cursor-pointer items-center justify-center rounded-sm px-3 py-1.5 text-caption font-medium text-primary transition-colors duration-base ease-tactile hover:bg-sunken focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-ghost--icon {
+    @apply inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md p-0 text-primary transition-colors duration-base ease-tactile hover:bg-sunken focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
   /* TAGS & LABELS ------------------------------------------------------------ */
 
   .badge {

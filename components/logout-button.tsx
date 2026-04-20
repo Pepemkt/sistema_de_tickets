@@ -21,11 +21,7 @@ export function LogoutButton({ iconOnly = false }: LogoutButtonProps) {
   return (
     <button
       onClick={onLogout}
-      className={
-        iconOnly
-          ? "inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-          : "inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-      }
+      className={iconOnly ? "btn-ghost--icon" : "btn-ghost w-full"}
       disabled={loading}
       title="Cerrar sesion"
       aria-label="Cerrar sesion"
