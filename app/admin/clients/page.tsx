@@ -75,8 +75,8 @@ export default async function AdminClientsPage() {
       <section className="panel p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Merchants por cliente</h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <h1 className="text-title-m font-semibold tracking-tight text-primary">Merchants por cliente</h1>
+            <p className="mt-1 text-body-s text-secondary">
               ADMIN y MANAGER pueden operar el merchant por cliente. MANAGER solo visualiza la comision configurada.
             </p>
           </div>
@@ -90,7 +90,7 @@ export default async function AdminClientsPage() {
 
       {clients.length === 0 ? (
         <section className="panel p-8">
-          <p className="text-slate-600">No hay clientes visibles con eventos vinculados todavia.</p>
+          <p className="text-secondary">No hay clientes visibles con eventos vinculados todavia.</p>
         </section>
       ) : (
         <section className="grid gap-4 lg:grid-cols-2">
@@ -101,8 +101,8 @@ export default async function AdminClientsPage() {
               <article key={client.id} className="panel p-6">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-semibold text-slate-900">{client.name}</h2>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <h2 className="text-body-l font-semibold text-primary">{client.name}</h2>
+                    <p className="mt-1 text-body-s text-secondary">
                       {merchant ? `Merchant ${merchant.status === "ACTIVE" ? "activo" : "deshabilitado"}` : "Sin merchant configurado"}
                     </p>
                   </div>
@@ -117,13 +117,13 @@ export default async function AdminClientsPage() {
                 </div>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Eventos visibles</p>
-                    <p className="mt-1 text-2xl font-semibold text-slate-900">{client.events.length}</p>
+                  <div className="rounded-sm border border-soft bg-sunken p-3">
+                    <p className="text-overline text-secondary">Eventos visibles</p>
+                    <p className="mt-1 text-title-m font-semibold text-primary">{client.events.length}</p>
                   </div>
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Ultima actualizacion</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-900">
+                  <div className="rounded-sm border border-soft bg-sunken p-3">
+                    <p className="text-overline text-secondary">Ultima actualizacion</p>
+                    <p className="mt-1 text-body-s font-semibold text-primary">
                       {merchant?.updatedAt
                         ? new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(merchant.updatedAt)
                         : "Pendiente"}
@@ -133,12 +133,12 @@ export default async function AdminClientsPage() {
 
                 <div className="mt-4 space-y-2">
                   {client.events.slice(0, 3).map((event) => (
-                    <div key={event.id} className="rounded-xl border border-slate-200 px-3 py-2">
-                      <p className="text-sm font-medium text-slate-900">{event.name}</p>
-                      <p className="text-xs text-slate-500">{new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short" }).format(event.startsAt)}</p>
+                    <div key={event.id} className="rounded-sm border border-soft px-3 py-2">
+                      <p className="text-body-s font-medium text-primary">{event.name}</p>
+                      <p className="text-caption text-secondary">{new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short" }).format(event.startsAt)}</p>
                     </div>
                   ))}
-                  {client.events.length > 3 ? <p className="text-xs text-slate-500">+ {client.events.length - 3} eventos mas</p> : null}
+                  {client.events.length > 3 ? <p className="text-caption text-secondary">+ {client.events.length - 3} eventos mas</p> : null}
                 </div>
               </article>
             );

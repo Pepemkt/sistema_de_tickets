@@ -1,63 +1,63 @@
 export const ANALYTICS_STEP_META = {
   event_page: {
     label: "Pagina del evento",
-    color: "bg-blue-500",
+    color: "bg-forest-500",
     rank: 1,
     progressionRank: 1,
     terminal: false
   },
   checkout: {
     label: "Checkout",
-    color: "bg-indigo-500",
+    color: "bg-forest-500",
     rank: 2,
     progressionRank: 2,
     terminal: false
   },
   checkout_started: {
     label: "Comenzo el formulario",
-    color: "bg-violet-500",
+    color: "bg-forest-500",
     rank: 3,
     progressionRank: 3,
     terminal: false
   },
   checkout_submit: {
     label: "Intento pagar",
-    color: "bg-cyan-500",
+    color: "bg-forest-500",
     rank: 4,
     progressionRank: 4,
     terminal: false
   },
   checkout_redirect: {
     label: "Redireccion a Mercado Pago",
-    color: "bg-sky-500",
+    color: "bg-forest-500",
     rank: 5,
     progressionRank: 5,
     terminal: false
   },
   success: {
     label: "Pago exitoso",
-    color: "bg-emerald-500",
+    color: "bg-success-500",
     rank: 6,
     progressionRank: 5,
     terminal: true
   },
   pending: {
     label: "Pago pendiente",
-    color: "bg-amber-400",
+    color: "bg-warning-700",
     rank: 6,
     progressionRank: 5,
     terminal: true
   },
   failure: {
     label: "Pago rechazado",
-    color: "bg-rose-500",
+    color: "bg-danger-500",
     rank: 6,
     progressionRank: 5,
     terminal: true
   },
   checkout_error: {
     label: "Error creando la orden",
-    color: "bg-orange-500",
+    color: "bg-danger-500",
     rank: 4,
     progressionRank: 4,
     terminal: false
@@ -80,27 +80,27 @@ export const PRIMARY_FUNNEL_STEPS: AnalyticsStep[] = [
 export const SESSION_STATUS_META = {
   active: {
     label: "Activa",
-    badgeClass: "bg-blue-100 text-blue-700"
+    badgeClass: "bg-info-50 text-info-700"
   },
   abandoned: {
     label: "Abandono",
-    badgeClass: "bg-rose-100 text-rose-700"
+    badgeClass: "bg-danger-50 text-danger-700"
   },
   success: {
     label: "Convertida",
-    badgeClass: "bg-emerald-100 text-emerald-700"
+    badgeClass: "bg-success-50 text-success-700"
   },
   pending: {
     label: "Pendiente",
-    badgeClass: "bg-amber-100 text-amber-700"
+    badgeClass: "bg-warning-50 text-warning-700"
   },
   failure: {
     label: "Rechazada",
-    badgeClass: "bg-rose-100 text-rose-700"
+    badgeClass: "bg-danger-50 text-danger-700"
   },
   checkout_error: {
     label: "Error",
-    badgeClass: "bg-orange-100 text-orange-700"
+    badgeClass: "bg-danger-50 text-danger-700"
   }
 } as const;
 

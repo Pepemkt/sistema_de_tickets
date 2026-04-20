@@ -140,10 +140,10 @@ function getDeviceLabel(deviceType: string) {
 }
 
 function getDeviceBadgeClass(deviceType: string) {
-  if (deviceType === "desktop") return "bg-slate-100 text-slate-700";
-  if (deviceType === "mobile") return "bg-cyan-100 text-cyan-700";
-  if (deviceType === "tablet") return "bg-violet-100 text-violet-700";
-  return "bg-slate-100 text-slate-500";
+  if (deviceType === "desktop") return "bg-arena-200 text-primary";
+  if (deviceType === "mobile") return "bg-info-50 text-info-700";
+  if (deviceType === "tablet") return "bg-coral-50 text-coral-700";
+  return "bg-sunken text-secondary";
 }
 
 function formatDuration(durationMs: number) {
@@ -488,7 +488,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       <section className="panel p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Analytics UX</h1>
+            <h1 className="text-title-m font-semibold text-primary">Analytics UX</h1>
             <p className="muted mt-1">
               Recorridos anonimos por sesion y evento. Una visita queda marcada como abandono si no llega a un estado final y queda inactiva por mas de 30 minutos.
             </p>
@@ -535,35 +535,35 @@ export default async function AnalyticsPage({ searchParams }: Props) {
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <article className="panel p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Visitas</p>
-          <p className="mt-1 text-3xl font-semibold text-slate-900">{journeys.length.toLocaleString("es-AR")}</p>
-          <p className="mt-1 text-xs text-slate-500">{range.label}</p>
+          <p className="text-overline text-secondary">Visitas</p>
+          <p className="mt-1 text-title-l font-semibold text-primary">{journeys.length.toLocaleString("es-AR")}</p>
+          <p className="mt-1 text-caption text-secondary">{range.label}</p>
         </article>
         <article className="panel p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Llegan al checkout</p>
-          <p className="mt-1 text-3xl font-semibold text-slate-900">{checkoutReachedJourneys.toLocaleString("es-AR")}</p>
-          <p className="mt-1 text-xs text-slate-500">{checkoutRate}% del total</p>
+          <p className="text-overline text-secondary">Llegan al checkout</p>
+          <p className="mt-1 text-title-l font-semibold text-primary">{checkoutReachedJourneys.toLocaleString("es-AR")}</p>
+          <p className="mt-1 text-caption text-secondary">{checkoutRate}% del total</p>
         </article>
         <article className="panel p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Intentan pagar</p>
-          <p className="mt-1 text-3xl font-semibold text-slate-900">{submitJourneys.toLocaleString("es-AR")}</p>
-          <p className="mt-1 text-xs text-slate-500">{submitRate}% del total</p>
+          <p className="text-overline text-secondary">Intentan pagar</p>
+          <p className="mt-1 text-title-l font-semibold text-primary">{submitJourneys.toLocaleString("es-AR")}</p>
+          <p className="mt-1 text-caption text-secondary">{submitRate}% del total</p>
         </article>
         <article className="panel p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Convertidas</p>
-          <p className="mt-1 text-3xl font-semibold text-emerald-600">{convertedJourneys.toLocaleString("es-AR")}</p>
-          <p className="mt-1 text-xs text-slate-500">{conversionRate}% del total</p>
+          <p className="text-overline text-secondary">Convertidas</p>
+          <p className="mt-1 text-title-l font-semibold text-success-700">{convertedJourneys.toLocaleString("es-AR")}</p>
+          <p className="mt-1 text-caption text-secondary">{conversionRate}% del total</p>
         </article>
         <article className="panel p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Abandonos</p>
-          <p className="mt-1 text-3xl font-semibold text-rose-600">{abandonedJourneys.toLocaleString("es-AR")}</p>
-          <p className="mt-1 text-xs text-slate-500">{activeJourneys.toLocaleString("es-AR")} visitas activas</p>
+          <p className="text-overline text-secondary">Abandonos</p>
+          <p className="mt-1 text-title-l font-semibold text-danger-700">{abandonedJourneys.toLocaleString("es-AR")}</p>
+          <p className="mt-1 text-caption text-secondary">{activeJourneys.toLocaleString("es-AR")} visitas activas</p>
         </article>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <article className="panel p-5">
-          <h2 className="text-lg font-semibold text-slate-900">Embudo UX</h2>
+          <h2 className="text-body-l font-semibold text-primary">Embudo UX</h2>
           <p className="muted mt-1">Cuenta cuantas visitas alcanzan cada hito del flujo de compra.</p>
 
           {journeys.length === 0 ? (
@@ -572,15 +572,15 @@ export default async function AnalyticsPage({ searchParams }: Props) {
             <div className="mt-5 space-y-3">
               {funnelRows.map((row) => (
                 <div key={row.step} className="grid grid-cols-[170px_1fr_90px_90px] items-center gap-3">
-                  <span className="text-xs font-medium text-slate-600">{row.label}</span>
-                  <div className="h-4 overflow-hidden rounded-full bg-slate-100">
+                  <span className="text-caption font-medium text-secondary">{row.label}</span>
+                  <div className="h-4 overflow-hidden rounded-full bg-sunken">
                     <div
-                      className={`h-4 rounded-full transition-all ${row.color}`}
+                      className="h-4 rounded-full bg-forest-600 transition-all"
                       style={{ width: `${Math.max((row.sessions / maxFunnelSessions) * 100, row.sessions > 0 ? 2 : 0)}%` }}
                     />
                   </div>
-                  <span className="text-right text-sm font-semibold text-slate-800">{row.sessions.toLocaleString("es-AR")}</span>
-                  <span className="text-right text-xs text-slate-500">
+                  <span className="text-right text-body-s font-semibold text-primary">{row.sessions.toLocaleString("es-AR")}</span>
+                  <span className="text-right text-caption text-secondary">
                     {row.dropOffPct === null ? "entrada" : `-${row.dropOffPct}%`}
                   </span>
                 </div>
@@ -588,13 +588,13 @@ export default async function AnalyticsPage({ searchParams }: Props) {
             </div>
           )}
 
-          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
-            El embudo usa una visita unica por combinacion <span className="font-semibold text-slate-700">sesion + evento</span>, para no mezclar recorridos de distintos eventos en un mismo navegador.
+          <div className="mt-4 rounded-sm border border-soft bg-sunken p-3 text-caption text-secondary">
+            El embudo usa una visita unica por combinacion <span className="font-semibold text-primary">sesion + evento</span>, para no mezclar recorridos de distintos eventos en un mismo navegador.
           </div>
         </article>
 
         <article className="panel p-5">
-          <h2 className="text-lg font-semibold text-slate-900">Estado final de las visitas</h2>
+          <h2 className="text-body-l font-semibold text-primary">Estado final de las visitas</h2>
           <p className="muted mt-1">Distribucion del ultimo estado visto por cada sesion.</p>
 
           <div className="mt-5 space-y-3">
@@ -602,9 +602,9 @@ export default async function AnalyticsPage({ searchParams }: Props) {
               <p className="muted">Sin estados registrados todavia.</p>
             ) : (
               statusRows.map((row) => (
-                <div key={row.status} className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2.5">
+                <div key={row.status} className="flex items-center justify-between rounded-sm border border-soft px-3 py-2.5">
                   <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${row.badgeClass}`}>{row.label}</span>
-                  <span className="text-sm font-semibold text-slate-800">{row.count.toLocaleString("es-AR")}</span>
+                  <span className="text-body-s font-semibold text-primary">{row.count.toLocaleString("es-AR")}</span>
                 </div>
               ))
             )}
@@ -614,7 +614,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
 
       <section className="grid gap-6 xl:grid-cols-3">
         <article className="panel p-5 xl:col-span-1">
-          <h2 className="text-lg font-semibold text-slate-900">Puntos de fuga</h2>
+          <h2 className="text-body-l font-semibold text-primary">Puntos de fuga</h2>
           <p className="muted mt-1">En que paso terminan las visitas abandonadas.</p>
 
           <div className="mt-5 space-y-3">
@@ -622,12 +622,12 @@ export default async function AnalyticsPage({ searchParams }: Props) {
               <p className="muted">Todavia no se detectaron abandonos en este filtro.</p>
             ) : (
               abandonmentRows.map((row) => (
-                <div key={row.step} className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2.5">
+                <div key={row.step} className="flex items-center justify-between rounded-sm border border-soft px-3 py-2.5">
                   <div>
-                    <p className="text-sm font-semibold text-slate-800">{row.label}</p>
-                    <p className="text-xs text-slate-500">{row.pct}% del total</p>
+                    <p className="text-body-s font-semibold text-primary">{row.label}</p>
+                    <p className="text-caption text-secondary">{row.pct}% del total</p>
                   </div>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold text-white ${row.color}`}>{row.count}</span>
+                  <span className="rounded-full bg-danger-500 px-2 py-0.5 text-xs font-semibold text-onprimary">{row.count}</span>
                 </div>
               ))
             )}
@@ -635,7 +635,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
         </article>
 
         <article className="panel p-5 xl:col-span-1">
-          <h2 className="text-lg font-semibold text-slate-900">Dispositivos</h2>
+          <h2 className="text-body-l font-semibold text-primary">Dispositivos</h2>
           <p className="muted mt-1">Comparativo de volumen y conversion por tipo de dispositivo.</p>
 
           <div className="mt-5 space-y-3">
@@ -648,13 +648,13 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                     <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${getDeviceBadgeClass(row.deviceType)}`}>
                       {getDeviceLabel(row.deviceType)}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-caption text-secondary">
                       {row.sessions.toLocaleString("es-AR")} visitas · {row.conversionPct}% conv.
                     </span>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-3 overflow-hidden rounded-full bg-sunken">
                     <div
-                      className="h-3 rounded-full bg-slate-700"
+                      className="h-3 rounded-full bg-forest-600"
                       style={{ width: `${Math.max((row.sessions / maxDeviceSessions) * 100, row.sessions > 0 ? 2 : 0)}%` }}
                     />
                   </div>
@@ -665,7 +665,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
         </article>
 
         <article className="panel p-5 xl:col-span-1">
-          <h2 className="text-lg font-semibold text-slate-900">Origenes de trafico</h2>
+          <h2 className="text-body-l font-semibold text-primary">Origenes de trafico</h2>
           <p className="muted mt-1">Referrer host de entrada por sesion. El trafico sin referrer aparece como Directo.</p>
 
           <div className="mt-5 space-y-3">
@@ -675,15 +675,15 @@ export default async function AnalyticsPage({ searchParams }: Props) {
               referrerRows.map((row) => (
                 <div key={row.label} className="grid grid-cols-[1fr_80px] items-center gap-3">
                   <div>
-                    <p className="truncate text-sm font-medium text-slate-800">{row.label}</p>
-                    <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-slate-100">
+                    <p className="truncate text-body-s font-medium text-primary">{row.label}</p>
+                    <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-sunken">
                       <div
-                        className="h-2.5 rounded-full bg-blue-600"
+                        className="h-2.5 rounded-full bg-forest-600"
                         style={{ width: `${Math.max((row.count / maxReferrerSessions) * 100, row.count > 0 ? 2 : 0)}%` }}
                       />
                     </div>
                   </div>
-                  <span className="text-right text-sm font-semibold text-slate-800">{row.count.toLocaleString("es-AR")}</span>
+                  <span className="text-right text-body-s font-semibold text-primary">{row.count.toLocaleString("es-AR")}</span>
                 </div>
               ))
             )}
@@ -692,7 +692,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       </section>
 
       <section className="panel p-5">
-        <h2 className="text-lg font-semibold text-slate-900">Sesiones recientes</h2>
+        <h2 className="text-body-l font-semibold text-primary">Sesiones recientes</h2>
         <p className="muted mt-1">Ultimos recorridos capturados. Cada tarjeta representa una visita anonima a un evento.</p>
 
         {journeys.length === 0 ? (
@@ -703,11 +703,11 @@ export default async function AnalyticsPage({ searchParams }: Props) {
               const statusMeta = SESSION_STATUS_META[journey.status];
 
               return (
-                <article key={journey.key} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <article key={journey.key} className="rounded-md border border-soft bg-sunken p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">{formatAnalyticsSessionLabel(journey.sessionId)}</p>
-                      <h3 className="text-base font-semibold text-slate-900">{journey.eventName}</h3>
+                      <p className="text-overline text-secondary">{formatAnalyticsSessionLabel(journey.sessionId)}</p>
+                      <h3 className="text-base font-semibold text-primary">{journey.eventName}</h3>
                     </div>
                     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusMeta.badgeClass}`}>{statusMeta.label}</span>
                   </div>
@@ -716,41 +716,41 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                     <span className={`rounded-full px-2 py-0.5 font-semibold ${getDeviceBadgeClass(journey.deviceType)}`}>
                       {getDeviceLabel(journey.deviceType)}
                     </span>
-                    <span className="rounded-full bg-white px-2 py-0.5 font-medium text-slate-600">
+                    <span className="rounded-full bg-surface px-2 py-0.5 font-medium text-secondary">
                       {getReferrerLabel(journey.referrerHost, appHost)}
                     </span>
-                    {journey.landingPath ? <span className="rounded-full bg-white px-2 py-0.5 font-medium text-slate-600">Entro por {journey.landingPath}</span> : null}
+                    {journey.landingPath ? <span className="rounded-full bg-surface px-2 py-0.5 font-medium text-secondary">Entro por {journey.landingPath}</span> : null}
                   </div>
 
                   <div className="mt-4 flex flex-wrap gap-2">
                     {journey.timeline.map((step, index) => {
                       const stepMeta = getAnalyticsStepMeta(step);
                       return (
-                        <span key={`${journey.key}:${step}:${index}`} className={`rounded-full px-2 py-0.5 text-xs font-semibold text-white ${stepMeta.color}`}>
+                        <span key={`${journey.key}:${step}:${index}`} className={`rounded-full px-2 py-0.5 text-xs font-semibold text-onprimary ${stepMeta.color}`}>
                           {stepMeta.label}
                         </span>
                       );
                     })}
                   </div>
 
-                  <div className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                  <div className="mt-4 grid gap-2 text-body-s text-secondary sm:grid-cols-2">
                     <p>
-                      Inicio: <span className="font-semibold text-slate-800">{dateTimeFormatter.format(journey.firstSeen)}</span>
+                      Inicio: <span className="font-semibold text-primary">{dateTimeFormatter.format(journey.firstSeen)}</span>
                     </p>
                     <p>
-                      Ultima actividad: <span className="font-semibold text-slate-800">{dateTimeFormatter.format(journey.lastSeen)}</span>
+                      Ultima actividad: <span className="font-semibold text-primary">{dateTimeFormatter.format(journey.lastSeen)}</span>
                     </p>
                     <p>
-                      Duracion: <span className="font-semibold text-slate-800">{formatDuration(journey.durationMs)}</span>
+                      Duracion: <span className="font-semibold text-primary">{formatDuration(journey.durationMs)}</span>
                     </p>
                     <p>
-                      Ultimo paso: <span className="font-semibold text-slate-800">{getAnalyticsStepMeta(journey.lastStep).label}</span>
+                      Ultimo paso: <span className="font-semibold text-primary">{getAnalyticsStepMeta(journey.lastStep).label}</span>
                     </p>
                   </div>
 
                   {journey.lastPath ? (
-                    <p className="mt-3 text-xs text-slate-500">
-                      Ultima ruta vista: <span className="font-semibold text-slate-700">{journey.lastPath}</span>
+                    <p className="mt-3 text-caption text-secondary">
+                      Ultima ruta vista: <span className="font-semibold text-primary">{journey.lastPath}</span>
                     </p>
                   ) : null}
                 </article>
@@ -762,7 +762,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
         <article className="panel p-5">
-          <h2 className="text-lg font-semibold text-slate-900">Conversion por evento</h2>
+          <h2 className="text-body-l font-semibold text-primary">Conversion por evento</h2>
           <p className="muted mt-1">Comparativo rapido entre visitas, avance en checkout, conversion y abandono.</p>
 
           <div className="mt-4 space-y-4">
@@ -770,16 +770,16 @@ export default async function AnalyticsPage({ searchParams }: Props) {
               <p className="muted">No hay eventos dentro del filtro seleccionado.</p>
             ) : (
               eventJourneyRows.map((row) => (
-                <article key={row.slug} className="rounded-xl border border-slate-200 p-4">
+                <article key={row.slug} className="rounded-md border border-soft p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h3 className="text-base font-semibold text-slate-800">{row.name}</h3>
-                    <span className="text-sm font-semibold text-slate-600">{row.sessions.toLocaleString("es-AR")} visitas</span>
+                    <h3 className="text-base font-semibold text-primary">{row.name}</h3>
+                    <span className="text-body-s font-semibold text-secondary">{row.sessions.toLocaleString("es-AR")} visitas</span>
                   </div>
-                  <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-4">
-                    <p>Checkout: <span className="font-semibold text-slate-800">{row.checkoutRate}%</span></p>
-                    <p>Intento pago: <span className="font-semibold text-slate-800">{row.submit.toLocaleString("es-AR")}</span></p>
-                    <p>Conversion: <span className="font-semibold text-emerald-700">{row.conversionRate}%</span></p>
-                    <p>Abandono: <span className="font-semibold text-rose-700">{row.abandonmentRate}%</span></p>
+                  <div className="mt-3 grid gap-2 text-body-s text-secondary sm:grid-cols-4">
+                    <p>Checkout: <span className="font-semibold text-primary">{row.checkoutRate}%</span></p>
+                    <p>Intento pago: <span className="font-semibold text-primary">{row.submit.toLocaleString("es-AR")}</span></p>
+                    <p>Conversion: <span className="font-semibold text-success-700">{row.conversionRate}%</span></p>
+                    <p>Abandono: <span className="font-semibold text-danger-700">{row.abandonmentRate}%</span></p>
                   </div>
                 </article>
               ))
@@ -788,7 +788,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
         </article>
 
         <article className="panel p-5">
-          <h2 className="text-lg font-semibold text-slate-900">Ventas por dia</h2>
+          <h2 className="text-body-l font-semibold text-primary">Ventas por dia</h2>
           <p className="muted mt-1">Ingresos aprobados dentro del rango seleccionado.</p>
 
           <div className="mt-4 space-y-2">
@@ -797,11 +797,11 @@ export default async function AnalyticsPage({ searchParams }: Props) {
             ) : (
               salesByDay.map((day) => (
                 <div key={day.date} className="grid grid-cols-[110px_1fr_120px] items-center gap-3">
-                  <span className="text-xs text-slate-500">{day.date}</span>
-                  <div className="h-3 rounded-full bg-slate-200">
-                    <div className="h-3 rounded-full bg-blue-600" style={{ width: `${Math.max((day.total / maxDay) * 100, 2)}%` }} />
+                  <span className="text-caption text-secondary">{day.date}</span>
+                  <div className="h-3 rounded-full bg-sunken">
+                    <div className="h-3 rounded-full bg-forest-600" style={{ width: `${Math.max((day.total / maxDay) * 100, 2)}%` }} />
                   </div>
-                  <span className="text-right text-sm font-medium text-slate-700">{centsToCurrency(day.total)}</span>
+                  <span className="text-right text-body-s font-medium text-primary">{centsToCurrency(day.total)}</span>
                 </div>
               ))
             )}
@@ -810,7 +810,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       </section>
 
       <section className="panel p-5">
-        <h2 className="text-lg font-semibold text-slate-900">Rendimiento comercial</h2>
+        <h2 className="text-body-l font-semibold text-primary">Rendimiento comercial</h2>
         <p className="muted mt-1">Ingresos y tickets comerciales dentro del filtro actual. Las invitaciones quedan fuera de este bloque.</p>
 
         <div className="mt-4 space-y-4">
@@ -818,20 +818,20 @@ export default async function AnalyticsPage({ searchParams }: Props) {
             <p className="muted">No hay eventos para analizar comercialmente.</p>
           ) : (
             commercialRows.map((row) => (
-              <article key={row.id} className="rounded-xl border border-slate-200 p-4">
+              <article key={row.id} className="rounded-md border border-soft p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="text-base font-semibold text-slate-800">{row.name}</h3>
-                  <p className="text-sm font-semibold text-blue-700">{centsToCurrency(row.revenue)}</p>
+                  <h3 className="text-base font-semibold text-primary">{row.name}</h3>
+                  <p className="text-body-s font-semibold text-forest-700">{centsToCurrency(row.revenue)}</p>
                 </div>
 
-                <div className="mt-3 h-3 rounded-full bg-slate-200">
-                  <div className="h-3 rounded-full bg-blue-600" style={{ width: `${Math.max((row.revenue / maxRevenue) * 100, row.revenue > 0 ? 2 : 0)}%` }} />
+                <div className="mt-3 h-3 rounded-full bg-sunken">
+                  <div className="h-3 rounded-full bg-forest-600" style={{ width: `${Math.max((row.revenue / maxRevenue) * 100, row.revenue > 0 ? 2 : 0)}%` }} />
                 </div>
 
-                <div className="mt-3 grid gap-2 text-sm text-slate-600 md:grid-cols-3">
-                  <p>Tickets vendidos: <span className="font-semibold text-slate-800">{row.sold}</span></p>
-                  <p>Asistentes: <span className="font-semibold text-slate-800">{row.attended}</span></p>
-                  <p>Asistencia: <span className="font-semibold text-slate-800">{row.attendanceRate}%</span></p>
+                <div className="mt-3 grid gap-2 text-body-s text-secondary md:grid-cols-3">
+                  <p>Tickets vendidos: <span className="font-semibold text-primary">{row.sold}</span></p>
+                  <p>Asistentes: <span className="font-semibold text-primary">{row.attended}</span></p>
+                  <p>Asistencia: <span className="font-semibold text-primary">{row.attendanceRate}%</span></p>
                 </div>
               </article>
             ))

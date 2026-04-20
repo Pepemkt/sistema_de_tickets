@@ -41,34 +41,34 @@ export default async function AdminOrdersPage() {
       <section className="grid gap-4 md:grid-cols-5">
         <article className="panel p-4">
           <p className="muted">Ordenes</p>
-          <p className="mt-1 text-3xl font-semibold text-slate-900">{orders.length}</p>
+          <p className="mt-1 text-title-l font-semibold text-primary">{orders.length}</p>
         </article>
         <article className="panel p-4">
           <p className="muted">Ventas pagadas</p>
-          <p className="mt-1 text-3xl font-semibold text-blue-700">{paidOrders.length}</p>
+          <p className="mt-1 text-title-l font-semibold text-forest-700">{paidOrders.length}</p>
         </article>
         <article className="panel p-4">
           <p className="muted">Invitaciones</p>
-          <p className="mt-1 text-3xl font-semibold text-fuchsia-700">{invitationOrders.length}</p>
+          <p className="mt-1 text-title-l font-semibold text-coral-700">{invitationOrders.length}</p>
         </article>
         <article className="panel p-4">
           <p className="muted">Pendientes</p>
-          <p className="mt-1 text-3xl font-semibold text-amber-600">{pendingOrders.length}</p>
+          <p className="mt-1 text-title-l font-semibold text-warning-700">{pendingOrders.length}</p>
         </article>
         <article className="panel p-4">
           <p className="muted">Ingresos</p>
-          <p className="mt-1 text-3xl font-semibold text-slate-900">{centsToCurrency(revenue)}</p>
-          <p className="text-xs text-slate-500">Tickets emitidos: {totalTickets}</p>
+          <p className="mt-1 text-title-l font-semibold text-primary">{centsToCurrency(revenue)}</p>
+          <p className="text-caption text-secondary">Tickets emitidos: {totalTickets}</p>
         </article>
       </section>
 
       <section className="panel p-5">
-        <h2 className="text-lg font-semibold text-slate-900">Ultimas ordenes</h2>
+        <h2 className="text-body-l font-semibold text-primary">Ultimas ordenes</h2>
 
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-soft text-left text-secondary">
                 <th className="pb-2 pr-3">Fecha</th>
                 <th className="pb-2 pr-3">Evento</th>
                 <th className="pb-2 pr-3">Comprador</th>
@@ -105,7 +105,7 @@ export default async function AdminOrdersPage() {
                     <td className="py-3 pr-3 text-slate-700">{order.quantity}</td>
                     <td className="py-3 pr-3 text-slate-700">{centsToCurrency(order.totalCents)}</td>
                     <td className="py-3 pr-3">
-                      <span className={`badge ${order.status === "PAID" ? "border-blue-200 bg-blue-50 text-blue-700" : ""}`}>{order.status}</span>
+                      <span className={`badge ${order.status === "PAID" ? "border-info-500 bg-info-50 text-info-700" : ""}`}>{order.status}</span>
                     </td>
                     <td className="py-3 pr-3">
                       {order.tickets.length > 0 ? (
@@ -134,7 +134,7 @@ export default async function AdminOrdersPage() {
           </table>
         </div>
 
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-caption text-secondary">
           Solo se pueden eliminar ordenes sin tickets validados en acceso.
         </p>
       </section>

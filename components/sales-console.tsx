@@ -448,13 +448,13 @@ export function SalesConsole() {
         <p className="muted mt-1">Emite tickets pagos de forma manual con una experiencia de caja mas clara para el equipo.</p>
 
         {loading ? (
-          <p className="mt-5 text-sm text-slate-500">Cargando datos...</p>
+          <p className="mt-5 text-body-s text-secondary">Cargando datos...</p>
         ) : (
           <form onSubmit={onManualIssue} className="mt-5 grid gap-4 lg:grid-cols-[1fr_360px]">
             <div className="space-y-4">
-              <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <h3 className="text-base font-semibold text-slate-900">Informacion del cliente</h3>
-                <p className="mt-1 text-xs text-slate-500">Carga asistentes en formato Nombre,Email (uno por linea).</p>
+              <section className="rounded-md border border-soft bg-sunken p-4">
+                <h3 className="text-base font-semibold text-primary">Informacion del cliente</h3>
+                <p className="mt-1 text-caption text-secondary">Carga asistentes en formato Nombre,Email (uno por linea).</p>
                 <textarea
                   className="field mt-3 min-h-44 font-mono text-xs"
                   value={attendeesText}
@@ -464,8 +464,8 @@ export function SalesConsole() {
                 />
               </section>
 
-              <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <h3 className="text-base font-semibold text-slate-900">Seleccionar entradas</h3>
+              <section className="rounded-md border border-soft bg-sunken p-4">
+                <h3 className="text-base font-semibold text-primary">Seleccionar entradas</h3>
                 <div className="mt-3 grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="label">Evento</label>
@@ -492,36 +492,36 @@ export function SalesConsole() {
               </section>
             </div>
 
-            <aside className="rounded-2xl border border-slate-200 bg-white p-4">
-              <h3 className="text-base font-semibold text-slate-900">Resumen de orden</h3>
-              <p className="mt-1 text-xs text-slate-500">{selectedEvent?.name ?? "Sin evento seleccionado"}</p>
+            <aside className="rounded-md border border-soft bg-surface p-4">
+              <h3 className="text-base font-semibold text-primary">Resumen de orden</h3>
+              <p className="mt-1 text-caption text-secondary">{selectedEvent?.name ?? "Sin evento seleccionado"}</p>
 
-              <div className="mt-4 space-y-2 border-b border-slate-200 pb-3 text-sm">
+              <div className="mt-4 space-y-2 border-b border-soft pb-3 text-body-s">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-600">Ticket</span>
-                  <span className="font-medium text-slate-900">{selectedTicketType?.name ?? "-"}</span>
+                  <span className="text-secondary">Ticket</span>
+                  <span className="font-medium text-primary">{selectedTicketType?.name ?? "-"}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-600">Cantidad</span>
-                  <span className="font-medium text-slate-900">{attendeesPreview.length}</span>
+                  <span className="text-secondary">Cantidad</span>
+                  <span className="font-medium text-primary">{attendeesPreview.length}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-600">Precio unitario</span>
-                  <span className="font-medium text-slate-900">
+                  <span className="text-secondary">Precio unitario</span>
+                  <span className="font-medium text-primary">
                     {selectedTicketType ? centsToCurrency(selectedTicketType.priceCents) : "-"}
                   </span>
                 </div>
               </div>
 
               <div className="mt-3 flex items-center justify-between">
-                <p className="text-sm text-slate-600">Total</p>
-                <p className="text-2xl font-semibold text-blue-700">{centsToCurrency(previewTotalCents)}</p>
+                <p className="text-body-s text-secondary">Total</p>
+                <p className="text-title-m font-semibold text-forest-700">{centsToCurrency(previewTotalCents)}</p>
               </div>
 
               <button className="btn-primary mt-4 w-full" disabled={savingIssue || !eventId || !ticketTypeId}>
                 {savingIssue ? "Emitiendo..." : "Emitir y procesar venta"}
               </button>
-              <p className="mt-2 text-xs text-slate-500">Se crea una orden pagada manual y se emiten tickets para cada asistente.</p>
+              <p className="mt-2 text-caption text-secondary">Se crea una orden pagada manual y se emiten tickets para cada asistente.</p>
             </aside>
           </form>
         )}
@@ -532,14 +532,14 @@ export function SalesConsole() {
         <p className="muted mt-1">Emite tickets de invitacion con importe 0, envio por email y descarga operativa para el equipo.</p>
 
         {loading ? (
-          <p className="mt-5 text-sm text-slate-500">Cargando datos...</p>
+          <p className="mt-5 text-body-s text-secondary">Cargando datos...</p>
         ) : (
           <>
             <form onSubmit={onCreateInvitation} className="mt-5 grid gap-4 lg:grid-cols-[1fr_360px]">
               <div className="space-y-4">
-                <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <h3 className="text-base font-semibold text-slate-900">Invitados</h3>
-                  <p className="mt-1 text-xs text-slate-500">Carga invitados en formato Nombre,Email (uno por linea).</p>
+                <section className="rounded-md border border-soft bg-sunken p-4">
+                  <h3 className="text-base font-semibold text-primary">Invitados</h3>
+                  <p className="mt-1 text-caption text-secondary">Carga invitados en formato Nombre,Email (uno por linea).</p>
                   <textarea
                     className="field mt-3 min-h-44 font-mono text-xs"
                     value={inviteesText}
@@ -549,8 +549,8 @@ export function SalesConsole() {
                   />
                 </section>
 
-                <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <h3 className="text-base font-semibold text-slate-900">Evento y ticket</h3>
+                <section className="rounded-md border border-soft bg-sunken p-4">
+                  <h3 className="text-base font-semibold text-primary">Evento y ticket</h3>
                   <div className="mt-3 grid gap-4 md:grid-cols-2">
                     <div>
                       <label className="label">Evento</label>
@@ -577,83 +577,83 @@ export function SalesConsole() {
                 </section>
               </div>
 
-              <aside className="rounded-2xl border border-slate-200 bg-white p-4">
-                <h3 className="text-base font-semibold text-slate-900">Resumen de invitacion</h3>
-                <p className="mt-1 text-xs text-slate-500">{selectedInviteEvent?.name ?? "Sin evento seleccionado"}</p>
+              <aside className="rounded-md border border-soft bg-surface p-4">
+                <h3 className="text-base font-semibold text-primary">Resumen de invitacion</h3>
+                <p className="mt-1 text-caption text-secondary">{selectedInviteEvent?.name ?? "Sin evento seleccionado"}</p>
 
-                <div className="mt-4 space-y-2 border-b border-slate-200 pb-3 text-sm">
+                <div className="mt-4 space-y-2 border-b border-soft pb-3 text-body-s">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-600">Ticket</span>
-                    <span className="font-medium text-slate-900">{selectedInviteTicketType?.name ?? "-"}</span>
+                    <span className="text-secondary">Ticket</span>
+                    <span className="font-medium text-primary">{selectedInviteTicketType?.name ?? "-"}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-600">Cantidad</span>
-                    <span className="font-medium text-slate-900">{inviteesPreview.length}</span>
+                    <span className="text-secondary">Cantidad</span>
+                    <span className="font-medium text-primary">{inviteesPreview.length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-600">Valor de referencia</span>
-                    <span className="font-medium text-slate-900">
+                    <span className="text-secondary">Valor de referencia</span>
+                    <span className="font-medium text-primary">
                       {selectedInviteTicketType ? centsToCurrency(selectedInviteTicketType.priceCents) : "-"}
                     </span>
                   </div>
                 </div>
 
                 <div className="mt-3 flex items-center justify-between">
-                  <p className="text-sm text-slate-600">Total a cobrar</p>
-                  <p className="text-2xl font-semibold text-fuchsia-700">{centsToCurrency(0)}</p>
+                  <p className="text-body-s text-secondary">Total a cobrar</p>
+                  <p className="text-title-m font-semibold text-coral-700">{centsToCurrency(0)}</p>
                 </div>
-                <p className="mt-2 text-xs text-slate-500">Valor comercial de referencia: {centsToCurrency(invitationReferenceTotalCents)}</p>
+                <p className="mt-2 text-caption text-secondary">Valor comercial de referencia: {centsToCurrency(invitationReferenceTotalCents)}</p>
 
                 <button className="btn-primary mt-4 w-full" disabled={savingInvitation || !inviteEventId || !inviteTicketTypeId}>
                   {savingInvitation ? "Emitiendo invitaciones..." : "Emitir invitaciones"}
                 </button>
-                <p className="mt-2 text-xs text-slate-500">Se crea una orden tipo invitacion, con tickets validos para check-in y monto final cero.</p>
+                <p className="mt-2 text-caption text-secondary">Se crea una orden tipo invitacion, con tickets validos para check-in y monto final cero.</p>
               </aside>
             </form>
 
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="mt-6 rounded-md border border-soft bg-sunken p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900">Invitaciones recientes</h3>
-                  <p className="mt-1 text-xs text-slate-500">Revisa descargas y estado del email sin salir de la consola.</p>
+                  <h3 className="text-base font-semibold text-primary">Invitaciones recientes</h3>
+                  <p className="mt-1 text-caption text-secondary">Revisa descargas y estado del email sin salir de la consola.</p>
                 </div>
-                <p className="text-xs text-slate-500">{invitations.length} ordenes cargadas</p>
+                <p className="text-caption text-secondary">{invitations.length} ordenes cargadas</p>
               </div>
 
               <div className="mt-4 space-y-4">
                 {invitations.length === 0 ? (
-                  <p className="text-sm text-slate-500">Todavia no hay invitaciones emitidas.</p>
+                  <p className="text-body-s text-secondary">Todavia no hay invitaciones emitidas.</p>
                 ) : (
                   invitations.map((invitation) => (
                     <article
                       key={invitation.orderId}
-                      className={`rounded-2xl border p-4 ${
-                        invitation.orderId === latestInvitationOrderId ? "border-fuchsia-300 bg-fuchsia-50/40" : "border-slate-200 bg-white"
+                      className={`rounded-md border p-4 ${
+                        invitation.orderId === latestInvitationOrderId ? "border-coral-200 bg-coral-50/40" : "border-soft bg-surface"
                       }`}
                     >
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                          <h4 className="text-sm font-semibold text-slate-900">{invitation.eventName}</h4>
-                          <p className="text-xs text-slate-500">
+                          <h4 className="text-body-s font-semibold text-primary">{invitation.eventName}</h4>
+                          <p className="text-caption text-secondary">
                             {invitation.ticketTypeName} · {invitation.quantity} tickets · {new Date(invitation.createdAt).toLocaleString("es-AR")}
                           </p>
-                          <p className="text-xs text-slate-500">Orden {invitation.orderId} · {invitation.issuedBy}</p>
+                          <p className="text-caption text-secondary">Orden {invitation.orderId} · {invitation.issuedBy}</p>
                         </div>
-                        <span className="badge border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700">Invitacion</span>
+                        <span className="badge border-coral-200 bg-coral-50 text-coral-700">Invitacion</span>
                       </div>
 
                       <div className="mt-4 grid gap-3">
                         {invitation.tickets.map((ticket) => (
-                          <div key={ticket.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                          <div key={ticket.id} className="rounded-sm border border-soft bg-sunken px-3 py-3">
                             <div className="flex flex-wrap items-start justify-between gap-3">
                               <div>
-                                <p className="text-sm font-semibold text-slate-900">{ticket.attendeeName}</p>
-                                <p className="text-xs text-slate-500">{ticket.attendeeEmail}</p>
-                                <p className="text-xs text-slate-500">Codigo {ticket.code}</p>
+                                <p className="text-body-s font-semibold text-primary">{ticket.attendeeName}</p>
+                                <p className="text-caption text-secondary">{ticket.attendeeEmail}</p>
+                                <p className="text-caption text-secondary">Codigo {ticket.code}</p>
                               </div>
                               <div className="flex flex-wrap items-center gap-2">
                                 {ticket.emailStatus ? (
-                                  <span className={`badge ${ticket.emailStatus === "SENT" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
+                                  <span className={`badge ${ticket.emailStatus === "SENT" ? "border-success-500 bg-success-50 text-success-700" : "border-danger-500 bg-danger-50 text-danger-700"}`}>
                                     {ticket.emailStatus === "SENT" ? "Email enviado" : "Email fallido"}
                                   </span>
                                 ) : (
@@ -665,9 +665,9 @@ export function SalesConsole() {
                               </div>
                             </div>
                             {ticket.emailedAt ? (
-                              <p className="mt-2 text-xs text-slate-500">Ultimo intento: {new Date(ticket.emailedAt).toLocaleString("es-AR")}</p>
+                              <p className="mt-2 text-caption text-secondary">Ultimo intento: {new Date(ticket.emailedAt).toLocaleString("es-AR")}</p>
                             ) : null}
-                            {ticket.emailError ? <p className="mt-2 text-xs text-rose-700">Error: {ticket.emailError}</p> : null}
+                            {ticket.emailError ? <p className="mt-2 text-caption text-danger-700">Error: {ticket.emailError}</p> : null}
                           </div>
                         ))}
                       </div>
@@ -685,7 +685,7 @@ export function SalesConsole() {
         <p className="muted mt-1">Crea cupones para habilitar tickets `COUPON_ONLY` o campañas cerradas.</p>
 
         {loading ? (
-          <p className="mt-5 text-sm text-slate-500">Cargando datos...</p>
+          <p className="mt-5 text-body-s text-secondary">Cargando datos...</p>
         ) : (
           <>
             <form onSubmit={onCreateCoupon} className="mt-5 grid gap-4 md:grid-cols-2">
@@ -776,7 +776,7 @@ export function SalesConsole() {
             <div className="mt-6 overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-left text-slate-500">
+                  <tr className="border-b border-soft text-left text-secondary">
                     <th className="pb-2 pr-3">Codigo</th>
                     <th className="pb-2 pr-3">Evento / Ticket</th>
                     <th className="pb-2 pr-3">Uso</th>
@@ -810,7 +810,7 @@ export function SalesConsole() {
                         </td>
                         <td className="py-3 pr-3 text-slate-700">{coupon.expiresAt ? new Date(coupon.expiresAt).toLocaleString("es-AR") : "Sin vencimiento"}</td>
                         <td className="py-3 pr-3">
-                          <span className={`badge ${coupon.isActive ? "border-blue-200 bg-blue-50 text-blue-700" : ""}`}>{coupon.isActive ? "Activo" : "Inactivo"}</span>
+                          <span className={`badge ${coupon.isActive ? "border-info-500 bg-info-50 text-info-700" : ""}`}>{coupon.isActive ? "Activo" : "Inactivo"}</span>
                         </td>
                         <td className="py-3 pr-3">
                           <div className="flex flex-wrap gap-2">
@@ -832,7 +832,7 @@ export function SalesConsole() {
         )}
       </section>
 
-      {message && <p className="text-sm text-slate-600">{message}</p>}
+      {message && <p className="text-body-s text-secondary">{message}</p>}
     </div>
   );
 }

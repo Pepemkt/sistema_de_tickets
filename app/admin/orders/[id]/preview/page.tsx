@@ -54,19 +54,19 @@ export default async function OrderPreviewPage({ params }: Props) {
       </div>
 
       <div className="panel p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Envios de email</h2>
+        <h2 className="text-body-l font-semibold text-primary">Envios de email</h2>
         <div className="mt-4 space-y-2">
           {order.emailDeliveries.length === 0 ? (
-            <p className="text-sm text-slate-500">Aun no hay envios registrados.</p>
+            <p className="text-body-s text-secondary">Aun no hay envios registrados.</p>
           ) : (
             order.emailDeliveries.map((log) => (
-              <div key={log.id} className="rounded-lg border border-slate-200 p-3 text-sm">
-                <p className="font-semibold text-slate-800">
+              <div key={log.id} className="rounded-sm border border-soft p-3 text-body-s">
+                <p className="font-semibold text-primary">
                   {log.status === "SENT" ? "Enviado" : "Fallo"} · {new Date(log.createdAt).toLocaleString("es-AR")}
                 </p>
-                <p className="text-slate-600">Destino: {log.recipientEmail}</p>
-                <p className="text-slate-600">Origen: {log.trigger}</p>
-                {log.errorMessage ? <p className="text-red-700">Error: {log.errorMessage}</p> : null}
+                <p className="text-secondary">Destino: {log.recipientEmail}</p>
+                <p className="text-secondary">Origen: {log.trigger}</p>
+                {log.errorMessage ? <p className="text-danger-700">Error: {log.errorMessage}</p> : null}
               </div>
             ))
           )}
@@ -74,14 +74,14 @@ export default async function OrderPreviewPage({ params }: Props) {
       </div>
 
       <div className="panel p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Entradas emitidas</h2>
+        <h2 className="text-body-l font-semibold text-primary">Entradas emitidas</h2>
         <div className="mt-4 space-y-3">
           {order.tickets.map((ticket) => (
-            <article key={ticket.id} className="rounded-xl border border-slate-200 p-4">
-              <p className="text-sm text-slate-700"><span className="font-semibold">Asistente:</span> {ticket.attendeeName}</p>
-              <p className="text-sm text-slate-700"><span className="font-semibold">Email:</span> {ticket.attendeeEmail}</p>
-              <p className="text-sm text-slate-700"><span className="font-semibold">Codigo:</span> {ticket.code}</p>
-              <p className="text-sm text-slate-700"><span className="font-semibold">QR payload:</span> {ticket.qrPayload}</p>
+            <article key={ticket.id} className="rounded-md border border-soft p-4">
+              <p className="text-body-s text-primary"><span className="font-semibold">Asistente:</span> {ticket.attendeeName}</p>
+              <p className="text-body-s text-primary"><span className="font-semibold">Email:</span> {ticket.attendeeEmail}</p>
+              <p className="text-body-s text-primary"><span className="font-semibold">Codigo:</span> {ticket.code}</p>
+              <p className="text-body-s text-primary"><span className="font-semibold">QR payload:</span> {ticket.qrPayload}</p>
               <div className="mt-3 flex gap-2">
                 <Link className="btn-secondary" href={`/api/admin/orders/${order.id}/ticket/${ticket.id}/pdf`} target="_blank">
                   Ver PDF

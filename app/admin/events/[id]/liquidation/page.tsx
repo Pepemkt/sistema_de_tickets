@@ -7,6 +7,7 @@ import { buildLiquidationForEvent, type LiquidationDraft } from "@/lib/applicati
 import { commissionBpsToPercent } from "@/lib/platform-commission";
 import { centsToCurrency } from "@/lib/utils";
 import { LiquidationActions } from "@/components/liquidation-actions";
+import { SummaryBox } from "@/components/ui";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -74,10 +75,10 @@ const statusLabels: Record<LiquidationStatus, string> = {
 };
 
 const statusStyles: Record<LiquidationStatus, string> = {
-  DRAFT: "bg-amber-100 text-amber-700",
-  FINALIZED: "bg-blue-100 text-blue-700",
-  SETTLED: "bg-emerald-100 text-emerald-700",
-  CANCELLED: "bg-slate-200 text-slate-600"
+  DRAFT: "bg-warning-50 text-warning-700",
+  FINALIZED: "bg-info-50 text-info-700",
+  SETTLED: "bg-success-50 text-success-700",
+  CANCELLED: "bg-sunken text-primary border border-soft"
 };
 
 export default async function EventLiquidationPage({ params }: Props) {
@@ -132,20 +133,20 @@ export default async function EventLiquidationPage({ params }: Props) {
       <section className="panel p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-slate-500">Liquidaciones</p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{event.name}</h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="text-body-s font-medium text-secondary">Liquidaciones</p>
+            <h1 className="mt-1 text-title-m font-semibold tracking-tight text-primary">{event.name}</h1>
+            <p className="mt-1 text-body-s text-secondary">
               Comision configurada: {commissionPercent.toFixed(2).replace(/\.00$/, "")}% sobre ventas aprobadas DELEGATED.
             </p>
             {event.client ? (
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-body-s text-secondary">
                 Cliente:{" "}
-                <Link href={`/admin/clients/${event.client.id}/merchant`} className="font-medium text-blue-600 hover:underline">
+                <Link href={`/admin/clients/${event.client.id}/merchant`} className="font-medium text-forest-600 hover:underline">
                   {event.client.name}
                 </Link>
               </p>
             ) : (
-              <p className="mt-1 text-sm text-rose-600">Evento sin cliente delegado asociado.</p>
+              <p className="mt-1 text-body-s text-danger-700">Evento sin cliente delegado asociado.</p>
             )}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -162,13 +163,13 @@ export default async function EventLiquidationPage({ params }: Props) {
       </section>
 
       <section className="panel p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Preview de nueva liquidacion</h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <h2 className="text-body-l font-semibold text-primary">Preview de nueva liquidacion</h2>
+        <p className="mt-1 text-body-s text-secondary">
           Incluye solo ordenes PAID en modelo DELEGATED que no pertenecen a una liquidacion previa.
         </p>
 
         {draftError ? (
-          <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{draftError}</p>
+          <p className="mt-4 rounded-sm border border-danger-500 bg-danger-50 px-3 py-2 text-body-s text-danger-700">{draftError}</p>
         ) : draft ? (
           <>
             <div className="mt-4 grid gap-3 sm:grid-cols-4">
@@ -190,28 +191,28 @@ export default async function EventLiquidationPage({ params }: Props) {
       </section>
 
       <section className="panel p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Historial</h2>
+        <h2 className="text-body-l font-semibold text-primary">Historial</h2>
         {event.liquidations.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">Todavia no hay liquidaciones generadas para este evento.</p>
+          <p className="mt-3 text-body-s text-secondary">Todavia no hay liquidaciones generadas para este evento.</p>
         ) : (
           <div className="mt-4 space-y-3">
             {event.liquidations.map((liq) => (
-              <article key={liq.id} className="rounded-xl border border-slate-200 p-4">
+              <article key={liq.id} className="rounded-md border border-soft p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
                       <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${statusStyles[liq.status]}`}>
                         {statusLabels[liq.status]}
                       </span>
-                      <span className="text-xs text-slate-500">
+                      <span className="text-caption text-secondary">
                         {new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short" }).format(liq.createdAt)}
                       </span>
                     </div>
-                    <p className="mt-2 text-sm text-slate-600">
+                    <p className="mt-2 text-body-s text-secondary">
                       Comision snapshot: {(liq.commissionRateBpsSnapshot / 100).toFixed(2).replace(/\.00$/, "")}% · {liq.items.length} orden(es)
                     </p>
                     {liq.settledAt ? (
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-caption text-secondary">
                         Liquidada: {new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short" }).format(liq.settledAt)}
                       </p>
                     ) : null}
@@ -238,11 +239,3 @@ export default async function EventLiquidationPage({ params }: Props) {
   );
 }
 
-function SummaryBox({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
-    </div>
-  );
-}

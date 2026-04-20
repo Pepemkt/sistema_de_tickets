@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { getScopedEventIdsForViewer, requireViewerClientAccess } from "@/lib/event-scope";
 import { centsToCurrency } from "@/lib/utils";
 import { LiquidationActions } from "@/components/liquidation-actions";
+import { SummaryBox } from "@/components/ui";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -61,10 +62,10 @@ const statusLabels: Record<LiquidationStatus, string> = {
 };
 
 const statusStyles: Record<LiquidationStatus, string> = {
-  DRAFT: "bg-amber-100 text-amber-700",
-  FINALIZED: "bg-blue-100 text-blue-700",
-  SETTLED: "bg-emerald-100 text-emerald-700",
-  CANCELLED: "bg-slate-200 text-slate-600"
+  DRAFT: "bg-warning-50 text-warning-700",
+  FINALIZED: "bg-info-50 text-info-700",
+  SETTLED: "bg-success-50 text-success-700",
+  CANCELLED: "bg-sunken text-primary border border-soft"
 };
 
 export default async function ClientLiquidationsPage({ params }: Props) {
@@ -120,9 +121,9 @@ export default async function ClientLiquidationsPage({ params }: Props) {
       <section className="panel p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-slate-500">Liquidaciones</p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{client.name}</h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="text-body-s font-medium text-secondary">Liquidaciones</p>
+            <h1 className="mt-1 text-title-m font-semibold tracking-tight text-primary">{client.name}</h1>
+            <p className="mt-1 text-body-s text-secondary">
               Liquidaciones manuales por evento de este cliente. La comision aplicada es snapshot al momento de crear la liquidacion.
             </p>
           </div>
@@ -146,7 +147,7 @@ export default async function ClientLiquidationsPage({ params }: Props) {
 
       {client.liquidations.length === 0 ? (
         <section className="panel p-8">
-          <p className="text-slate-600">Este cliente todavia no tiene liquidaciones generadas.</p>
+          <p className="text-secondary">Este cliente todavia no tiene liquidaciones generadas.</p>
         </section>
       ) : (
         <section className="space-y-3">
@@ -159,19 +160,19 @@ export default async function ClientLiquidationsPage({ params }: Props) {
                       {statusLabels[liq.status]}
                     </span>
                     {liq.event ? (
-                      <Link href={`/admin/events/${liq.event.id}/liquidation`} className="text-sm font-medium text-slate-900 hover:underline">
+                      <Link href={`/admin/events/${liq.event.id}/liquidation`} className="text-body-s font-medium text-primary hover:underline">
                         {liq.event.name}
                       </Link>
                     ) : null}
-                    <span className="text-xs text-slate-500">
+                    <span className="text-caption text-secondary">
                       {new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short" }).format(liq.createdAt)}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-slate-600">
+                  <p className="mt-2 text-body-s text-secondary">
                     Comision snapshot: {(liq.commissionRateBpsSnapshot / 100).toFixed(2).replace(/\.00$/, "")}%
                   </p>
                   {liq.settledAt ? (
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-caption text-secondary">
                       Liquidada: {new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short" }).format(liq.settledAt)}
                     </p>
                   ) : null}
@@ -197,11 +198,3 @@ export default async function ClientLiquidationsPage({ params }: Props) {
   );
 }
 
-function SummaryBox({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
-    </div>
-  );
-}
