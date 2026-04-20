@@ -437,21 +437,21 @@ export default function AdminSettingsPage() {
         <p className="muted mt-1">Gestiona token y webhook secret desde admin.</p>
 
         {loading ? (
-          <p className="mt-6 text-sm text-slate-500">Cargando configuracion...</p>
+          <p className="mt-6 text-body-s text-secondary">Cargando configuracion...</p>
         ) : (
           <>
             <div className="mt-5 grid gap-3 md:grid-cols-3">
-              <article className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm text-slate-500">Access token</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{mpState.hasAccessToken ? "Configurado" : "No configurado"}</p>
+              <article className="rounded-sm border border-soft bg-sunken p-3">
+                <p className="text-body-s text-secondary">Access token</p>
+                <p className="mt-1 text-body-s font-semibold text-primary">{mpState.hasAccessToken ? "Configurado" : "No configurado"}</p>
               </article>
-              <article className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm text-slate-500">Webhook secret</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{mpState.hasWebhookSecret ? "Configurado" : "No configurado"}</p>
+              <article className="rounded-sm border border-soft bg-sunken p-3">
+                <p className="text-body-s text-secondary">Webhook secret</p>
+                <p className="mt-1 text-body-s font-semibold text-primary">{mpState.hasWebhookSecret ? "Configurado" : "No configurado"}</p>
               </article>
-              <article className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm text-slate-500">Ultima actualizacion</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">
+              <article className="rounded-sm border border-soft bg-sunken p-3">
+                <p className="text-body-s text-secondary">Ultima actualizacion</p>
+                <p className="mt-1 text-body-s font-semibold text-primary">
                   {mpState.updatedAt ? new Date(mpState.updatedAt).toLocaleString("es-AR") : "Sin cambios"}
                 </p>
               </article>
@@ -461,7 +461,7 @@ export default function AdminSettingsPage() {
               <div>
                 <label className="label">Nuevo Access Token</label>
                 <input className="field" type="password" value={accessToken} onChange={(event) => setAccessToken(event.target.value)} placeholder="APP_USR-..." />
-                <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                <label className="mt-2 flex items-center gap-2 text-body-s text-secondary">
                   <input type="checkbox" checked={clearAccessToken} onChange={(event) => setClearAccessToken(event.target.checked)} />
                   Limpiar access token actual
                 </label>
@@ -470,7 +470,7 @@ export default function AdminSettingsPage() {
               <div>
                 <label className="label">Nuevo Webhook Secret</label>
                 <input className="field" type="password" value={webhookSecret} onChange={(event) => setWebhookSecret(event.target.value)} placeholder="secret webhook" />
-                <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                <label className="mt-2 flex items-center gap-2 text-body-s text-secondary">
                   <input type="checkbox" checked={clearWebhookSecret} onChange={(event) => setClearWebhookSecret(event.target.checked)} />
                   Limpiar webhook secret actual
                 </label>
@@ -487,7 +487,7 @@ export default function AdminSettingsPage() {
         <p className="muted mt-1">Cambia el logo que aparece a la izquierda de Aiderbrand en la sidebar.</p>
 
         {loading ? (
-          <p className="mt-6 text-sm text-slate-500">Cargando configuracion...</p>
+          <p className="mt-6 text-body-s text-secondary">Cargando configuracion...</p>
         ) : (
           <form onSubmit={onSubmitBranding} className="mt-6 space-y-4">
             <div>
@@ -521,9 +521,9 @@ export default function AdminSettingsPage() {
 
             {brandingState.sidebarLogoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={brandingState.sidebarLogoUrl} alt="Logo lateral actual" className="h-12 w-12 rounded-lg border border-slate-200 object-cover" />
+              <img src={brandingState.sidebarLogoUrl} alt="Logo lateral actual" className="h-12 w-12 rounded-sm border border-soft object-cover" />
             ) : (
-              <p className="text-sm text-slate-500">Sin logo personalizado (se usa logo por defecto).</p>
+              <p className="text-body-s text-secondary">Sin logo personalizado (se usa logo por defecto).</p>
             )}
           </form>
         )}
@@ -534,25 +534,25 @@ export default function AdminSettingsPage() {
         <p className="muted mt-1">Configura envio de tickets por email desde la interfaz.</p>
 
         {loading ? (
-          <p className="mt-6 text-sm text-slate-500">Cargando configuracion...</p>
+          <p className="mt-6 text-body-s text-secondary">Cargando configuracion...</p>
         ) : (
           <>
             <div className="mt-5 grid gap-3 md:grid-cols-4">
-              <article className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm text-slate-500">Estado</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{smtpState.configured ? "Configurado" : "Incompleto"}</p>
+              <article className="rounded-sm border border-soft bg-sunken p-3">
+                <p className="text-body-s text-secondary">Estado</p>
+                <p className="mt-1 text-body-s font-semibold text-primary">{smtpState.configured ? "Configurado" : "Incompleto"}</p>
               </article>
-              <article className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm text-slate-500">Servidor</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{smtpState.host || "-"}</p>
+              <article className="rounded-sm border border-soft bg-sunken p-3">
+                <p className="text-body-s text-secondary">Servidor</p>
+                <p className="mt-1 text-body-s font-semibold text-primary">{smtpState.host || "-"}</p>
               </article>
-              <article className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm text-slate-500">Puerto</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{smtpState.port || "-"}</p>
+              <article className="rounded-sm border border-soft bg-sunken p-3">
+                <p className="text-body-s text-secondary">Puerto</p>
+                <p className="mt-1 text-body-s font-semibold text-primary">{smtpState.port || "-"}</p>
               </article>
-              <article className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm text-slate-500">Ultima actualizacion</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{smtpState.updatedAt ? new Date(smtpState.updatedAt).toLocaleString("es-AR") : "Sin cambios"}</p>
+              <article className="rounded-sm border border-soft bg-sunken p-3">
+                <p className="text-body-s text-secondary">Ultima actualizacion</p>
+                <p className="mt-1 text-body-s font-semibold text-primary">{smtpState.updatedAt ? new Date(smtpState.updatedAt).toLocaleString("es-AR") : "Sin cambios"}</p>
               </article>
             </div>
 
@@ -575,7 +575,7 @@ export default function AdminSettingsPage() {
               <div>
                 <label className="label">SMTP password</label>
                 <input className="field" type="password" value={smtpPass} onChange={(event) => setSmtpPass(event.target.value)} placeholder={smtpState.hasPassword ? "******** (dejar vacio para conservar)" : "Password SMTP"} />
-                <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                <label className="mt-2 flex items-center gap-2 text-body-s text-secondary">
                   <input type="checkbox" checked={clearSmtpPassword} onChange={(event) => setClearSmtpPassword(event.target.checked)} />
                   Limpiar password actual
                 </label>
@@ -587,7 +587,7 @@ export default function AdminSettingsPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className="flex items-center gap-2 text-body-s text-primary">
                   <input type="checkbox" checked={smtpSecure} onChange={(event) => setSmtpSecure(event.target.checked)} />
                   Usar conexion segura (SSL/TLS)
                 </label>
@@ -606,16 +606,16 @@ export default function AdminSettingsPage() {
         <p className="muted mt-1">Define recargos configurables por item (monto fijo o porcentaje). Si no hay items activos, no se agrega ningun recargo.</p>
 
         {loading ? (
-          <p className="mt-6 text-sm text-slate-500">Cargando configuracion...</p>
+          <p className="mt-6 text-body-s text-secondary">Cargando configuracion...</p>
         ) : (
           <form onSubmit={onSubmitCheckoutFees} className="mt-6 space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+            <div className="rounded-sm border border-soft bg-sunken p-3 text-body-s text-secondary">
               Ultima actualizacion: {checkoutFeesUpdatedAt ? new Date(checkoutFeesUpdatedAt).toLocaleString("es-AR") : "Sin cambios"}
             </div>
 
             <div className="space-y-3">
               {checkoutFeeItems.map((item) => (
-                <div key={item.id} className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-12">
+                <div key={item.id} className="grid gap-3 rounded-sm border border-soft p-3 md:grid-cols-12">
                   <div className="md:col-span-4">
                     <label className="label">Nombre</label>
                     <input className="field" value={item.name} onChange={(event) => updateCheckoutFeeItem(item.id, "name", event.target.value)} required />
@@ -641,7 +641,7 @@ export default function AdminSettingsPage() {
                   </div>
                   <div className="md:col-span-2">
                     <label className="label">Activo</label>
-                    <label className="mt-2 flex items-center gap-2 text-sm text-slate-700">
+                    <label className="mt-2 flex items-center gap-2 text-body-s text-primary">
                       <input type="checkbox" checked={item.enabled} onChange={(event) => updateCheckoutFeeItem(item.id, "enabled", event.target.checked)} />
                       Habilitado
                     </label>
@@ -672,19 +672,19 @@ export default function AdminSettingsPage() {
         <p className="muted mt-1">No necesitas HTML. Edita los textos y mantenemos el diseño profesional base.</p>
 
         {loading ? (
-          <p className="mt-6 text-sm text-slate-500">Cargando plantilla...</p>
+          <p className="mt-6 text-body-s text-secondary">Cargando plantilla...</p>
         ) : (
           <>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
-              <article className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm text-slate-500">Variables disponibles</p>
-                <p className="mt-2 text-sm font-medium text-slate-700">
+              <article className="rounded-sm border border-soft bg-sunken p-3">
+                <p className="text-body-s text-secondary">Variables disponibles</p>
+                <p className="mt-2 text-body-s font-medium text-primary">
                   {emailTemplateState.tokens.map((token) => `{{${token}}}`).join(" · ")}
                 </p>
               </article>
-              <article className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm text-slate-500">Ultima actualizacion</p>
-                <p className="mt-2 text-sm font-semibold text-slate-800">
+              <article className="rounded-sm border border-soft bg-sunken p-3">
+                <p className="text-body-s text-secondary">Ultima actualizacion</p>
+                <p className="mt-2 text-body-s font-semibold text-primary">
                   {emailTemplateState.updatedAt ? new Date(emailTemplateState.updatedAt).toLocaleString("es-AR") : "Sin cambios"}
                 </p>
               </article>
@@ -776,13 +776,13 @@ export default function AdminSettingsPage() {
             </form>
 
             <div className="mt-8 space-y-3">
-              <h3 className="text-lg font-semibold text-slate-900">Preview</h3>
-              <p className="text-sm text-slate-600">
-                Asunto: <span className="font-semibold text-slate-800">{previewSubject}</span>
+              <h3 className="text-body-l font-semibold text-primary">Preview</h3>
+              <p className="text-body-s text-secondary">
+                Asunto: <span className="font-semibold text-primary">{previewSubject}</span>
               </p>
               <iframe
                 title="Preview email tickets"
-                className="h-[560px] w-full rounded-xl border border-slate-200 bg-white"
+                className="h-[560px] w-full rounded-md border border-soft bg-surface"
                 sandbox=""
                 srcDoc={previewHtml}
               />
@@ -791,7 +791,7 @@ export default function AdminSettingsPage() {
         )}
       </section>
 
-      {message && <p className="text-sm text-slate-600">{message}</p>}
+      {message && <p className="text-body-s text-secondary">{message}</p>}
     </div>
   );
 }

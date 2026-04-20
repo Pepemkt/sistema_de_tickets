@@ -93,15 +93,15 @@ export function LiquidationActions(props: Props) {
         >
           {busy ? "Creando..." : "Crear liquidacion (DRAFT)"}
         </button>
-        {props.disabled && props.disabledReason ? <p className="text-xs text-slate-500">{props.disabledReason}</p> : null}
-        {error ? <p className="text-xs text-rose-600">{error}</p> : null}
+        {props.disabled && props.disabledReason ? <p className="text-caption text-secondary">{props.disabledReason}</p> : null}
+        {error ? <p className="text-caption text-danger-700">{error}</p> : null}
       </div>
     );
   }
 
   const nextStates = allowed[props.current];
   if (nextStates.length === 0) {
-    return <p className="text-xs text-slate-500">Sin transiciones disponibles</p>;
+    return <p className="text-caption text-secondary">Sin transiciones disponibles</p>;
   }
 
   return (
@@ -117,8 +117,8 @@ export function LiquidationActions(props: Props) {
               disabled={busy || blocked}
               className={
                 state === "CANCELLED"
-                  ? "rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-60"
-                  : "rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                  ? "rounded-sm border border-danger-500 bg-surface px-3 py-1.5 text-caption font-semibold text-danger-700 transition-colors duration-base ease-tactile hover:bg-danger-50 focus-visible:outline-none focus-visible:shadow-focus disabled:opacity-60"
+                  : "rounded-sm bg-forest-600 px-3 py-1.5 text-caption font-semibold text-onprimary transition-colors duration-base ease-tactile hover:bg-forest-700 focus-visible:outline-none focus-visible:shadow-focus disabled:opacity-60"
               }
               title={blocked ? "Solo ADMIN" : undefined}
             >
@@ -127,7 +127,7 @@ export function LiquidationActions(props: Props) {
           );
         })}
       </div>
-      {error ? <p className="text-xs text-rose-600">{error}</p> : null}
+      {error ? <p className="text-caption text-danger-700">{error}</p> : null}
     </div>
   );
 }

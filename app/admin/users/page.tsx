@@ -184,7 +184,7 @@ export default function AdminUsersPage() {
                 ))}
               </select>
             ) : (
-              <p className="mt-2 text-xs text-slate-500">ADMIN no requiere asignacion: tiene acceso global.</p>
+              <p className="mt-2 text-caption text-secondary">ADMIN no requiere asignacion: tiene acceso global.</p>
             )}
           </div>
           <button className="btn-primary" disabled={saving}>
@@ -194,7 +194,7 @@ export default function AdminUsersPage() {
       </section>
 
       <section className="panel p-6">
-        <h3 className="text-lg font-semibold text-slate-900">Listado</h3>
+        <h3 className="text-body-l font-semibold text-primary">Listado</h3>
 
         {loading ? (
           <p className="muted mt-4">Cargando usuarios...</p>
@@ -202,7 +202,7 @@ export default function AdminUsersPage() {
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-slate-500">
+                <tr className="border-b border-soft text-left text-secondary">
                   <th className="pb-2 pr-3">Usuario</th>
                   <th className="pb-2 pr-3">Rol</th>
                   <th className="pb-2 pr-3">Estado</th>
@@ -258,7 +258,7 @@ export default function AdminUsersPage() {
           </div>
         )}
 
-        {message && <p className="mt-4 text-sm text-slate-600">{message}</p>}
+        {message && <p className="mt-4 text-body-s text-secondary">{message}</p>}
       </section>
     </div>
   );
