@@ -1,44 +1,165 @@
+/* =============================================================================
+   ENTRY POINT — app/globals.css
+   Cascade order:
+   1. tokens.css       — CSS custom properties (single source of truth)
+   2. @tailwind base   — preflight + utilities baseline
+   3. @tailwind components
+   4. @tailwind utilities
+   5. @layer components — primitive classes (inlined; cannot live in separate
+      @import file because Next.js + Tailwind processes imported CSS standalone
+      and @apply / @layer would lose the Tailwind theme context)
+   6. Body resets + atmospheric layers (grain + conic gradient wash)
+   ============================================================================= */
+
+@import "../styles/tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* =============================================================================
+   PRIMITIVE CLASSES — Warm Tactile Design System
+   Lives inside @layer components so utilities can override and Tailwind
+   resolves @apply against theme.extend tokens.
+   ============================================================================= */
+
+@layer components {
+  /* SURFACES ----------------------------------------------------------------- */
+
+  .panel {
+    @apply rounded-lg border border-[color:var(--border-soft)] bg-surface p-6 shadow-md;
+  }
+
+  .panel-raised {
+    @apply rounded-lg border border-[color:var(--border-soft)] bg-surface p-6 shadow-lg;
+  }
+
+  .panel-sunken {
+    @apply rounded-lg bg-sunken p-6 shadow-[var(--shadow-inset)];
+  }
+
+  /* TYPOGRAPHY --------------------------------------------------------------- */
+
+  .section-title {
+    @apply font-display text-title-l tracking-tight text-primary;
+  }
+
+  .muted {
+    @apply text-body-s text-secondary;
+  }
+
+  /* FORM ELEMENTS ------------------------------------------------------------ */
+
+  .field {
+    @apply w-full rounded-sm border border-[color:var(--border-strong)] bg-surface px-3 py-2 text-body-s text-primary outline-none transition-[border-color,box-shadow] duration-swift ease-tactile focus:border-[color:var(--border-focus)] focus:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .label {
+    @apply mb-1 block text-label text-primary;
+  }
+
+  /* BUTTONS ------------------------------------------------------------------ */
+
+  .btn-primary {
+    @apply inline-flex cursor-pointer items-center justify-center rounded-md bg-forest-600 px-4 py-2 text-body-s font-semibold text-onprimary shadow-sm transition-all duration-base ease-tactile hover:bg-forest-700 hover:shadow-md active:translate-y-px active:shadow-[var(--shadow-inset)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secondary {
+    @apply inline-flex cursor-pointer items-center justify-center rounded-md border border-[color:var(--border-strong)] bg-surface px-4 py-2 text-body-s font-medium text-primary transition-all duration-base ease-tactile hover:border-[color:var(--border-focus)] hover:bg-sunken active:shadow-[var(--shadow-inset)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-ghost {
+    @apply inline-flex cursor-pointer items-center justify-center rounded-md px-4 py-2 text-body-s font-medium text-primary transition-colors duration-base ease-tactile hover:bg-sunken focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-destructive {
+    @apply inline-flex cursor-pointer items-center justify-center rounded-md bg-danger-500 px-4 py-2 text-body-s font-semibold text-onaccent shadow-sm transition-all duration-base ease-tactile hover:bg-danger-700 active:translate-y-px active:shadow-[var(--shadow-inset)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus-danger)] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  /* TAGS & LABELS ------------------------------------------------------------ */
+
+  .badge {
+    @apply inline-flex items-center rounded-xs border border-[color:var(--border-soft)] bg-sunken px-2 py-0.5 text-caption font-medium text-secondary;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-xs border border-[color:var(--border-soft)] bg-surface px-2 py-0.5 text-caption text-secondary;
+  }
+
+  .kbd {
+    @apply inline-flex min-w-[1.5rem] items-center justify-center rounded-xs border border-[color:var(--border-strong)] bg-surface px-1.5 py-0.5 font-mono text-caption text-primary shadow-xs;
+  }
+
+  /* DIVIDERS ----------------------------------------------------------------- */
+
+  .divider-soft {
+    @apply h-px w-full bg-[color:var(--border-soft)];
+  }
+}
+
+/* GRAIN UTILITY — opt-in for hero surfaces; never on .btn-* / .field / .badge.
+   Encoded as base64 because PostCSS misparses the literal `url(#n)` substring
+   (filter reference inside SVG) as a nested CSS url() function, breaking the
+   tokenizer. Base64 is opaque to the parser and decoded by the browser.
+   Underlying SVG: 140×140 fractalNoise filter, baseFrequency 0.9, numOctaves 2,
+   stitched, seed 7, warm arena-tinted feColorMatrix. */
+.bg-grain {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIiB2aWV3Qm94PSIwIDAgMTQwIDE0MCI+PGZpbHRlciBpZD0ibiI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuOSIgbnVtT2N0YXZlcz0iMiIgc3RpdGNoVGlsZXM9InN0aXRjaCIgc2VlZD0iNyIvPjxmZUNvbG9yTWF0cml4IHR5cGU9Im1hdHJpeCIgdmFsdWVzPSIwIDAgMCAwIDAuMTUgIDAgMCAwIDAgMC4xMyAgMCAwIDAgMCAwLjEwICAwIDAgMCAwLjkgMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNuKSIvPjwvc3ZnPg==");
+  background-size: 140px 140px;
+}
+
+/* =============================================================================
+   REDUCED MOTION
+   Universal override outside @layer because !important must win unconditionally.
+   .animate-spin re-declared below to preserve semantic loading indicator.
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+
+  .animate-spin {
+    animation-duration: 1s !important;
+  }
+}
+
+/* =============================================================================
+   BODY RESETS + ATMOSPHERIC LAYERS
+   body background = --bg-page (warm sand) + conic gradient wash from top-right.
+   body::before = grain texture (position:fixed, opacity 0.035, multiply blend).
+   ============================================================================= */
 
 :root {
   color-scheme: light;
 }
 
 body {
-  @apply min-h-screen bg-slate-100 text-slate-800 antialiased;
-  background-image: radial-gradient(circle at top right, rgba(37, 99, 235, 0.1), transparent 38%);
+  background-color: var(--bg-page);
+  background-image: conic-gradient(
+    from 210deg at 100% 0%,
+    rgba(31, 74, 59, 0.035) 0deg,
+    transparent 90deg
+  );
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.panel {
-  @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
-}
-
-.section-title {
-  @apply text-2xl font-semibold tracking-tight text-slate-900;
-}
-
-.muted {
-  @apply text-sm text-slate-500;
-}
-
-.field {
-  @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100;
-}
-
-.label {
-  @apply mb-1 block text-sm font-medium text-slate-700;
-}
-
-.btn-primary {
-  @apply rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60;
-}
-
-.btn-secondary {
-  @apply rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50;
-}
-
-.badge {
-  @apply inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600;
+/* Grain texture layer. SVG encoded as base64 (see .bg-grain comment for why). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIiB2aWV3Qm94PSIwIDAgMTQwIDE0MCI+PGZpbHRlciBpZD0ibiI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuOSIgbnVtT2N0YXZlcz0iMiIgc3RpdGNoVGlsZXM9InN0aXRjaCIgc2VlZD0iNyIvPjxmZUNvbG9yTWF0cml4IHR5cGU9Im1hdHJpeCIgdmFsdWVzPSIwIDAgMCAwIDAuMTUgIDAgMCAwIDAgMC4xMyAgMCAwIDAgMCAwLjEwICAwIDAgMCAwLjkgMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNuKSIvPjwvc3ZnPg==");
+  background-size: 140px 140px;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
 }

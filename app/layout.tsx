@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getCurrentViewer } from "@/lib/auth";
 import { readBrandingConfig } from "@/lib/branding";
 import { LayoutShell } from "@/components/layout-shell";
-import { PrelineClient } from "@/components/preline-client";
+import { fraunces, geistSans, geistMono } from "@/app/(fonts)/fonts";
 
 export const metadata: Metadata = {
   title: "Aiderbrand | Gestion de Entradas",
@@ -17,7 +17,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   ]);
 
   return (
-    <html lang="es">
+    <html
+      lang="es"
+      data-theme="light"
+      className={`${fraunces.variable} ${geistSans.variable} ${geistMono.variable}`}
+    >
       <body>
         <LayoutShell
           viewer={
@@ -33,7 +37,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           {children}
         </LayoutShell>
-        <PrelineClient />
       </body>
     </html>
   );
