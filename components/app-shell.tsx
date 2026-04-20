@@ -113,6 +113,11 @@ export function AppShell({ viewer, brandLogoUrl, children }: Props) {
           icon: <NavIcon path="M12 5v14M5 12h14" />
         },
         {
+          href: "/admin/clients",
+          label: "Merchants",
+          icon: <NavIcon path="M3 7h18M6 12h12M9 17h6" />
+        },
+        {
           href: "/admin/orders",
           label: "Ordenes",
           icon: <NavIcon path="M5 7h14M5 12h14M5 17h10" />

@@ -2,6 +2,8 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { UserRole } from "@prisma/client";
+import { commissionBpsToPercent, DEFAULT_PLATFORM_COMMISSION_RATE_BPS } from "@/lib/platform-commission";
 
 type TicketTypeInput = {
   id?: string;
@@ -17,6 +19,7 @@ type TicketTypeInput = {
 type EventFormProps = {
   mode: "create" | "edit";
   eventId?: string;
+  viewerRole: UserRole;
   initial?: {
     name: string;
     featuredTag?: string;
@@ -25,6 +28,7 @@ type EventFormProps = {
     heroImageUrl?: string;
     venue: string;
     status?: "ACTIVE" | "UPCOMING" | "DRAFT";
+    platformCommissionRateBps?: number;
     startsAt: string;
     endsAt: string;
     ticketTypes: TicketTypeInput[];
@@ -41,8 +45,9 @@ function toLocalInputValue(date: string) {
   return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
 }
 
-export function EventForm({ mode, eventId, initial }: EventFormProps) {
+export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps) {
   const router = useRouter();
+  const canEditCommission = viewerRole === "ADMIN";
   const [name, setName] = useState(initial?.name ?? "");
   const [featuredTag, setFeaturedTag] = useState(initial?.featuredTag ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
@@ -50,6 +55,9 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
   const [heroImageUrl, setHeroImageUrl] = useState(initial?.heroImageUrl ?? "");
   const [venue, setVenue] = useState(initial?.venue ?? "");
   const [status, setStatus] = useState<"ACTIVE" | "UPCOMING" | "DRAFT">(initial?.status ?? "ACTIVE");
+  const [platformCommissionPercent, setPlatformCommissionPercent] = useState(
+    commissionBpsToPercent(initial?.platformCommissionRateBps ?? DEFAULT_PLATFORM_COMMISSION_RATE_BPS)
+  );
   const [startsAt, setStartsAt] = useState(initial?.startsAt ? toLocalInputValue(initial.startsAt) : "");
   const [endsAt, setEndsAt] = useState(initial?.endsAt ? toLocalInputValue(initial.endsAt) : "");
   const [ticketTypes, setTicketTypes] = useState<TicketTypeInput[]>(
@@ -114,6 +122,7 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
       heroImageUrl,
       venue,
       status,
+      ...(canEditCommission ? { platformCommissionPercent } : {}),
       startsAt,
       endsAt: endsAt || undefined,
       ticketTypes: ticketTypes.map((item) => ({
@@ -234,6 +243,25 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
             <option value="UPCOMING">Proximamente</option>
             <option value="DRAFT">Borrador</option>
           </select>
+        </div>
+
+        <div>
+          <label className="label">Comision plataforma (%)</label>
+          <input
+            className="field"
+            type="number"
+            min={0}
+            max={100}
+            step="0.01"
+            value={platformCommissionPercent}
+            onChange={(event) => setPlatformCommissionPercent(Number(event.target.value))}
+            disabled={!canEditCommission}
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            {canEditCommission
+              ? "Solo ADMIN puede editar esta comision. Se usa para futuras liquidaciones manuales del evento."
+              : "Visible para MANAGER en modo lectura. Solo ADMIN puede editar esta comision."}
+          </p>
         </div>
 
         <div>

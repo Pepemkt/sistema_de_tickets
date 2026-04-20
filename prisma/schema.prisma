@@ -49,8 +49,30 @@ enum EventStatus {
   DRAFT
 }
 
+enum CommercialModel {
+  GLOBAL
+  DELEGATED
+}
+
+enum MerchantProvider {
+  MERCADOPAGO
+}
+
+enum MerchantAccountStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum LiquidationStatus {
+  DRAFT
+  FINALIZED
+  SETTLED
+  CANCELLED
+}
+
 model Event {
   id                 String             @id @default(cuid())
+  clientId           String?
   slug               String             @unique
   name               String
   featuredTag        String?
@@ -59,17 +81,22 @@ model Event {
   heroImageUrl       String?
   venue              String?
   status             EventStatus        @default(ACTIVE)
+  platformCommissionRateBps Int         @default(500)
   startsAt           DateTime
   endsAt             DateTime?
   templateJson       Json?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
+  client             Client?            @relation(fields: [clientId], references: [id], onDelete: SetNull)
   ticketTypes        TicketType[]
   coupons            Coupon[]
   orders             Order[]
   tickets            Ticket[]
   managerAssignments EventManagerScope[]
   emailDeliveries    EmailDeliveryLog[]
+  liquidations       Liquidation[]
+
+  @@index([clientId])
 }
 
 model TicketType {
@@ -93,7 +120,11 @@ model Order {
   id                String             @id @default(cuid())
   eventId           String
   ticketTypeId      String
+  clientId          String?
+  merchantAccountId String?
   kind              OrderKind          @default(ONLINE)
+  commercialModel   CommercialModel    @default(GLOBAL)
+  platformCommissionRateBps Int        @default(500)
   quantity          Int
   totalCents        Int
   subtotalCents     Int                @default(0)
@@ -106,13 +137,114 @@ model Order {
   mercadoPagoRef    String?
   mercadoPagoInit   String?
   mercadoPagoPay    String?
+  merchantSnapshot  Json?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   event             Event              @relation(fields: [eventId], references: [id])
   ticketType        TicketType         @relation(fields: [ticketTypeId], references: [id])
   coupon            Coupon?            @relation(fields: [couponId], references: [id])
+  client            Client?            @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  merchantAccount   MerchantAccount?   @relation(fields: [merchantAccountId], references: [id], onDelete: SetNull)
   tickets           Ticket[]
   emailDeliveries   EmailDeliveryLog[]
+  payments          Payment[]
+  liquidationItems  LiquidationItem[]
+
+  @@index([clientId])
+  @@index([merchantAccountId])
+  @@index([commercialModel])
+}
+
+model Client {
+  id               String            @id @default(cuid())
+  name             String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  events           Event[]
+  merchantAccounts MerchantAccount[]
+  orders           Order[]
+  liquidations     Liquidation[]
+}
+
+model MerchantAccount {
+  id                String                @id @default(cuid())
+  clientId          String
+  provider          MerchantProvider      @default(MERCADOPAGO)
+  accessToken       String
+  webhookSecret     String?
+  status            MerchantAccountStatus @default(ACTIVE)
+  commissionRateBps Int                   @default(500)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  client            Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  orders            Order[]
+  liquidations      Liquidation[]
+
+  @@unique([clientId, provider])
+  @@index([status])
+}
+
+model Payment {
+  id                String   @id @default(cuid())
+  orderId           String
+  provider          String   @default("MERCADOPAGO")
+  providerPaymentId String   @unique
+  status            String
+  source            String
+  merchantSnapshot  Json?
+  rawPayload        Json?
+  approvedAt        DateTime?
+  ticketEmailSentAt DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  liquidationItems  LiquidationItem[]
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model Liquidation {
+  id                        String            @id @default(cuid())
+  clientId                  String
+  eventId                   String
+  merchantAccountId         String?
+  status                    LiquidationStatus @default(DRAFT)
+  grossCents                Int
+  commissionCents           Int
+  netCents                  Int
+  commissionRateBpsSnapshot Int
+  periodStartsAt            DateTime?
+  periodEndsAt              DateTime?
+  settledAt                 DateTime?
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+  client                    Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  event                     Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  merchantAccount           MerchantAccount?  @relation(fields: [merchantAccountId], references: [id], onDelete: SetNull)
+  items                     LiquidationItem[]
+
+  @@index([clientId, status])
+  @@index([eventId, status])
+  @@index([merchantAccountId])
+}
+
+model LiquidationItem {
+  id              String      @id @default(cuid())
+  liquidationId   String
+  orderId         String
+  paymentId       String?
+  grossCents      Int
+  commissionCents Int
+  netCents        Int
+  createdAt       DateTime    @default(now())
+  liquidation     Liquidation @relation(fields: [liquidationId], references: [id], onDelete: Cascade)
+  order           Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payment         Payment?    @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([liquidationId, orderId])
+  @@index([orderId])
+  @@index([paymentId])
 }
 
 model Coupon {

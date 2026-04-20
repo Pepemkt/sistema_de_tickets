@@ -1,66 +1,9 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { verifyMercadoPagoWebhook } from "@/lib/guards";
-import { getPayment } from "@/lib/mercadopago";
-import { sendOrderTicketsEmail } from "@/lib/email";
-import { generateTicketsForPaidOrder } from "@/lib/tickets";
+import { db } from "@/lib/db";
+import { finalizeMercadoPagoPayment } from "@/lib/application/payments/finalize-mercadopago-payment";
 
 export const runtime = "nodejs";
-const EMAIL_RETRY_MEMORY_TTL_MS = 1000 * 60 * 60 * 12;
-
-const globalForWebhookEmail = globalThis as typeof globalThis & {
-  aiderbrandWebhookEmailSentAt?: Map<string, number>;
-};
-
-function webhookEmailCache() {
-  if (!globalForWebhookEmail.aiderbrandWebhookEmailSentAt) {
-    globalForWebhookEmail.aiderbrandWebhookEmailSentAt = new Map();
-  }
-
-  return globalForWebhookEmail.aiderbrandWebhookEmailSentAt;
-}
-
-function wasEmailRecentlySent(key: string) {
-  const cache = webhookEmailCache();
-  const sentAt = cache.get(key);
-  if (!sentAt) {
-    return false;
-  }
-
-  if (Date.now() - sentAt > EMAIL_RETRY_MEMORY_TTL_MS) {
-    cache.delete(key);
-    return false;
-  }
-
-  return true;
-}
-
-function markEmailAsSent(key: string) {
-  const cache = webhookEmailCache();
-  const now = Date.now();
-
-  for (const [cacheKey, sentAt] of cache.entries()) {
-    if (now - sentAt > EMAIL_RETRY_MEMORY_TTL_MS) {
-      cache.delete(cacheKey);
-    }
-  }
-
-  cache.set(key, now);
-}
-
-async function sendTicketsEmailSafe(orderId: string, emailCacheKey: string) {
-  try {
-    await sendOrderTicketsEmail(orderId, { trigger: "WEBHOOK" });
-    markEmailAsSent(emailCacheKey);
-    return { emailSent: true as const };
-  } catch (error) {
-    console.error(`[webhook] email failed for order ${orderId}`, error);
-    return {
-      emailSent: false as const,
-      emailError: error instanceof Error ? error.message : "No se pudo enviar email"
-    };
-  }
-}
 
 function extractPaymentId(searchParams: URLSearchParams, body: unknown) {
   const parsedBody =
@@ -114,37 +57,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    const payment = await getPayment(paymentId);
-    if (payment.status !== "approved" || !payment.external_reference) {
-      return NextResponse.json({ ok: true });
-    }
-
-    const order = await db.order.findUnique({
-      where: { id: payment.external_reference },
-      include: { tickets: { select: { id: true } } }
+    // MP re-delivers webhooks; on replays we already have the order linked
+    // to this providerPaymentId, so the hint picks the right merchant on the first try.
+    const knownPayment = await db.payment.findUnique({
+      where: { providerPaymentId: paymentId },
+      select: { orderId: true }
     });
-    if (!order) {
-      return NextResponse.json({ ok: true });
-    }
 
-    const normalizedPaymentId = payment.id.toString();
-    const emailCacheKey = `${order.id}:${normalizedPaymentId}`;
-    const alreadyProcessed =
-      order.status === "PAID" && order.mercadoPagoPay === normalizedPaymentId && order.tickets.length > 0;
+    const result = await finalizeMercadoPagoPayment({
+      paymentId,
+      orderIdHint: knownPayment?.orderId,
+      source: "WEBHOOK",
+      rawPayload: body
+    });
 
-    if (alreadyProcessed) {
-      if (wasEmailRecentlySent(emailCacheKey)) {
-        return NextResponse.json({ ok: true, replay: true, emailSent: true });
-      }
-
-      const emailResult = await sendTicketsEmailSafe(order.id, emailCacheKey);
-      return NextResponse.json({ ok: true, replay: true, ...emailResult });
-    }
-
-    await generateTicketsForPaidOrder(order.id, normalizedPaymentId);
-    const emailResult = await sendTicketsEmailSafe(order.id, emailCacheKey);
-
-    return NextResponse.json({ ok: true, ...emailResult });
+    return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     return NextResponse.json(
       {

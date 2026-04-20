@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { checkApiRole } from "@/lib/api-auth";
+import { commissionPercentToBps, DEFAULT_PLATFORM_COMMISSION_RATE_BPS } from "@/lib/platform-commission";
 import { defaultTicketTemplate } from "@/lib/ticket-template";
 import { slugify } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ const createSchema = z.object({
     .refine((value) => !value || value.startsWith("data:image/"), "La imagen debe subirse desde archivo"),
   venue: z.string().min(2),
   status: z.enum(["ACTIVE", "UPCOMING", "DRAFT"]).optional().default("ACTIVE"),
+  platformCommissionPercent: z.number().min(0).max(100).optional(),
   startsAt: z.string().min(10),
   endsAt: z.string().optional(),
   ticketTypes: z.array(ticketTypeSchema).min(1).optional(),
@@ -56,6 +58,14 @@ export async function POST(request: Request) {
 
   try {
     const data = createSchema.parse(await request.json());
+    const platformCommissionRateBps =
+      actor.role === "ADMIN"
+        ? commissionPercentToBps(data.platformCommissionPercent)
+        : DEFAULT_PLATFORM_COMMISSION_RATE_BPS;
+
+    if (actor.role !== "ADMIN" && data.platformCommissionPercent !== undefined) {
+      throw new Error("Solo ADMIN puede configurar la comision del evento");
+    }
 
     const startsAt = new Date(data.startsAt);
     const endsAt = data.endsAt ? new Date(data.endsAt) : null;
@@ -103,6 +113,7 @@ export async function POST(request: Request) {
           heroImageUrl: data.heroImageUrl || null,
           venue: data.venue,
           status: data.status,
+          platformCommissionRateBps,
           startsAt,
           endsAt,
           templateJson: defaultTicketTemplate,

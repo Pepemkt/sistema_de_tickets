@@ -2,6 +2,16 @@ import { resolveMercadoPagoAccessToken } from "@/lib/platform-config";
 
 const MP_API = "https://api.mercadopago.com";
 
+export class MercadoPagoApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "MercadoPagoApiError";
+    this.status = status;
+  }
+}
+
 function isPublicReturnUrl(value: string) {
   try {
     const url = new URL(value);
@@ -25,8 +35,8 @@ function isPublicReturnUrl(value: string) {
   }
 }
 
-async function mpToken() {
-  const token = await resolveMercadoPagoAccessToken();
+async function mpToken(accessToken?: string) {
+  const token = accessToken?.trim() || (await resolveMercadoPagoAccessToken());
   if (!token) {
     throw new Error("Credenciales de Mercado Pago no configuradas");
   }
@@ -45,8 +55,12 @@ export type CreatePreferenceInput = {
   webhookUrl: string;
 };
 
-export async function createPreference(input: CreatePreferenceInput) {
-  const token = await mpToken();
+type MercadoPagoRequestOptions = {
+  accessToken?: string;
+};
+
+export async function createPreference(input: CreatePreferenceInput, options?: MercadoPagoRequestOptions) {
+  const token = await mpToken(options?.accessToken);
   const hasPublicBackUrls =
     isPublicReturnUrl(input.successUrl) &&
     isPublicReturnUrl(input.failureUrl) &&
@@ -88,7 +102,7 @@ export async function createPreference(input: CreatePreferenceInput) {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Error creando preferencia MP: ${text}`);
+    throw new MercadoPagoApiError(`Error creando preferencia MP: ${text}`, res.status);
   }
 
   return (await res.json()) as {
@@ -98,8 +112,8 @@ export async function createPreference(input: CreatePreferenceInput) {
   };
 }
 
-export async function getPayment(paymentId: string) {
-  const token = await mpToken();
+export async function getPayment(paymentId: string, options?: MercadoPagoRequestOptions) {
+  const token = await mpToken(options?.accessToken);
 
   const res = await fetch(`${MP_API}/v1/payments/${paymentId}`, {
     headers: {
@@ -110,7 +124,7 @@ export async function getPayment(paymentId: string) {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Error obteniendo pago MP: ${text}`);
+    throw new MercadoPagoApiError(`Error obteniendo pago MP: ${text}`, res.status);
   }
 
   return (await res.json()) as {

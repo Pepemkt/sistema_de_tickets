@@ -69,6 +69,15 @@ async function main() {
   if (createDemoEvent) {
     const existingEvents = await prisma.event.count();
     if (existingEvents === 0) {
+      const clientWriter = prisma as unknown as {
+        client: { create(args: { data: { name: string }; select: { id: true; name: true } }): Promise<{ id: string; name: string }> };
+      };
+      const demoClient = await clientWriter.client.create({
+        data: { name: "Productora Demo" },
+        select: { id: true, name: true }
+      });
+      console.log(`Cliente demo creado: ${demoClient.id} (${demoClient.name})`);
+
       const event = await prisma.event.create({
         data: {
           slug: `demo-${Date.now()}`,
@@ -77,6 +86,7 @@ async function main() {
           venue: "Cordoba",
           startsAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
           templateJson: defaultTicketTemplate,
+          clientId: demoClient.id,
           ticketTypes: {
             create: [
               {
@@ -98,6 +108,30 @@ async function main() {
       });
 
       console.log(`Evento demo creado: ${event.id}`);
+
+      const managerUsername = (process.env.SEED_DEMO_MANAGER_USERNAME ?? "cliente-demo").toLowerCase();
+      const managerPassword = process.env.SEED_DEMO_MANAGER_PASSWORD ?? "Cliente1234!";
+      const managerUser = await prisma.user.upsert({
+        where: { username: managerUsername },
+        create: {
+          username: managerUsername,
+          displayName: demoClient.name,
+          passwordHash: await hashPassword(managerPassword),
+          role: "MANAGER"
+        },
+        update: {
+          passwordHash: await hashPassword(managerPassword),
+          role: "MANAGER"
+        }
+      });
+
+      await prisma.eventManagerScope.upsert({
+        where: { userId_eventId: { userId: managerUser.id, eventId: event.id } },
+        create: { eventId: event.id, userId: managerUser.id },
+        update: {}
+      });
+
+      console.log(`Manager demo: ${managerUsername} / ${managerPassword} (scope en evento ${event.id})`);
     } else {
       console.log(`Evento demo no creado: ya existen ${existingEvents} evento(s).`);
     }

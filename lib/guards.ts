@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { resolveMercadoPagoWebhookSecret } from "@/lib/platform-config";
+import { listMercadoPagoWebhookSecretCandidates } from "@/lib/application/payments/resolve-mercadopago-context";
 
 function safeHexEqual(expected: string, received: string) {
   const expectedBuffer = Buffer.from(expected, "hex");
@@ -56,19 +56,14 @@ export async function verifyMercadoPagoWebhook(input: {
   rawBody: string;
   body: unknown;
 }) {
-  const secret = await resolveMercadoPagoWebhookSecret();
-  if (!secret) {
+  const secrets = await listMercadoPagoWebhookSecretCandidates();
+  if (secrets.length === 0) {
     return process.env.NODE_ENV !== "production";
   }
 
   const signatureHeader = input.request.headers.get("x-signature") ?? "";
   if (!signatureHeader) {
     return false;
-  }
-
-  // Backward-compatible mode: explicit exact match with configured secret.
-  if (signatureHeader === secret) {
-    return true;
   }
 
   const parsedSignature = parseSignatureHeader(signatureHeader);
@@ -90,10 +85,16 @@ export async function verifyMercadoPagoWebhook(input: {
     input.rawBody
   ].filter(Boolean);
 
-  for (const payload of payloads) {
-    const expectedHash = createHmac("sha256", secret).update(payload).digest("hex");
-    if (safeHexEqual(expectedHash, providedHash)) {
+  for (const secret of secrets) {
+    if (signatureHeader === secret) {
       return true;
+    }
+
+    for (const payload of payloads) {
+      const expectedHash = createHmac("sha256", secret).update(payload).digest("hex");
+      if (safeHexEqual(expectedHash, providedHash)) {
+        return true;
+      }
     }
   }
 

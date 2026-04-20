@@ -6,6 +6,15 @@ import { CheckoutFeeItem, normalizeCheckoutFeeItems } from "@/lib/checkout-fees"
 
 const DEFAULT_CONFIG_ID = "default";
 
+export type GlobalMercadoPagoConfig = {
+  mode: "GLOBAL";
+  accessToken: string;
+  webhookSecret: string | null;
+  publicKey: string;
+  configured: boolean;
+  source: "env" | "db" | "mixed" | "none";
+};
+
 export async function getPlatformConfig() {
   return db.platformConfig.findUnique({
     where: { id: DEFAULT_CONFIG_ID }
@@ -103,15 +112,42 @@ export async function resolveCheckoutFeeItems() {
 }
 
 export async function resolveMercadoPagoAccessToken() {
-  const config = await getPlatformConfig();
-  const envToken = process.env.MERCADOPAGO_ACCESS_TOKEN?.trim() ?? "";
-  return envToken || config?.mercadoPagoAccessToken || "";
+  const config = await resolveGlobalMercadoPagoConfig();
+  return config.accessToken;
 }
 
 export async function resolveMercadoPagoWebhookSecret() {
+  const config = await resolveGlobalMercadoPagoConfig();
+  return config.webhookSecret ?? "";
+}
+
+export async function resolveGlobalMercadoPagoConfig(): Promise<GlobalMercadoPagoConfig> {
   const config = await getPlatformConfig();
+  const envToken = process.env.MERCADOPAGO_ACCESS_TOKEN?.trim() ?? "";
   const envSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET?.trim() ?? "";
-  return envSecret || config?.mercadoPagoWebhookSecret || "";
+  const dbToken = config?.mercadoPagoAccessToken?.trim() ?? "";
+  const dbSecret = config?.mercadoPagoWebhookSecret?.trim() ?? "";
+
+  const accessToken = envToken || dbToken || "";
+  const webhookSecret = envSecret || dbSecret || null;
+
+  let source: GlobalMercadoPagoConfig["source"] = "none";
+  if (envToken && envSecret) {
+    source = "env";
+  } else if (dbToken && dbSecret) {
+    source = "db";
+  } else if (accessToken || webhookSecret) {
+    source = envToken || envSecret ? "mixed" : "db";
+  }
+
+  return {
+    mode: "GLOBAL",
+    accessToken,
+    webhookSecret,
+    publicKey: process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY?.trim() ?? "",
+    configured: Boolean(accessToken),
+    source
+  };
 }
 
 export async function resolveSmtpConfig() {

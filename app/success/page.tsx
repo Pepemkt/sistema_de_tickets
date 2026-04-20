@@ -1,48 +1,11 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { sendOrderTicketsEmail } from "@/lib/email";
-import { getPayment } from "@/lib/mercadopago";
-import { generateTicketsForPaidOrder } from "@/lib/tickets";
 import { VisitTracker } from "@/components/visit-tracker";
+import { finalizeMercadoPagoPayment } from "@/lib/application/payments/finalize-mercadopago-payment";
 
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
-
-const SUCCESS_EMAIL_RETRY_MEMORY_TTL_MS = 1000 * 60 * 30;
-const globalForSuccessEmail = globalThis as typeof globalThis & {
-  aiderbrandSuccessEmailSentAt?: Map<string, number>;
-};
-
-function successEmailCache() {
-  if (!globalForSuccessEmail.aiderbrandSuccessEmailSentAt) {
-    globalForSuccessEmail.aiderbrandSuccessEmailSentAt = new Map();
-  }
-  return globalForSuccessEmail.aiderbrandSuccessEmailSentAt;
-}
-
-function wasEmailRecentlySent(key: string) {
-  const cache = successEmailCache();
-  const sentAt = cache.get(key);
-  if (!sentAt) return false;
-  if (Date.now() - sentAt > SUCCESS_EMAIL_RETRY_MEMORY_TTL_MS) {
-    cache.delete(key);
-    return false;
-  }
-  return true;
-}
-
-function markEmailAsSent(key: string) {
-  const cache = successEmailCache();
-  const now = Date.now();
-
-  for (const [cacheKey, sentAt] of cache.entries()) {
-    if (now - sentAt > SUCCESS_EMAIL_RETRY_MEMORY_TTL_MS) {
-      cache.delete(cacheKey);
-    }
-  }
-  cache.set(key, now);
-}
 
 function resolveValue(value: string | string[] | undefined) {
   if (Array.isArray(value)) return value[0] ?? "";
@@ -61,51 +24,20 @@ function resolvePaymentId(params: Record<string, string | string[] | undefined>)
 
 async function reconcileOrderFromMercadoPagoReturn(orderId: string, paymentId: string) {
   try {
-    const payment = await getPayment(paymentId);
-    const normalizedPaymentId = payment.id.toString();
-    const emailCacheKey = `${orderId}:${normalizedPaymentId}`;
-
-    if (payment.status !== "approved" || payment.external_reference !== orderId) {
-      return { confirmed: false as const };
-    }
-
-    const order = await db.order.findUnique({
-      where: { id: orderId },
-      include: { tickets: { select: { id: true } } }
+    const result = await finalizeMercadoPagoPayment({
+      paymentId,
+      source: "SUCCESS",
+      orderIdHint: orderId
     });
 
-    if (!order) {
+    if (result.status === "ignored") {
       return { confirmed: false as const };
     }
 
-    const alreadyProcessed =
-      order.status === "PAID" && order.mercadoPagoPay === normalizedPaymentId && order.tickets.length > 0;
-
-    if (alreadyProcessed) {
-      if (wasEmailRecentlySent(emailCacheKey)) {
-        return { confirmed: true as const, emailSent: true as const };
-      }
-
-      try {
-        await sendOrderTicketsEmail(order.id, { trigger: "SUCCESS_PAGE" });
-        markEmailAsSent(emailCacheKey);
-        return { confirmed: true as const, emailSent: true as const };
-      } catch (error) {
-        console.error(`[success] email retry failed for order ${order.id}`, error);
-        return { confirmed: true as const, emailSent: false as const };
-      }
-    }
-
-    await generateTicketsForPaidOrder(order.id, normalizedPaymentId);
-
-    try {
-      await sendOrderTicketsEmail(order.id, { trigger: "SUCCESS_PAGE" });
-      markEmailAsSent(emailCacheKey);
-      return { confirmed: true as const, emailSent: true as const };
-    } catch (error) {
-      console.error(`[success] email failed for order ${order.id}`, error);
-      return { confirmed: true as const, emailSent: false as const };
-    }
+    return {
+      confirmed: true as const,
+      emailSent: result.emailSent ?? false
+    };
   } catch (error) {
     console.error(`[success] reconciliation failed for order ${orderId} payment ${paymentId}`, error);
     return { confirmed: false as const };

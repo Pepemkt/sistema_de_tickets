@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { checkApiRole } from "@/lib/api-auth";
 import { requireViewerEventAccess } from "@/lib/event-scope";
+import { commissionPercentToBps } from "@/lib/platform-commission";
 
 type Params = {
   params: Promise<{ id: string }>;
@@ -32,6 +33,7 @@ const updateSchema = z.object({
     .refine((value) => !value || value.startsWith("data:image/"), "La imagen debe subirse desde archivo"),
   venue: z.string().min(2),
   status: z.enum(["ACTIVE", "UPCOMING", "DRAFT"]).optional().default("ACTIVE"),
+  platformCommissionPercent: z.number().min(0).max(100).optional(),
   startsAt: z.string().min(10),
   endsAt: z.string().optional(),
   ticketTypes: z.array(updateTicketTypeSchema).min(1)
@@ -57,6 +59,7 @@ export async function GET(_request: Request, { params }: Params) {
       heroImageUrl: true,
       venue: true,
       status: true,
+      platformCommissionRateBps: true,
       startsAt: true,
       endsAt: true,
       createdAt: true,
@@ -94,6 +97,10 @@ export async function PUT(request: Request, { params }: Params) {
     const { id } = await params;
     await requireViewerEventAccess(viewer, id);
     const data = updateSchema.parse(await request.json());
+
+    if (viewer.role !== "ADMIN" && data.platformCommissionPercent !== undefined) {
+      throw new Error("Solo ADMIN puede configurar la comision del evento");
+    }
 
     const startsAt = new Date(data.startsAt);
     const endsAt = data.endsAt ? new Date(data.endsAt) : null;
@@ -183,6 +190,9 @@ export async function PUT(request: Request, { params }: Params) {
           heroImageUrl: data.heroImageUrl || null,
           venue: data.venue,
           status: data.status,
+          ...(viewer.role === "ADMIN" && data.platformCommissionPercent !== undefined
+            ? { platformCommissionRateBps: commissionPercentToBps(data.platformCommissionPercent) }
+            : {}),
           startsAt,
           endsAt
         },
