@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB_is_required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER_is_required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD_is_required}
+    volumes:
+      - tickets_vps_postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL_is_required}
+    depends_on:
+      - db
+    networks:
+      - internal
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=aiderbrand-system_proxy"
+      - "traefik.http.routers.tickets-vps.rule=Host(`${APP_DOMAIN:?APP_DOMAIN_is_required}`)"
+      - "traefik.http.routers.tickets-vps.entrypoints=websecure"
+      - "traefik.http.routers.tickets-vps.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
+      - "traefik.http.services.tickets-vps.loadbalancer.server.port=3000"
+      - "traefik.http.routers.tickets-vps-http.rule=Host(`${APP_DOMAIN:?APP_DOMAIN_is_required}`)"
+      - "traefik.http.routers.tickets-vps-http.entrypoints=web"
+      - "traefik.http.routers.tickets-vps-http.middlewares=tickets-vps-https-redirect"
+      - "traefik.http.middlewares.tickets-vps-https-redirect.redirectscheme.scheme=https"
+
+volumes:
+  tickets_vps_postgres_data:
+    name: tickets_vps_postgres_data
+
+networks:
+  proxy:
+    external: true
+    name: aiderbrand-system_proxy
+  internal:
