@@ -11,3 +11,4 @@ pnpm-debug.log*
 tsconfig.tsbuildinfo
 .atl/
 .claude/
+preview-admin-v2.html
