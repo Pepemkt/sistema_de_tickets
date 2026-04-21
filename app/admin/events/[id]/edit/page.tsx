@@ -107,14 +107,14 @@ export default async function EditEventPage({ params }: Props) {
         </Link>
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Link compartible</p>
-        <p className="mt-1 break-all text-sm text-slate-700">{publicEventUrl}</p>
+      <div className="mt-4 rounded-md border border-soft bg-sunken p-3">
+        <p className="text-overline font-semibold uppercase tracking-wide text-muted">Link compartible</p>
+        <p className="mt-1 break-all text-body-s text-secondary">{publicEventUrl}</p>
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Modelo comercial</p>
-        <p className="mt-1 text-sm text-slate-800">
+      <div className="mt-4 rounded-md border border-soft bg-sunken p-4">
+        <p className="text-overline font-semibold uppercase tracking-wide text-muted">Modelo comercial</p>
+        <p className="mt-1 text-body-s text-primary">
           {event.client
             ? `Merchant delegado por cliente: ${event.client.name}`
             : "Flujo global temporal activo. Este evento aun no tiene cliente merchant asociado."}

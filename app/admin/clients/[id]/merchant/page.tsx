@@ -97,9 +97,9 @@ export default async function ClientMerchantPage({ params }: Props) {
       <section className="panel p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-slate-500">Cliente</p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{client.name}</h1>
-            <p className="mt-1 text-sm text-slate-600">Gestion operativa del merchant Mercado Pago para este cliente.</p>
+            <p className="text-overline font-semibold uppercase tracking-[0.1em] text-[color:var(--brand-magenta)]">Cliente</p>
+            <h1 className="mt-1 font-display text-title-xl font-bold text-primary">{client.name}</h1>
+            <p className="mt-1 text-body-s text-secondary">Gestion operativa del merchant Mercado Pago para este cliente.</p>
           </div>
           <Link href="/admin/clients" className="btn-secondary">
             Volver a clientes

@@ -101,23 +101,23 @@ export function ClientMerchantForm({ clientId, clientName, viewerRole, initialMe
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <section className="rounded-lg border border-soft bg-sunken p-4">
         <div className="grid gap-3 md:grid-cols-4">
           <article>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Cliente</p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">{clientName}</p>
+            <p className="text-overline uppercase tracking-wide text-muted">Cliente</p>
+            <p className="mt-1 text-body-s font-semibold text-primary">{clientName}</p>
           </article>
           <article>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Merchant</p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">{merchant.merchantAccountId ?? "Pendiente de alta"}</p>
+            <p className="text-overline uppercase tracking-wide text-muted">Merchant</p>
+            <p className="mt-1 text-body-s font-semibold text-primary">{merchant.merchantAccountId ?? "Pendiente de alta"}</p>
           </article>
           <article>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Estado</p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">{merchant.status === "ACTIVE" ? "Activo" : "Deshabilitado"}</p>
+            <p className="text-overline uppercase tracking-wide text-muted">Estado</p>
+            <p className="mt-1 text-body-s font-semibold text-primary">{merchant.status === "ACTIVE" ? "Activo" : "Deshabilitado"}</p>
           </article>
           <article>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Comision plataforma</p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">{commissionBpsToPercent(merchant.commissionRateBps).toFixed(2)}%</p>
+            <p className="text-overline uppercase tracking-wide text-muted">Comision plataforma</p>
+            <p className="mt-1 text-body-s font-semibold text-primary">{commissionBpsToPercent(merchant.commissionRateBps).toFixed(2)}%</p>
           </article>
         </div>
       </section>
@@ -151,7 +151,7 @@ export function ClientMerchantForm({ clientId, clientName, viewerRole, initialMe
               onChange={(event) => setCommissionPercent(Number(event.target.value))}
               disabled={!canEditCommission}
             />
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-caption text-muted">
               {canEditCommission
                 ? "ADMIN define la comision base para liquidaciones delegadas del cliente."
                 : "MANAGER puede ver la comision, pero no modificarla."}
@@ -167,7 +167,7 @@ export function ClientMerchantForm({ clientId, clientName, viewerRole, initialMe
               onChange={(event) => setAccessToken(event.target.value)}
               placeholder={merchant.hasAccessToken ? "Ya configurado. Ingresa uno nuevo para reemplazarlo." : "APP_USR-..."}
             />
-            <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+            <label className="mt-2 flex items-center gap-2 text-body-s text-secondary">
               <input type="checkbox" checked={clearAccessToken} onChange={(event) => setClearAccessToken(event.target.checked)} />
               Limpiar access token actual
             </label>
@@ -182,7 +182,7 @@ export function ClientMerchantForm({ clientId, clientName, viewerRole, initialMe
               onChange={(event) => setWebhookSecret(event.target.value)}
               placeholder={merchant.hasWebhookSecret ? "Ya configurado. Ingresa uno nuevo para reemplazarlo." : "Secret del webhook de Mercado Pago"}
             />
-            <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+            <label className="mt-2 flex items-center gap-2 text-body-s text-secondary">
               <input type="checkbox" checked={clearWebhookSecret} onChange={(event) => setClearWebhookSecret(event.target.checked)} />
               Limpiar webhook secret actual
             </label>
@@ -193,12 +193,12 @@ export function ClientMerchantForm({ clientId, clientName, viewerRole, initialMe
           <button className="btn-primary" disabled={saving}>
             {saving ? "Guardando..." : "Guardar merchant"}
           </button>
-          {message ? <p className="text-sm text-slate-600">{message}</p> : null}
+          {message ? <p className="text-body-s text-secondary">{message}</p> : null}
         </div>
       </form>
 
       <section className="panel p-6">
-        <h3 className="text-lg font-semibold text-slate-900">Eventos vinculados</h3>
+        <h3 className="font-display text-title-l font-bold text-primary">Eventos vinculados</h3>
         <p className="muted mt-1">Los eventos con este cliente usan merchant delegado. Los demas quedan temporalmente en el flujo global.</p>
 
         {linkedEvents.length === 0 ? (
@@ -206,10 +206,10 @@ export function ClientMerchantForm({ clientId, clientName, viewerRole, initialMe
         ) : (
           <div className="mt-4 space-y-2">
             {linkedEvents.map((event) => (
-              <div key={event.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-3">
+              <div key={event.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-soft px-3 py-3">
                 <div>
-                  <p className="text-sm font-medium text-slate-900">{event.name}</p>
-                  <p className="text-xs text-slate-500">{new Date(event.startsAt).toLocaleString("es-AR")}</p>
+                  <p className="text-body-s font-medium text-primary">{event.name}</p>
+                  <p className="text-caption text-muted">{new Date(event.startsAt).toLocaleString("es-AR")}</p>
                 </div>
                 <a href={`/admin/events/${event.id}/edit`} className="btn-secondary">
                   Ver evento

@@ -217,12 +217,12 @@ export function ScanClient() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="panel p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Evento actual</p>
-          <p className="mt-2 text-lg font-semibold text-slate-900">{eventStats?.eventName ?? "Sin lecturas aun"}</p>
+          <p className="text-overline font-semibold uppercase tracking-[0.14em] text-[color:var(--brand-magenta)]">Evento actual</p>
+          <p className="mt-2 text-title-m font-semibold text-primary">{eventStats?.eventName ?? "Sin lecturas aun"}</p>
         </div>
         <div className="panel p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Asistentes escaneados</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">{eventStats?.eventScannedCount ?? 0}</p>
+          <p className="text-overline font-semibold uppercase tracking-[0.14em] text-[color:var(--brand-magenta)]">Asistentes escaneados</p>
+          <p className="mt-2 font-display text-title-xl font-bold text-primary">{eventStats?.eventScannedCount ?? 0}</p>
           <p className="muted mt-1">Actualizado en tiempo real por QR validado.</p>
         </div>
       </div>
@@ -230,13 +230,13 @@ export function ScanClient() {
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="panel p-4">
           {!cameraReady && !cameraError && <p className="muted mb-3">Iniciando camara...</p>}
-          {cameraError && <p className="mb-3 text-sm text-red-700">No se pudo abrir la camara: {cameraError}</p>}
-          {isLocked && <p className="mb-3 text-sm text-amber-700">Procesando lectura...</p>}
+          {cameraError && <p className="mb-3 text-body-s text-danger-500">No se pudo abrir la camara: {cameraError}</p>}
+          {isLocked && <p className="mb-3 text-body-s text-warning-700">Procesando lectura...</p>}
           <div id="qr-reader" className="overflow-hidden rounded-xl" />
         </div>
 
         <div className="panel p-5">
-          <h2 className="text-lg font-semibold text-slate-900">Validacion manual</h2>
+          <h2 className="font-display text-title-m font-bold text-primary">Validacion manual</h2>
           <p className="muted">Util para tickets impresos con QR dañado o camara no disponible.</p>
 
           <div className="mt-3 flex gap-2">
@@ -251,51 +251,51 @@ export function ScanClient() {
             </button>
           </div>
 
-          <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
-            {!result && <p className="text-slate-600">Aun sin validaciones en esta sesion.</p>}
+          <div className="mt-5 rounded-md border border-soft bg-sunken p-4 text-body-s">
+            {!result && <p className="text-secondary">Aun sin validaciones en esta sesion.</p>}
 
             {result?.status === "ok" && (
-              <p className="text-emerald-700">
+              <p className="text-success-700">
                 OK. Ticket {result.ticketCode} de {result.attendeeName} para {result.eventName}. Escaneados: {result.eventScannedCount}.
               </p>
             )}
 
             {result?.status === "already_used" && (
-              <p className="text-amber-700">
+              <p className="text-warning-700">
                 Ya usado. Ticket {result.ticketCode} ({result.attendeeName}) validado en {new Date(result.attendedAt).toLocaleString("es-AR")}. Escaneados: {result.eventScannedCount}.
               </p>
             )}
 
-            {result?.status === "error" && <p className="text-red-700">Error: {result.message}</p>}
+            {result?.status === "error" && <p className="text-danger-500">Error: {result.message}</p>}
           </div>
         </div>
       </div>
 
       {popup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--brand-violet-deep)]/70 px-4 py-6 backdrop-blur-sm">
           <div
-            className={`pointer-events-auto relative w-full max-w-2xl overflow-hidden rounded-2xl border bg-white px-6 py-10 shadow-2xl sm:px-10 ${
+            className={`pointer-events-auto relative w-full max-w-2xl overflow-hidden rounded-lg border bg-surface px-6 py-10 shadow-2xl sm:px-10 ${
               popup.tone === "success"
-                ? "border-emerald-200"
+                ? "border-success-500/40"
                 : popup.tone === "warning"
-                  ? "border-amber-200"
-                  : "border-red-200"
+                  ? "border-warning-500/40"
+                  : "border-danger-500/40"
             }`}
           >
             <div
               className={`absolute inset-x-0 top-0 h-1.5 ${
                 popup.tone === "success"
-                  ? "bg-emerald-500"
+                  ? "bg-success-500"
                   : popup.tone === "warning"
-                    ? "bg-amber-500"
-                    : "bg-red-500"
+                    ? "bg-warning-500"
+                    : "bg-danger-500"
               }`}
             />
 
             <button
               type="button"
               onClick={closePopupAndUnlock}
-              className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-300 bg-white text-lg font-semibold text-slate-600 transition hover:bg-slate-100"
+              className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-soft bg-surface text-body-l font-semibold text-secondary transition hover:bg-sunken"
               aria-label="Cerrar popup"
             >
               x
@@ -303,29 +303,29 @@ export function ScanClient() {
 
             <div className="mx-auto flex max-w-xl flex-col items-center text-center">
               <div
-                className={`flex h-24 w-24 items-center justify-center rounded-full border text-2xl font-bold ${
+                className={`flex h-24 w-24 items-center justify-center rounded-full border text-title-m font-bold ${
                   popup.tone === "success"
-                    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                    ? "border-success-500/40 bg-success-50 text-success-700"
                     : popup.tone === "warning"
-                      ? "border-amber-300 bg-amber-50 text-amber-700"
-                      : "border-red-300 bg-red-50 text-red-700"
+                      ? "border-warning-500/40 bg-warning-50 text-warning-700"
+                      : "border-danger-500/40 bg-danger-50 text-danger-500"
                 }`}
               >
                 {popup.tone === "success" ? "OK" : popup.tone === "warning" ? "!" : "X"}
               </div>
 
-              <p className="mt-6 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">{popup.title}</p>
-              <p className="mt-3 text-base text-slate-600 sm:text-lg">{popup.detail}</p>
+              <p className="mt-6 font-display text-title-xl font-bold text-primary sm:text-4xl">{popup.title}</p>
+              <p className="mt-3 text-body text-secondary sm:text-body-l">{popup.detail}</p>
 
               <button
                 type="button"
                 onClick={closePopupAndUnlock}
-                className={`mt-8 w-full max-w-xs rounded-xl px-5 py-3 text-sm font-semibold text-white transition ${
+                className={`mt-8 w-full max-w-xs rounded-full px-5 py-3 text-body-s font-semibold text-white transition ${
                   popup.tone === "success"
-                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    ? "bg-success-500 hover:bg-success-700"
                     : popup.tone === "warning"
-                      ? "bg-amber-600 hover:bg-amber-700"
-                      : "bg-red-600 hover:bg-red-700"
+                      ? "bg-warning-500 hover:bg-warning-700"
+                      : "bg-danger-500 hover:bg-danger-700"
                 }`}
               >
                 Continuar escaneo

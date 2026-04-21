@@ -212,13 +212,13 @@ export default function AdminUsersPage() {
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={user.id} className="border-b border-slate-100">
+                  <tr key={user.id} className="border-b border-soft">
                     <td className="py-3 pr-3">
-                      <p className="font-medium text-slate-800">{user.username}</p>
-                      <p className="text-xs text-slate-500">{user.displayName ?? "Sin nombre"}</p>
+                      <p className="font-medium text-primary">{user.username}</p>
+                      <p className="text-caption text-muted">{user.displayName ?? "Sin nombre"}</p>
                     </td>
                     <td className="py-3 pr-3">
-                      <p className="text-sm font-medium text-slate-700">{user.role}</p>
+                      <p className="text-body-s font-medium text-secondary">{user.role}</p>
                       {roleSupportsEventAssignments(user.role) && (
                         <div className="mt-2">
                           <select

@@ -790,16 +790,16 @@ export function SalesConsole() {
                   {coupons.map((coupon) => {
                     const used = coupon.reservedUses ?? coupon.usedCount;
                     return (
-                      <tr key={coupon.id} className="border-b border-slate-100">
-                        <td className="py-3 pr-3 font-semibold text-slate-800">{coupon.code}</td>
+                      <tr key={coupon.id} className="border-b border-soft">
+                        <td className="py-3 pr-3 font-semibold text-primary">{coupon.code}</td>
                         <td className="py-3 pr-3">
-                          <p className="text-slate-700">{coupon.event.name}</p>
-                          <p className="text-xs text-slate-500">{coupon.ticketType?.name ?? "Todos los tickets"}</p>
+                          <p className="text-secondary">{coupon.event.name}</p>
+                          <p className="text-caption text-muted">{coupon.ticketType?.name ?? "Todos los tickets"}</p>
                         </td>
-                        <td className="py-3 pr-3 text-slate-700">
+                        <td className="py-3 pr-3 text-secondary">
                           {used}/{coupon.maxUses}
                         </td>
-                        <td className="py-3 pr-3 text-slate-700">
+                        <td className="py-3 pr-3 text-secondary">
                           {coupon.discountType === "PERCENT"
                             ? `${coupon.discountValue ?? 0}%`
                             : coupon.discountType === "FIXED_DISCOUNT"
@@ -808,7 +808,7 @@ export function SalesConsole() {
                                 ? centsToCurrency(coupon.discountValue ?? 0)
                                 : "Sin descuento"}
                         </td>
-                        <td className="py-3 pr-3 text-slate-700">{coupon.expiresAt ? new Date(coupon.expiresAt).toLocaleString("es-AR") : "Sin vencimiento"}</td>
+                        <td className="py-3 pr-3 text-secondary">{coupon.expiresAt ? new Date(coupon.expiresAt).toLocaleString("es-AR") : "Sin vencimiento"}</td>
                         <td className="py-3 pr-3">
                           <span className={`badge ${coupon.isActive ? "border-info-500 bg-info-50 text-info-700" : ""}`}>{coupon.isActive ? "Activo" : "Inactivo"}</span>
                         </td>

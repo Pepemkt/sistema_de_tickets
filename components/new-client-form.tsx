@@ -39,7 +39,7 @@ export function NewClientForm() {
   return (
     <form onSubmit={onSubmit} className="panel space-y-4 p-6">
       <div>
-        <label className="block text-sm font-medium text-slate-700">Nombre del cliente</label>
+        <label className="label">Nombre del cliente</label>
         <input
           type="text"
           value={name}
@@ -48,10 +48,10 @@ export function NewClientForm() {
           minLength={2}
           maxLength={120}
           placeholder="Ej: Productora X"
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="field mt-1"
         />
       </div>
-      {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+      {error ? <p className="text-body-s text-danger-500">{error}</p> : null}
       <div className="flex gap-2">
         <button type="submit" disabled={saving || name.trim().length < 2} className="btn-primary disabled:opacity-60">
           {saving ? "Creando..." : "Crear cliente"}

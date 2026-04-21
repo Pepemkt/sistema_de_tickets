@@ -47,11 +47,11 @@ export function EventClientPicker({ eventId, currentClientId, currentClientName,
     <form onSubmit={onSubmit} className="mt-3 space-y-3">
       <div className="flex flex-wrap items-end gap-2">
         <div className="min-w-[220px] flex-1">
-          <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">Cliente asignado</label>
+          <label className="text-overline font-semibold uppercase tracking-wide text-muted">Cliente asignado</label>
           <select
             value={selected}
             onChange={(event) => setSelected(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="field mt-1"
           >
             <option value="">Sin cliente (flujo global)</option>
             {clients.map((client) => (
@@ -72,9 +72,9 @@ export function EventClientPicker({ eventId, currentClientId, currentClientName,
           Nuevo cliente
         </Link>
       </div>
-      {currentClientName ? <p className="text-xs text-slate-500">Cliente actual: {currentClientName}</p> : null}
-      {message ? <p className="text-xs text-emerald-600">{message}</p> : null}
-      {error ? <p className="text-xs text-rose-600">{error}</p> : null}
+      {currentClientName ? <p className="text-caption text-muted">Cliente actual: {currentClientName}</p> : null}
+      {message ? <p className="text-caption text-success-700">{message}</p> : null}
+      {error ? <p className="text-caption text-danger-500">{error}</p> : null}
     </form>
   );
 }

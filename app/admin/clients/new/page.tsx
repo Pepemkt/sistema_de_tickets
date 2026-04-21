@@ -10,9 +10,9 @@ export default async function NewClientPage() {
       <section className="panel p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-slate-500">Clientes</p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Nuevo cliente</h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="text-overline font-semibold uppercase tracking-[0.1em] text-[color:var(--brand-magenta)]">Clientes</p>
+            <h1 className="mt-1 font-display text-title-xl font-bold text-primary">Nuevo cliente</h1>
+            <p className="mt-1 text-body-s text-secondary">
               Despues de crearlo vas a poder cargar su cuenta de Mercado Pago y asignarlo a uno o varios eventos.
             </p>
           </div>

@@ -182,14 +182,14 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
 
   return (
     <aside className="panel h-fit overflow-hidden p-0">
-      <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
-        <h2 className="text-xl font-semibold text-slate-900">Seleccion de entradas</h2>
-        <p className="mt-1 text-sm text-slate-500">{eventName}</p>
+      <div className="border-b border-soft bg-sunken px-5 py-4">
+        <h2 className="font-display text-title-l font-bold text-primary">Seleccion de entradas</h2>
+        <p className="mt-1 text-body-s text-muted">{eventName}</p>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4 p-5">
         {ticketTypes.length === 0 && (
-          <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+          <p className="rounded-md border border-warning-500/40 bg-warning-50 p-3 text-body-s text-warning-700">
             Este evento no tiene entradas habilitadas para compra online.
           </p>
         )}
@@ -230,8 +230,8 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
             onChange={(event) => setQuantity(Math.max(1, Number(event.target.value) || 1))}
             className="field"
           />
-          {selected?.maxPerOrder ? <p className="mt-1 text-xs text-slate-500">Maximo por operacion: {selected.maxPerOrder}</p> : null}
-          {selected?.maxPerEmail ? <p className="mt-1 text-xs text-slate-500">Maximo por email: {selected.maxPerEmail}</p> : null}
+          {selected?.maxPerOrder ? <p className="mt-1 text-caption text-muted">Maximo por operacion: {selected.maxPerOrder}</p> : null}
+          {selected?.maxPerEmail ? <p className="mt-1 text-caption text-muted">Maximo por email: {selected.maxPerEmail}</p> : null}
         </div>
 
         <div>
@@ -245,12 +245,12 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
           />
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Subtotal</p>
-          <p className="text-base font-semibold text-slate-700">{centsToCurrency(previewSubtotal)}</p>
-          {previewDiscount > 0 && <p className="mt-1 text-sm font-semibold text-emerald-700">Descuento: -{centsToCurrency(previewDiscount)}</p>}
-          <p className="mt-2 text-xs uppercase tracking-wide text-slate-500">Total final</p>
-          <p className="text-2xl font-semibold text-blue-700">{centsToCurrency(previewTotal)}</p>
+        <div className="rounded-md border border-soft bg-sunken px-3 py-3 text-body-s">
+          <p className="text-overline uppercase tracking-wide text-muted">Subtotal</p>
+          <p className="text-body-l font-semibold text-primary">{centsToCurrency(previewSubtotal)}</p>
+          {previewDiscount > 0 && <p className="mt-1 text-body-s font-semibold text-success-700">Descuento: -{centsToCurrency(previewDiscount)}</p>}
+          <p className="mt-2 text-overline uppercase tracking-wide text-muted">Total final</p>
+          <p className="font-display text-title-l font-bold text-[color:var(--brand-magenta)]">{centsToCurrency(previewTotal)}</p>
         </div>
 
         <button disabled={loading || !selected} className="btn-primary w-full">
@@ -263,9 +263,9 @@ export function CheckoutCard({ eventId, eventName, ticketTypes, allowDevSimulati
           </button>
         )}
 
-        {error && <p className="text-sm text-red-700">{error}</p>}
-        {quoteError && <p className="text-sm text-red-700">{quoteError}</p>}
-        {success && <p className="text-sm text-emerald-700">{success}</p>}
+        {error && <p className="text-body-s text-danger-500">{error}</p>}
+        {quoteError && <p className="text-body-s text-danger-500">{quoteError}</p>}
+        {success && <p className="text-body-s text-success-700">{success}</p>}
       </form>
     </aside>
   );

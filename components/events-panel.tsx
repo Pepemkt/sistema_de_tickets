@@ -105,23 +105,23 @@ export function EventsPanel({ viewerRole, appUrl, events }: Props) {
       <section className="panel p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Panel de eventos</h1>
-            <p className="mt-1 text-sm text-slate-600">Administra, comparte y accede rapido a cada evento.</p>
+            <h1 className="font-display text-title-xl font-bold text-primary">Panel de eventos</h1>
+            <p className="mt-1 text-body-s text-secondary">Administra, comparte y accede rapido a cada evento.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex rounded-lg border border-slate-300 bg-white p-1">
+            <div className="inline-flex rounded-full border border-soft bg-surface p-1">
               <button
                 type="button"
                 onClick={() => setMode("cards")}
-                className={`rounded-md px-3 py-1.5 text-sm ${mode === "cards" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+                className={`rounded-full px-3 py-1.5 text-body-s ${mode === "cards" ? "bg-[color:var(--brand-violet)] text-white" : "text-secondary hover:bg-sunken"}`}
               >
                 Tarjetas
               </button>
               <button
                 type="button"
                 onClick={() => setMode("list")}
-                className={`rounded-md px-3 py-1.5 text-sm ${mode === "list" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+                className={`rounded-full px-3 py-1.5 text-body-s ${mode === "list" ? "bg-[color:var(--brand-violet)] text-white" : "text-secondary hover:bg-sunken"}`}
               >
                 Lista
               </button>
@@ -138,7 +138,7 @@ export function EventsPanel({ viewerRole, appUrl, events }: Props) {
 
       {events.length === 0 ? (
         <section className="panel p-8">
-          <p className="text-slate-600">Aun no hay eventos publicados.</p>
+          <p className="text-secondary">Aun no hay eventos publicados.</p>
           {(viewerRole === "ADMIN" || viewerRole === "MANAGER") && (
             <Link href="/admin/events/new" className="btn-primary mt-4 inline-flex">
               Crear primer evento
@@ -154,15 +154,15 @@ export function EventsPanel({ viewerRole, appUrl, events }: Props) {
 
             return (
               <article key={event.id} className="panel p-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{event.startsAtLabel}</p>
-                <h2 className="mt-1 text-xl font-semibold text-slate-900">{event.name}</h2>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Estado: {getStatusLabel(event.status)}</p>
-                <p className="mt-1 text-sm text-slate-600">{event.venue ?? "Lugar por confirmar"}</p>
-                <p className="mt-3 line-clamp-2 text-sm text-slate-600">{event.description ?? "Sin descripcion"}</p>
+                <p className="text-overline font-semibold uppercase tracking-[0.1em] text-[color:var(--brand-magenta)]">{event.startsAtLabel}</p>
+                <h2 className="mt-1 font-display text-title-l font-bold text-primary">{event.name}</h2>
+                <p className="mt-1 text-overline font-semibold uppercase tracking-wide text-muted">Estado: {getStatusLabel(event.status)}</p>
+                <p className="mt-1 text-body-s text-secondary">{event.venue ?? "Lugar por confirmar"}</p>
+                <p className="mt-3 line-clamp-2 text-body-s text-secondary">{event.description ?? "Sin descripcion"}</p>
                 <div className="mt-4 flex items-end justify-between gap-3">
                   <div>
-                    <p className="text-xs uppercase text-slate-500">Desde</p>
-                    <p className="text-xl font-semibold text-blue-700">
+                    <p className="text-overline uppercase text-muted">Desde</p>
+                    <p className="font-display text-title-l font-bold text-[color:var(--brand-magenta)]">
                       {fromType ? centsToCurrency(fromType.priceCents) : "Solo emision interna"}
                     </p>
                   </div>
@@ -177,7 +177,7 @@ export function EventsPanel({ viewerRole, appUrl, events }: Props) {
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-slate-500">
+                <tr className="border-b border-soft text-left text-muted">
                   <th className="px-3 py-2">Evento</th>
                   <th className="px-3 py-2">Fecha</th>
                   <th className="px-3 py-2">Lugar</th>
@@ -193,15 +193,15 @@ export function EventsPanel({ viewerRole, appUrl, events }: Props) {
                   const publicUrl = eventPublicUrl(appUrl, event.slug);
 
                   return (
-                    <tr key={event.id} className="border-b border-slate-100">
+                    <tr key={event.id} className="border-b border-soft">
                       <td className="px-3 py-3">
-                        <p className="font-medium text-slate-900">{event.name}</p>
-                        <p className="text-xs text-slate-500">/{event.slug}</p>
+                        <p className="font-medium text-primary">{event.name}</p>
+                        <p className="text-caption text-muted">/{event.slug}</p>
                       </td>
-                      <td className="px-3 py-3 text-slate-700">{event.startsAtLabel}</td>
-                      <td className="px-3 py-3 text-slate-700">{event.venue ?? "-"}</td>
-                      <td className="px-3 py-3 text-slate-700">{getStatusLabel(event.status)}</td>
-                      <td className="px-3 py-3 font-medium text-slate-900">
+                      <td className="px-3 py-3 text-secondary">{event.startsAtLabel}</td>
+                      <td className="px-3 py-3 text-secondary">{event.venue ?? "-"}</td>
+                      <td className="px-3 py-3 text-secondary">{getStatusLabel(event.status)}</td>
+                      <td className="px-3 py-3 font-medium text-primary">
                         {fromType ? centsToCurrency(fromType.priceCents) : "Interno"}
                       </td>
                       <td className="px-3 py-3">

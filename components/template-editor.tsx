@@ -97,9 +97,9 @@ function ImageCropField(props: CropFieldProps) {
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-      <h4 className="text-sm font-semibold text-slate-900">{props.title}</h4>
-      <p className="mt-1 text-xs text-slate-500">{props.hint}</p>
+    <section className="rounded-lg border border-soft bg-sunken/70 p-4">
+      <h4 className="text-body-s font-semibold text-primary">{props.title}</h4>
+      <p className="mt-1 text-caption text-muted">{props.hint}</p>
 
       <label className="mt-3 block">
         <span className="label">Subir imagen</span>
@@ -108,7 +108,7 @@ function ImageCropField(props: CropFieldProps) {
 
       <div
         ref={frameRef}
-        className={`mt-3 relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 ${
+        className={`mt-3 relative overflow-hidden rounded-lg border border-soft bg-sunken ${
           props.imageDataUrl ? "cursor-grab active:cursor-grabbing" : ""
         } touch-none select-none`}
         style={{ aspectRatio: props.aspectRatio }}
@@ -128,7 +128,7 @@ function ImageCropField(props: CropFieldProps) {
             }}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-500">Sin imagen cargada</div>
+          <div className="absolute inset-0 flex items-center justify-center text-body-s text-muted">Sin imagen cargada</div>
         )}
 
         <div className="pointer-events-none absolute inset-0 border border-white/60" />
@@ -357,14 +357,14 @@ export function TemplateEditor(props: Props) {
       <section className="panel p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Editor de diseno de tickets</h2>
+            <h2 className="font-display text-title-l font-bold text-primary">Editor de diseno de tickets</h2>
             <p className="muted mt-1">Ajustes visuales del PDF final con preview exacta.</p>
           </div>
           <span className="badge">{isHorizontal ? "Horizontal" : isCompact ? "Vertical compacto" : "Vertical mobile"}</span>
         </div>
 
         <form onSubmit={onSubmit} className="mt-5 space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-3">
+          <div className="rounded-lg border border-soft bg-surface p-3">
             <div className="flex flex-wrap gap-2">
               <Link href={`/admin/events/${props.eventId}/edit`} className="btn-secondary">
                 Cancelar y volver
@@ -375,20 +375,20 @@ export function TemplateEditor(props: Props) {
             </div>
           </div>
 
-          <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-            <h4 className="text-sm font-semibold text-slate-900">Formato del ticket</h4>
+          <section className="rounded-lg border border-soft bg-sunken/70 p-4">
+            <h4 className="text-body-s font-semibold text-primary">Formato del ticket</h4>
             <div className="mt-3 grid gap-2">
               {ticketTemplatePresets.map((preset) => (
                 <button
                   key={preset.id}
                   type="button"
-                  className={`rounded-2xl border px-3 py-2 text-left transition ${
-                    formData.layout === preset.id ? "border-blue-500 bg-blue-50" : "border-slate-300 bg-white hover:bg-slate-50"
+                  className={`rounded-md border px-3 py-2 text-left transition ${
+                    formData.layout === preset.id ? "border-[color:var(--brand-violet)] bg-coral-50" : "border-soft bg-surface hover:bg-sunken"
                   }`}
                   onClick={() => applyPreset(preset.id)}
                 >
-                  <p className="text-sm font-semibold text-slate-900">{preset.name}</p>
-                  <p className="text-xs text-slate-600">{preset.description}</p>
+                  <p className="text-body-s font-semibold text-primary">{preset.name}</p>
+                  <p className="text-caption text-secondary">{preset.description}</p>
                 </button>
               ))}
             </div>
@@ -407,8 +407,8 @@ export function TemplateEditor(props: Props) {
             </label>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-            <h4 className="text-sm font-semibold text-slate-900">Colores y textos</h4>
+          <section className="rounded-lg border border-soft bg-sunken/70 p-4">
+            <h4 className="text-body-s font-semibold text-primary">Colores y textos</h4>
 
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <label className="block">
@@ -448,7 +448,7 @@ export function TemplateEditor(props: Props) {
                     }))
                   }
                 />
-                <span className="w-14 text-right text-sm font-semibold text-slate-700">{Math.round(overlayOpacity * 100)}%</span>
+                <span className="w-14 text-right text-body-s font-semibold text-secondary">{Math.round(overlayOpacity * 100)}%</span>
               </div>
             </label>
 
@@ -539,28 +539,28 @@ export function TemplateEditor(props: Props) {
             }
           />
 
-          {message && <p className="text-sm text-slate-600">{message}</p>}
+          {message && <p className="text-body-s text-secondary">{message}</p>}
         </form>
       </section>
 
       <section className="panel overflow-hidden p-5">
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-slate-900">Vista previa exacta</h3>
+          <h3 className="font-display text-title-l font-bold text-primary">Vista previa exacta</h3>
           <p className="muted">Render real del PDF final para este evento y formato.</p>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 p-2">
+        <div className="overflow-hidden rounded-lg border border-soft bg-sunken p-2">
           {previewPdfUrl ? (
-            <iframe title="Preview PDF ticket" src={previewPdfUrl} className={`w-full rounded-xl bg-white ${previewHeightClass}`} />
+            <iframe title="Preview PDF ticket" src={previewPdfUrl} className={`w-full rounded-md bg-surface ${previewHeightClass}`} />
           ) : (
-            <div className={`flex w-full items-center justify-center rounded-xl bg-white ${previewHeightClass}`}>
-              <p className="text-sm text-slate-500">Generando preview de ticket...</p>
+            <div className={`flex w-full items-center justify-center rounded-md bg-surface ${previewHeightClass}`}>
+              <p className="text-body-s text-muted">Generando preview de ticket...</p>
             </div>
           )}
         </div>
 
-        {previewLoading ? <p className="mt-3 text-sm text-slate-500">Actualizando preview...</p> : null}
-        {previewError ? <p className="mt-3 text-sm text-rose-600">{previewError}</p> : null}
+        {previewLoading ? <p className="mt-3 text-body-s text-muted">Actualizando preview...</p> : null}
+        {previewError ? <p className="mt-3 text-body-s text-danger-500">{previewError}</p> : null}
       </section>
     </div>
   );

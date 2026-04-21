@@ -87,23 +87,23 @@ export default async function AdminOrdersPage() {
                 const hasAttendedTickets = attendedTickets > 0;
 
                 return (
-                  <tr key={order.id} className="border-b border-slate-100">
-                    <td className="py-3 pr-3 text-slate-600">{new Date(order.createdAt).toLocaleString("es-AR")}</td>
+                  <tr key={order.id} className="border-b border-soft">
+                    <td className="py-3 pr-3 text-secondary">{new Date(order.createdAt).toLocaleString("es-AR")}</td>
                     <td className="py-3 pr-3">
-                      <p className="font-medium text-slate-800">{order.event.name}</p>
-                      <p className="text-xs text-slate-500">{order.id}</p>
+                      <p className="font-medium text-primary">{order.event.name}</p>
+                      <p className="text-caption text-muted">{order.id}</p>
                     </td>
                     <td className="py-3 pr-3">
-                      <p className="text-slate-700">{order.buyerName}</p>
-                      <p className="text-xs text-slate-500">{order.buyerEmail}</p>
-                      <p className="text-xs text-slate-500">{order.buyerPhone ?? "Sin telefono"}</p>
+                      <p className="text-secondary">{order.buyerName}</p>
+                      <p className="text-caption text-muted">{order.buyerEmail}</p>
+                      <p className="text-caption text-muted">{order.buyerPhone ?? "Sin telefono"}</p>
                     </td>
                     <td className="py-3 pr-3">
                       <span className={`badge ${getOrderKindBadgeClass(order.kind)}`}>{getOrderKindLabel(order.kind)}</span>
                     </td>
-                    <td className="py-3 pr-3 text-slate-700">{order.ticketType.name}</td>
-                    <td className="py-3 pr-3 text-slate-700">{order.quantity}</td>
-                    <td className="py-3 pr-3 text-slate-700">{centsToCurrency(order.totalCents)}</td>
+                    <td className="py-3 pr-3 text-secondary">{order.ticketType.name}</td>
+                    <td className="py-3 pr-3 text-secondary">{order.quantity}</td>
+                    <td className="py-3 pr-3 text-secondary">{centsToCurrency(order.totalCents)}</td>
                     <td className="py-3 pr-3">
                       <span className={`badge ${order.status === "PAID" ? "border-info-500 bg-info-50 text-info-700" : ""}`}>{order.status}</span>
                     </td>
@@ -113,9 +113,9 @@ export default async function AdminOrdersPage() {
                           Ver ({order.tickets.length})
                         </Link>
                       ) : (
-                        <span className="text-xs text-slate-500">Sin emitir</span>
+                        <span className="text-caption text-muted">Sin emitir</span>
                       )}
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-caption text-muted">
                         Email:{" "}
                         {order.emailDeliveries[0]
                           ? order.emailDeliveries[0].status === "SENT"

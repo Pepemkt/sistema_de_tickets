@@ -58,7 +58,7 @@ export function DeleteOrderButton({ orderId, hasAttendedTickets }: Props) {
       type="button"
       onClick={() => void onDelete()}
       disabled={loading || hasAttendedTickets}
-      className="inline-flex items-center rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex items-center rounded-full border border-danger-500/40 bg-surface px-3 py-2 text-body-s font-medium text-danger-500 transition hover:bg-danger-50 disabled:cursor-not-allowed disabled:opacity-60"
       title={hasAttendedTickets ? "Tiene tickets validados en acceso" : "Eliminar orden"}
     >
       {loading ? "Eliminando..." : "Eliminar"}

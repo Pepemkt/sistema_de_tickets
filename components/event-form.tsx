@@ -200,7 +200,7 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
             accept="image/*"
             onChange={(event) => void onImageFileChange(event.target.files?.[0] ?? null)}
           />
-          <p className="mt-1 text-xs text-slate-500">Sube una imagen para portada publica del evento.</p>
+          <p className="mt-1 text-caption text-muted">Sube una imagen para portada publica del evento.</p>
           {heroImageUrl && (
             <button type="button" className="btn-secondary mt-2" onClick={() => setHeroImageUrl("")}>
               Quitar imagen
@@ -209,7 +209,7 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
         </div>
 
         {heroImageUrl && (
-          <div className="md:col-span-2 overflow-hidden rounded-xl border border-slate-200">
+          <div className="md:col-span-2 overflow-hidden rounded-md border border-soft">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={heroImageUrl} alt="Preview portada del evento" className="h-56 w-full object-cover" />
           </div>
@@ -228,7 +228,7 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
               />
             ))}
           </div>
-          <p className="mt-1 text-xs text-slate-500">Puedes dejarlas en blanco y no se mostraran en la landing publica.</p>
+          <p className="mt-1 text-caption text-muted">Puedes dejarlas en blanco y no se mostraran en la landing publica.</p>
         </div>
 
         <div>
@@ -257,7 +257,7 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
             onChange={(event) => setPlatformCommissionPercent(Number(event.target.value))}
             disabled={!canEditCommission}
           />
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-caption text-muted">
             {canEditCommission
               ? "Solo ADMIN puede editar esta comision. Se usa para futuras liquidaciones manuales del evento."
               : "Visible para MANAGER en modo lectura. Solo ADMIN puede editar esta comision."}
@@ -274,15 +274,15 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
           <input className="field" type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} />
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <p className="text-sm font-medium text-slate-700">Capacidad total</p>
-          <p className="text-2xl font-semibold text-blue-700">{totalCapacity}</p>
+        <div className="rounded-md border border-soft bg-sunken p-3">
+          <p className="text-body-s font-medium text-secondary">Capacidad total</p>
+          <p className="font-display text-title-m font-bold text-[color:var(--brand-magenta)]">{totalCapacity}</p>
         </div>
       </div>
 
-      <section className="rounded-2xl border border-slate-200 p-4">
+      <section className="rounded-lg border border-soft p-4">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-slate-900">Tipos de entrada</h3>
+          <h3 className="text-body-l font-semibold text-primary">Tipos de entrada</h3>
           <button type="button" onClick={addType} className="btn-secondary">
             Agregar tipo
           </button>
@@ -290,7 +290,7 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
 
         <div className="space-y-3">
           {ticketTypes.map((type, index) => (
-            <div key={`${type.id ?? "new"}-${index}`} className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-12">
+            <div key={`${type.id ?? "new"}-${index}`} className="grid gap-3 rounded-md border border-soft p-3 md:grid-cols-12">
               <div className="md:col-span-5">
                 <label className="label">Nombre</label>
                 <input
@@ -374,7 +374,7 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
                 >
                   Quitar
                 </button>
-                {type.soldCount ? <p className="mt-1 text-xs text-slate-500">Vendidas: {type.soldCount}</p> : null}
+                {type.soldCount ? <p className="mt-1 text-caption text-muted">Vendidas: {type.soldCount}</p> : null}
               </div>
             </div>
           ))}
@@ -386,7 +386,7 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
           {loading ? "Guardando..." : mode === "create" ? "Crear evento" : "Guardar cambios"}
         </button>
 
-        {message && <p className="text-sm text-slate-600">{message}</p>}
+        {message && <p className="text-body-s text-secondary">{message}</p>}
       </div>
     </form>
   );

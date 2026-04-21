@@ -132,9 +132,9 @@ export default async function AdminDashboardPage() {
                 </thead>
                 <tbody>
                   {recentOrders.map((order) => (
-                    <tr key={order.id} className="border-b border-slate-100">
-                      <td className="py-2.5 pr-3 text-slate-800">{order.event.name}</td>
-                      <td className="py-2.5 pr-3 text-slate-600">{order.ticketType.name}</td>
+                    <tr key={order.id} className="border-b border-soft">
+                      <td className="py-2.5 pr-3 text-primary">{order.event.name}</td>
+                      <td className="py-2.5 pr-3 text-secondary">{order.ticketType.name}</td>
                       <td className="py-2.5 pr-3">
                         <span className={`badge ${getOrderKindBadgeClass(order.kind)}`}>{getOrderKindLabel(order.kind)}</span>
                       </td>
@@ -151,8 +151,8 @@ export default async function AdminDashboardPage() {
                           {order.status}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-3 font-medium text-slate-800">{centsToCurrency(order.totalCents)}</td>
-                      <td className="py-2.5 pr-3 text-slate-500">
+                      <td className="py-2.5 pr-3 font-medium text-primary">{centsToCurrency(order.totalCents)}</td>
+                      <td className="py-2.5 pr-3 text-muted">
                         {new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(order.createdAt)}
                       </td>
                     </tr>
