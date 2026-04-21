@@ -22,9 +22,9 @@ const SESSION_LIST_LIMIT = 18;
 
 const RANGE_OPTIONS = [
   { value: "1d", label: "24 horas" },
-  { value: "7d", label: "7 dias" },
-  { value: "30d", label: "30 dias" },
-  { value: "90d", label: "90 dias" },
+  { value: "7d", label: "7 días" },
+  { value: "30d", label: "30 días" },
+  { value: "90d", label: "90 días" },
   { value: "all", label: "Todo" }
 ] as const;
 
@@ -234,6 +234,17 @@ function getSafeAppHost() {
   } catch {
     return null;
   }
+}
+
+function formatRelativeTime(date: Date, now: Date): string {
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "ahora";
+  if (diffMin < 60) return `hace ${diffMin} min`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `hace ${diffH} h`;
+  const diffD = Math.floor(diffH / 24);
+  return `hace ${diffD} d`;
 }
 
 type Props = {
@@ -484,360 +495,736 @@ export default async function AnalyticsPage({ searchParams }: Props) {
   const dateTimeFormatter = new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" });
 
   return (
-    <div className="space-y-6">
-      <section className="panel p-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-title-m font-semibold text-primary">Analytics UX</h1>
-            <p className="muted mt-1">
-              Recorridos anonimos por sesion y evento. Una visita queda marcada como abandono si no llega a un estado final y queda inactiva por mas de 30 minutos.
-            </p>
-          </div>
-          <Link href="/admin" className="btn-secondary">
-            Volver al dashboard
-          </Link>
-        </div>
+    <>
+      {/* ─── CSS-ONLY ANIMATIONS — server component safe ─────────────────────── */}
+      <style>{`
+@keyframes an-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes an-stat-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes an-bar-grow {
+  from { width: 0 !important; }
+}
+@keyframes an-row-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes an-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
 
-        <form className="mt-5 grid gap-3 md:grid-cols-[1fr_180px_auto]">
-          <label className="space-y-1">
-            <span className="label">Evento</span>
-            <select name="event" defaultValue={selectedEventSlug} className="field">
-              <option value="">Todos los eventos</option>
-              {availableEvents.map((event) => (
-                <option key={event.id} value={event.slug}>
-                  {event.name}
-                </option>
-              ))}
-            </select>
-          </label>
+/* Header */
+.an-header { animation: an-fade-up 0.6s var(--ease-tactile, cubic-bezier(.22,1,.36,1)) 0.02s both; }
 
-          <label className="space-y-1">
-            <span className="label">Rango</span>
-            <select name="range" defaultValue={range.value} className="field">
-              {RANGE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+/* KPI cards */
+.an-kpi { animation: an-stat-in 0.5s var(--ease-spring, cubic-bezier(.34,1.56,.64,1)) both; }
+.an-kpi:nth-child(1) { animation-delay: 0.06s; }
+.an-kpi:nth-child(2) { animation-delay: 0.11s; }
+.an-kpi:nth-child(3) { animation-delay: 0.16s; }
+.an-kpi:nth-child(4) { animation-delay: 0.21s; }
+.an-kpi:nth-child(5) { animation-delay: 0.26s; }
+.an-kpi {
+  transition: transform 0.2s var(--ease-tactile, cubic-bezier(.22,1,.36,1)),
+              box-shadow 0.2s var(--ease-tactile, cubic-bezier(.22,1,.36,1)),
+              border-color 0.15s ease;
+}
+.an-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(21,22,43,0.09);
+}
 
-          <div className="flex items-end gap-2">
-            <button type="submit" className="btn-primary">
-              Aplicar
-            </button>
-            <Link href="/admin/analytics" className="btn-secondary">
-              Reset
-            </Link>
-          </div>
-        </form>
-      </section>
+/* Section panels */
+.an-panel { animation: an-fade-up 0.55s var(--ease-tactile, cubic-bezier(.22,1,.36,1)) both; }
+.an-panel-1 { animation-delay: 0.32s; }
+.an-panel-2 { animation-delay: 0.38s; }
+.an-panel-3 { animation-delay: 0.44s; }
+.an-panel-4 { animation-delay: 0.50s; }
+.an-panel-5 { animation-delay: 0.56s; }
+.an-panel-6 { animation-delay: 0.62s; }
+.an-panel-7 { animation-delay: 0.68s; }
+.an-panel-8 { animation-delay: 0.74s; }
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <article className="panel p-4">
-          <p className="text-overline text-secondary">Visitas</p>
-          <p className="mt-1 text-title-l font-semibold text-primary">{journeys.length.toLocaleString("es-AR")}</p>
-          <p className="mt-1 text-caption text-secondary">{range.label}</p>
-        </article>
-        <article className="panel p-4">
-          <p className="text-overline text-secondary">Llegan al checkout</p>
-          <p className="mt-1 text-title-l font-semibold text-primary">{checkoutReachedJourneys.toLocaleString("es-AR")}</p>
-          <p className="mt-1 text-caption text-secondary">{checkoutRate}% del total</p>
-        </article>
-        <article className="panel p-4">
-          <p className="text-overline text-secondary">Intentan pagar</p>
-          <p className="mt-1 text-title-l font-semibold text-primary">{submitJourneys.toLocaleString("es-AR")}</p>
-          <p className="mt-1 text-caption text-secondary">{submitRate}% del total</p>
-        </article>
-        <article className="panel p-4">
-          <p className="text-overline text-secondary">Convertidas</p>
-          <p className="mt-1 text-title-l font-semibold text-success-700">{convertedJourneys.toLocaleString("es-AR")}</p>
-          <p className="mt-1 text-caption text-secondary">{conversionRate}% del total</p>
-        </article>
-        <article className="panel p-4">
-          <p className="text-overline text-secondary">Abandonos</p>
-          <p className="mt-1 text-title-l font-semibold text-danger-700">{abandonedJourneys.toLocaleString("es-AR")}</p>
-          <p className="mt-1 text-caption text-secondary">{activeJourneys.toLocaleString("es-AR")} visitas activas</p>
-        </article>
-      </section>
+/* Bars */
+.an-bar { animation: an-bar-grow 0.9s var(--ease-tactile, cubic-bezier(.22,1,.36,1)) 0.5s both; }
 
-      <section className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-        <article className="panel p-5">
-          <h2 className="text-body-l font-semibold text-primary">Embudo UX</h2>
-          <p className="muted mt-1">Cuenta cuantas visitas alcanzan cada hito del flujo de compra.</p>
+/* Table rows */
+.an-trow { animation: an-fade-up 0.3s var(--ease-tactile, cubic-bezier(.22,1,.36,1)) both; }
+.an-trow:nth-child(1)  { animation-delay: 0.60s; }
+.an-trow:nth-child(2)  { animation-delay: 0.63s; }
+.an-trow:nth-child(3)  { animation-delay: 0.66s; }
+.an-trow:nth-child(4)  { animation-delay: 0.69s; }
+.an-trow:nth-child(5)  { animation-delay: 0.72s; }
+.an-trow:nth-child(6)  { animation-delay: 0.75s; }
+.an-trow:nth-child(7)  { animation-delay: 0.78s; }
+.an-trow:nth-child(8)  { animation-delay: 0.81s; }
+.an-trow:nth-child(9)  { animation-delay: 0.84s; }
+.an-trow:nth-child(10) { animation-delay: 0.87s; }
+.an-trow:nth-child(11) { animation-delay: 0.90s; }
+.an-trow:nth-child(12) { animation-delay: 0.93s; }
 
-          {journeys.length === 0 ? (
-            <p className="muted mt-4">Todavia no hay recorridos para mostrar en este filtro.</p>
-          ) : (
-            <div className="mt-5 space-y-3">
-              {funnelRows.map((row) => (
-                <div key={row.step} className="grid grid-cols-[170px_1fr_90px_90px] items-center gap-3">
-                  <span className="text-caption font-medium text-secondary">{row.label}</span>
-                  <div className="h-4 overflow-hidden rounded-full bg-sunken">
-                    <div
-                      className="h-4 rounded-full bg-forest-600 transition-all"
-                      style={{ width: `${Math.max((row.sessions / maxFunnelSessions) * 100, row.sessions > 0 ? 2 : 0)}%` }}
-                    />
-                  </div>
-                  <span className="text-right text-body-s font-semibold text-primary">{row.sessions.toLocaleString("es-AR")}</span>
-                  <span className="text-right text-caption text-secondary">
-                    {row.dropOffPct === null ? "entrada" : `-${row.dropOffPct}%`}
-                  </span>
-                </div>
-              ))}
+/* Pulse dot */
+.an-dot-pulse { animation: an-pulse-dot 2.2s ease-in-out infinite; }
+
+/* Gradient number text */
+.an-grad-num {
+  background: var(--grad-hero);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Toolbar form inputs */
+.an-toolbar-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+
+/* Dense table */
+.an-dense-table { width: 100%; border-collapse: collapse; }
+.an-dense-table th {
+  padding: 7px 10px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: var(--text-secondary, #4B4F6B);
+  background: var(--bg-sunken, #F1F2F6);
+  border-bottom: 1px solid var(--border-soft, #E5E7EF);
+  white-space: nowrap;
+}
+.an-dense-table th.right { text-align: right; }
+.an-dense-table td {
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-primary, #15162B);
+  border-bottom: 1px solid var(--border-soft, #E5E7EF);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.an-dense-table td.right { text-align: right; }
+.an-dense-table td.mono {
+  font-family: var(--font-mono, ui-monospace);
+  font-size: 11px;
+  color: var(--text-secondary, #4B4F6B);
+}
+.an-dense-table td.muted { color: var(--text-secondary, #4B4F6B); }
+.an-dense-table tbody tr:hover { background: var(--bg-sunken, #F1F2F6); }
+.an-dense-table tbody tr:last-child td { border-bottom: none; }
+
+/* Session status pills */
+.an-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  border-width: 1px;
+  border-style: solid;
+}
+.an-pill-green  { background: rgba(31,174,74,0.08);  border-color: rgba(31,174,74,0.22);  color: #117A30; }
+.an-pill-red    { background: rgba(225,29,72,0.07);  border-color: rgba(225,29,72,0.20);  color: #9F1239; }
+.an-pill-amber  { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.22); color: #9B5F17; }
+.an-pill-blue   { background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.20); color: #312E81; }
+.an-pill-gray   { background: var(--bg-sunken,#F1F2F6); border-color: var(--border-soft,#E5E7EF); color: var(--text-secondary,#4B4F6B); }
+.an-pill-violet { background: rgba(109,40,217,0.07); border-color: rgba(109,40,217,0.20); color: #4C1D95; }
+
+/* Icon action button with tooltip */
+.an-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #4B4F6B);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+.an-action-btn:hover { background: var(--bg-sunken, #F1F2F6); color: var(--brand-violet, #5B21B6); }
+.an-action-btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  background: #15162B;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Range segmented control */
+.an-range-seg {
+  display: inline-flex;
+  gap: 1px;
+  background: var(--border-soft, #E5E7EF);
+  border-radius: 8px;
+  padding: 2px;
+}
+.an-range-seg a {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary, #4B4F6B);
+  text-decoration: none;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.an-range-seg a:hover { background: var(--bg-surface, #fff); color: var(--text-primary, #15162B); }
+.an-range-seg a.active {
+  background: var(--bg-surface, #fff);
+  color: var(--brand-violet, #5B21B6);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(21,22,43,0.10);
+}
+
+/* Chart bar column */
+.an-col-bar { display: flex; align-items: flex-end; gap: 3px; height: 80px; }
+.an-col-bar-item {
+  flex: 1;
+  min-width: 0;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #8B5CF6 0%, #6D28D9 100%);
+  transition: opacity 0.15s;
+}
+.an-col-bar-item.hi { background: linear-gradient(180deg, #EC4899 0%, #8B5CF6 100%); }
+.an-col-bar-item:hover { opacity: 0.8; }
+      `}</style>
+
+      <div className="space-y-5">
+
+        {/* ── HERO BAR ─────────────────────────────────────────────────────────── */}
+        <header className="an-header">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: "var(--brand-magenta)" }}>
+                ANALYTICS
+              </p>
+              <h1 className="mt-0.5 font-display text-[1.6rem] font-extrabold leading-tight tracking-tight text-primary">
+                Analytics UX
+              </h1>
+              <p className="mt-0.5 text-[12px] text-secondary">
+                Recorridos anónimos por sesión · {range.label} · abandono = sin actividad por +30 min
+              </p>
             </div>
-          )}
 
-          <div className="mt-4 rounded-sm border border-soft bg-sunken p-3 text-caption text-secondary">
-            El embudo usa una visita unica por combinacion <span className="font-semibold text-primary">sesion + evento</span>, para no mezclar recorridos de distintos eventos en un mismo navegador.
+            {/* Right: date-range segmented + event filter */}
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Event quick select */}
+              <form className="flex items-center gap-1.5">
+                <select
+                  name="event"
+                  defaultValue={selectedEventSlug}
+                  className="an-toolbar-select rounded-lg border border-[color:var(--border-soft)] bg-surface px-3 py-1.5 text-[12px] font-medium text-primary focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-violet)]/30"
+                >
+                  <option value="">Todos los eventos</option>
+                  {availableEvents.map((event) => (
+                    <option key={event.id} value={event.slug}>
+                      {event.name}
+                    </option>
+                  ))}
+                </select>
+                <input type="hidden" name="range" value={range.value} />
+                <button type="submit" className="btn-primary--sm !px-3">Aplicar</button>
+              </form>
+
+              {/* Range segmented control */}
+              <nav className="an-range-seg" aria-label="Rango de tiempo">
+                {RANGE_OPTIONS.map((opt) => {
+                  const href = selectedEventSlug
+                    ? `/admin/analytics?range=${opt.value}&event=${selectedEventSlug}`
+                    : `/admin/analytics?range=${opt.value}`;
+                  return (
+                    <a
+                      key={opt.value}
+                      href={href}
+                      className={range.value === opt.value ? "active" : ""}
+                    >
+                      {opt.label}
+                    </a>
+                  );
+                })}
+              </nav>
+            </div>
           </div>
-        </article>
+        </header>
 
-        <article className="panel p-5">
-          <h2 className="text-body-l font-semibold text-primary">Estado final de las visitas</h2>
-          <p className="muted mt-1">Distribucion del ultimo estado visto por cada sesion.</p>
+        {/* ── KPI ROW (5 cards, compact) ───────────────────────────────────────── */}
+        <section className="grid gap-2.5 sm:grid-cols-3 xl:grid-cols-5" aria-label="Métricas de sesiones">
 
-          <div className="mt-5 space-y-3">
-            {statusRows.length === 0 ? (
-              <p className="muted">Sin estados registrados todavia.</p>
+          {/* Visitas */}
+          <article className="an-kpi rounded-xl border border-[color:var(--border-soft)] bg-surface p-3.5 shadow-[var(--shadow-xs)]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-secondary">Visitas</p>
+            <p className="mt-1.5 font-display text-[1.5rem] font-extrabold leading-none tracking-tight text-primary tabular-nums">
+              {journeys.length.toLocaleString("es-AR")}
+            </p>
+            <p className="mt-1 text-[11px] text-secondary">{range.label}</p>
+          </article>
+
+          {/* Al checkout */}
+          <article className="an-kpi rounded-xl border border-[color:var(--border-soft)] bg-surface p-3.5 shadow-[var(--shadow-xs)]" style={{ borderTopWidth: "2px", borderTopColor: "var(--brand-magenta)" }}>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-secondary">Al checkout</p>
+            <p className="mt-1.5 font-display text-[1.5rem] font-extrabold leading-none tracking-tight tabular-nums" style={{ color: "var(--brand-magenta)" }}>
+              {checkoutReachedJourneys.toLocaleString("es-AR")}
+            </p>
+            <p className="mt-1 text-[11px] text-secondary">{checkoutRate}% del total</p>
+          </article>
+
+          {/* Intentan pagar */}
+          <article className="an-kpi rounded-xl border border-[color:var(--border-soft)] bg-surface p-3.5 shadow-[var(--shadow-xs)]" style={{ borderTopWidth: "2px", borderTopColor: "var(--brand-magenta)" }}>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-secondary">Intentan pagar</p>
+            <p className="mt-1.5 font-display text-[1.5rem] font-extrabold leading-none tracking-tight tabular-nums" style={{ color: "var(--brand-magenta)" }}>
+              {submitJourneys.toLocaleString("es-AR")}
+            </p>
+            <p className="mt-1 text-[11px] text-secondary">{submitRate}% del total</p>
+          </article>
+
+          {/* Convertidas */}
+          <article className="an-kpi rounded-xl border border-[color:var(--border-soft)] bg-surface p-3.5 shadow-[var(--shadow-xs)]" style={{ borderTopWidth: "2px", borderTopColor: "var(--clr-success-500)" }}>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-secondary">Convertidas</p>
+            <p className="mt-1.5 font-display text-[1.5rem] font-extrabold leading-none tracking-tight tabular-nums text-success-700">
+              {convertedJourneys.toLocaleString("es-AR")}
+            </p>
+            <p className="mt-1 text-[11px] text-secondary">{conversionRate}% conversión</p>
+          </article>
+
+          {/* Abandonos */}
+          <article className="an-kpi rounded-xl border border-[color:var(--border-soft)] bg-surface p-3.5 shadow-[var(--shadow-xs)]" style={{ borderTopWidth: "2px", borderTopColor: "var(--clr-danger-500)" }}>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-secondary">Abandonos</p>
+            <p className="mt-1.5 font-display text-[1.5rem] font-extrabold leading-none tracking-tight tabular-nums text-danger-700">
+              {abandonedJourneys.toLocaleString("es-AR")}
+            </p>
+            <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-secondary">
+              <span className="an-dot-pulse inline-block h-1.5 w-1.5 rounded-full bg-success-500" aria-hidden="true" />
+              {activeJourneys.toLocaleString("es-AR")} activas ahora
+            </p>
+          </article>
+        </section>
+
+        {/* ── CHARTS ROW: Embudo + Ventas por día (side-by-side) ──────────────── */}
+        <section className="an-panel an-panel-1 grid gap-4 xl:grid-cols-2">
+
+          {/* Embudo UX */}
+          <article className="rounded-xl border border-[color:var(--border-soft)] bg-surface shadow-[var(--shadow-xs)]">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[color:var(--border-soft)]">
+              <div>
+                <h2 className="font-display text-[13px] font-bold text-primary">Embudo UX</h2>
+                <p className="text-[11px] text-secondary">Visitas que alcanzan cada hito</p>
+              </div>
+              <span className="an-pill an-pill-gray">{range.label}</span>
+            </div>
+
+            {journeys.length === 0 ? (
+              <p className="px-4 py-6 text-[12px] text-secondary">Sin datos para este filtro.</p>
             ) : (
-              statusRows.map((row) => (
-                <div key={row.status} className="flex items-center justify-between rounded-sm border border-soft px-3 py-2.5">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${row.badgeClass}`}>{row.label}</span>
-                  <span className="text-body-s font-semibold text-primary">{row.count.toLocaleString("es-AR")}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </article>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-3">
-        <article className="panel p-5 xl:col-span-1">
-          <h2 className="text-body-l font-semibold text-primary">Puntos de fuga</h2>
-          <p className="muted mt-1">En que paso terminan las visitas abandonadas.</p>
-
-          <div className="mt-5 space-y-3">
-            {abandonmentRows.length === 0 ? (
-              <p className="muted">Todavia no se detectaron abandonos en este filtro.</p>
-            ) : (
-              abandonmentRows.map((row) => (
-                <div key={row.step} className="flex items-center justify-between rounded-sm border border-soft px-3 py-2.5">
-                  <div>
-                    <p className="text-body-s font-semibold text-primary">{row.label}</p>
-                    <p className="text-caption text-secondary">{row.pct}% del total</p>
-                  </div>
-                  <span className="rounded-full bg-danger-500 px-2 py-0.5 text-xs font-semibold text-onprimary">{row.count}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </article>
-
-        <article className="panel p-5 xl:col-span-1">
-          <h2 className="text-body-l font-semibold text-primary">Dispositivos</h2>
-          <p className="muted mt-1">Comparativo de volumen y conversion por tipo de dispositivo.</p>
-
-          <div className="mt-5 space-y-3">
-            {deviceRows.length === 0 ? (
-              <p className="muted">Sin datos de dispositivo disponibles.</p>
-            ) : (
-              deviceRows.map((row) => (
-                <div key={row.deviceType} className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${getDeviceBadgeClass(row.deviceType)}`}>
-                      {getDeviceLabel(row.deviceType)}
-                    </span>
-                    <span className="text-caption text-secondary">
-                      {row.sessions.toLocaleString("es-AR")} visitas · {row.conversionPct}% conv.
-                    </span>
-                  </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-sunken">
-                    <div
-                      className="h-3 rounded-full bg-forest-600"
-                      style={{ width: `${Math.max((row.sessions / maxDeviceSessions) * 100, row.sessions > 0 ? 2 : 0)}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </article>
-
-        <article className="panel p-5 xl:col-span-1">
-          <h2 className="text-body-l font-semibold text-primary">Origenes de trafico</h2>
-          <p className="muted mt-1">Referrer host de entrada por sesion. El trafico sin referrer aparece como Directo.</p>
-
-          <div className="mt-5 space-y-3">
-            {referrerRows.length === 0 ? (
-              <p className="muted">Sin referrers registrados todavia.</p>
-            ) : (
-              referrerRows.map((row) => (
-                <div key={row.label} className="grid grid-cols-[1fr_80px] items-center gap-3">
-                  <div>
-                    <p className="truncate text-body-s font-medium text-primary">{row.label}</p>
-                    <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-sunken">
+              <div className="px-4 py-3 space-y-2">
+                {funnelRows.map((row, i) => (
+                  <div key={row.step} className="grid items-center gap-2" style={{ gridTemplateColumns: "130px 1fr 48px 56px" }}>
+                    <span className="truncate text-[11px] font-medium text-secondary">{row.label}</span>
+                    <div className="h-[5px] overflow-hidden rounded-full bg-[color:var(--bg-sunken)]">
                       <div
-                        className="h-2.5 rounded-full bg-forest-600"
-                        style={{ width: `${Math.max((row.count / maxReferrerSessions) * 100, row.count > 0 ? 2 : 0)}%` }}
+                        className="an-bar h-[5px] rounded-full"
+                        style={{
+                          width: `${Math.max((row.sessions / maxFunnelSessions) * 100, row.sessions > 0 ? 2 : 0)}%`,
+                          background: i === funnelRows.length - 1
+                            ? "var(--clr-success-500)"
+                            : i === 0
+                              ? "var(--grad-hero)"
+                              : "linear-gradient(90deg,#8B5CF6,#6D28D9)",
+                          opacity: 1 - i * 0.08
+                        }}
+                      />
+                    </div>
+                    <span className="text-right font-display text-[12px] font-bold text-primary tabular-nums">{row.sessions.toLocaleString("es-AR")}</span>
+                    <span className={`text-right text-[11px] font-semibold tabular-nums ${
+                      row.dropOffPct === null ? "text-secondary" :
+                      row.dropOffPct > 40 ? "text-danger-600" :
+                      row.dropOffPct > 15 ? "text-warning-600" : "text-secondary"
+                    }`}>
+                      {row.dropOffPct === null ? "entrada" : `−${row.dropOffPct}%`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+
+          {/* Ventas por día */}
+          <article className="rounded-xl border border-[color:var(--border-soft)] bg-surface shadow-[var(--shadow-xs)]">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[color:var(--border-soft)]">
+              <div>
+                <h2 className="font-display text-[13px] font-bold text-primary">Ventas por día</h2>
+                <p className="text-[11px] text-secondary">Ingresos aprobados · {range.label}</p>
+              </div>
+              <span className="an-pill an-pill-violet">
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                Ingresos
+              </span>
+            </div>
+
+            {salesByDay.length === 0 ? (
+              <p className="px-4 py-6 text-[12px] text-secondary">Aún no hay ventas pagadas.</p>
+            ) : (
+              <div className="px-4 py-3">
+                {/* Mini column chart */}
+                <div className="an-col-bar mb-2">
+                  {salesByDay.slice(-14).map((day, i, arr) => {
+                    const pct = Math.max((day.total / maxDay) * 100, 2);
+                    const isMax = day.total === maxDay;
+                    return (
+                      <div
+                        key={day.date}
+                        className={`an-col-bar-item${isMax ? " hi" : ""}`}
+                        style={{ height: `${pct}%` }}
+                        title={`${day.date}: ${centsToCurrency(day.total)}`}
+                      />
+                    );
+                  })}
+                </div>
+                {/* List: last 6 days */}
+                <div className="space-y-1.5 mt-3">
+                  {salesByDay.slice(-6).map((day) => (
+                    <div key={day.date} className="grid items-center gap-2" style={{ gridTemplateColumns: "76px 1fr 96px" }}>
+                      <span className="font-mono text-[10px] text-secondary">{day.date}</span>
+                      <div className="h-[4px] overflow-hidden rounded-full bg-[color:var(--bg-sunken)]">
+                        <div
+                          className="an-bar h-[4px] rounded-full"
+                          style={{
+                            width: `${Math.max((day.total / maxDay) * 100, 2)}%`,
+                            background: "var(--grad-hero)"
+                          }}
+                        />
+                      </div>
+                      <span className="text-right font-display text-[12px] font-bold text-primary tabular-nums">{centsToCurrency(day.total)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </article>
+        </section>
+
+        {/* ── SOURCES STRIP + STATUS + DEVICES (compact 3-col) ────────────────── */}
+        <section className="an-panel an-panel-2 grid gap-4 xl:grid-cols-3">
+
+          {/* Orígenes de tráfico */}
+          <article className="rounded-xl border border-[color:var(--border-soft)] bg-surface shadow-[var(--shadow-xs)]">
+            <div className="px-4 py-3 border-b border-[color:var(--border-soft)]">
+              <h2 className="font-display text-[13px] font-bold text-primary">Orígenes</h2>
+              <p className="text-[11px] text-secondary">Top 5 fuentes de tráfico</p>
+            </div>
+            <div className="px-4 py-3 space-y-2">
+              {referrerRows.length === 0 ? (
+                <p className="text-[12px] text-secondary">Sin referrers registrados.</p>
+              ) : (
+                referrerRows.slice(0, 5).map((row) => (
+                  <div key={row.label} className="grid items-center gap-2" style={{ gridTemplateColumns: "1fr 44px" }}>
+                    <div className="min-w-0">
+                      <p className="truncate text-[12px] font-medium text-primary">{row.label}</p>
+                      <div className="mt-1 h-[3px] overflow-hidden rounded-full bg-[color:var(--bg-sunken)]">
+                        <div
+                          className="an-bar h-[3px] rounded-full"
+                          style={{
+                            width: `${Math.max((row.count / maxReferrerSessions) * 100, row.count > 0 ? 4 : 0)}%`,
+                            background: "linear-gradient(90deg,#1FAE4A,#4ade80)"
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-right font-display text-[12px] font-bold text-primary tabular-nums">{row.count.toLocaleString("es-AR")}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </article>
+
+          {/* Estado final */}
+          <article className="rounded-xl border border-[color:var(--border-soft)] bg-surface shadow-[var(--shadow-xs)]">
+            <div className="px-4 py-3 border-b border-[color:var(--border-soft)]">
+              <h2 className="font-display text-[13px] font-bold text-primary">Estado final</h2>
+              <p className="text-[11px] text-secondary">Distribución por último estado</p>
+            </div>
+            <div className="px-4 py-3 space-y-1.5">
+              {statusRows.length === 0 ? (
+                <p className="text-[12px] text-secondary">Sin estados registrados.</p>
+              ) : (
+                statusRows.map((row) => (
+                  <div key={row.status} className="flex items-center justify-between py-1">
+                    <span className={`an-pill ${row.badgeClass}`}>{row.label}</span>
+                    <span className="font-display text-[13px] font-bold text-primary tabular-nums">{row.count.toLocaleString("es-AR")}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </article>
+
+          {/* Dispositivos */}
+          <article className="rounded-xl border border-[color:var(--border-soft)] bg-surface shadow-[var(--shadow-xs)]">
+            <div className="px-4 py-3 border-b border-[color:var(--border-soft)]">
+              <h2 className="font-display text-[13px] font-bold text-primary">Dispositivos</h2>
+              <p className="text-[11px] text-secondary">Volumen y conversión</p>
+            </div>
+            <div className="px-4 py-3 space-y-2.5">
+              {deviceRows.length === 0 ? (
+                <p className="text-[12px] text-secondary">Sin datos de dispositivo.</p>
+              ) : (
+                deviceRows.map((row) => (
+                  <div key={row.deviceType} className="space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`an-pill ${getDeviceBadgeClass(row.deviceType)}`}>
+                        {getDeviceLabel(row.deviceType)}
+                      </span>
+                      <span className="text-[11px] text-secondary tabular-nums">
+                        {row.sessions.toLocaleString("es-AR")} · <span className="font-semibold text-primary">{row.conversionPct}%</span>
+                      </span>
+                    </div>
+                    <div className="h-[3px] overflow-hidden rounded-full bg-[color:var(--bg-sunken)]">
+                      <div
+                        className="an-bar h-[3px] rounded-full"
+                        style={{
+                          width: `${Math.max((row.sessions / maxDeviceSessions) * 100, row.sessions > 0 ? 4 : 0)}%`,
+                          background: "var(--grad-hero)"
+                        }}
                       />
                     </div>
                   </div>
-                  <span className="text-right text-body-s font-semibold text-primary">{row.count.toLocaleString("es-AR")}</span>
-                </div>
-              ))
+                ))
+              )}
+            </div>
+          </article>
+        </section>
+
+        {/* ── SESIONES RECIENTES — DENSE TABLE ─────────────────────────────────── */}
+        <section className="an-panel an-panel-3 rounded-xl border border-[color:var(--border-soft)] bg-surface shadow-[var(--shadow-xs)] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[color:var(--border-soft)]">
+            <div>
+              <h2 className="font-display text-[13px] font-bold text-primary">Sesiones recientes</h2>
+              <p className="text-[11px] text-secondary">Últimos recorridos capturados — vista compacta</p>
+            </div>
+            {journeys.length > 0 && (
+              <span className="an-pill an-pill-gray">
+                {Math.min(journeys.length, SESSION_LIST_LIMIT)} de {journeys.length.toLocaleString("es-AR")}
+              </span>
             )}
           </div>
-        </article>
-      </section>
 
-      <section className="panel p-5">
-        <h2 className="text-body-l font-semibold text-primary">Sesiones recientes</h2>
-        <p className="muted mt-1">Ultimos recorridos capturados. Cada tarjeta representa una visita anonima a un evento.</p>
-
-        {journeys.length === 0 ? (
-          <p className="muted mt-4">Aun no se registraron visitas en el rango seleccionado.</p>
-        ) : (
-          <div className="mt-5 grid gap-4 xl:grid-cols-2">
-            {journeys.slice(0, SESSION_LIST_LIMIT).map((journey) => {
-              const statusMeta = SESSION_STATUS_META[journey.status];
-
-              return (
-                <article key={journey.key} className="rounded-md border border-soft bg-sunken p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-overline text-secondary">{formatAnalyticsSessionLabel(journey.sessionId)}</p>
-                      <h3 className="text-base font-semibold text-primary">{journey.eventName}</h3>
-                    </div>
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusMeta.badgeClass}`}>{statusMeta.label}</span>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                    <span className={`rounded-full px-2 py-0.5 font-semibold ${getDeviceBadgeClass(journey.deviceType)}`}>
-                      {getDeviceLabel(journey.deviceType)}
-                    </span>
-                    <span className="rounded-full bg-surface px-2 py-0.5 font-medium text-secondary">
-                      {getReferrerLabel(journey.referrerHost, appHost)}
-                    </span>
-                    {journey.landingPath ? <span className="rounded-full bg-surface px-2 py-0.5 font-medium text-secondary">Entro por {journey.landingPath}</span> : null}
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {journey.timeline.map((step, index) => {
-                      const stepMeta = getAnalyticsStepMeta(step);
-                      return (
-                        <span key={`${journey.key}:${step}:${index}`} className={`rounded-full px-2 py-0.5 text-xs font-semibold text-onprimary ${stepMeta.color}`}>
-                          {stepMeta.label}
-                        </span>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-4 grid gap-2 text-body-s text-secondary sm:grid-cols-2">
-                    <p>
-                      Inicio: <span className="font-semibold text-primary">{dateTimeFormatter.format(journey.firstSeen)}</span>
-                    </p>
-                    <p>
-                      Ultima actividad: <span className="font-semibold text-primary">{dateTimeFormatter.format(journey.lastSeen)}</span>
-                    </p>
-                    <p>
-                      Duracion: <span className="font-semibold text-primary">{formatDuration(journey.durationMs)}</span>
-                    </p>
-                    <p>
-                      Ultimo paso: <span className="font-semibold text-primary">{getAnalyticsStepMeta(journey.lastStep).label}</span>
-                    </p>
-                  </div>
-
-                  {journey.lastPath ? (
-                    <p className="mt-3 text-caption text-secondary">
-                      Ultima ruta vista: <span className="font-semibold text-primary">{journey.lastPath}</span>
-                    </p>
-                  ) : null}
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
-        <article className="panel p-5">
-          <h2 className="text-body-l font-semibold text-primary">Conversion por evento</h2>
-          <p className="muted mt-1">Comparativo rapido entre visitas, avance en checkout, conversion y abandono.</p>
-
-          <div className="mt-4 space-y-4">
-            {eventJourneyRows.length === 0 ? (
-              <p className="muted">No hay eventos dentro del filtro seleccionado.</p>
-            ) : (
-              eventJourneyRows.map((row) => (
-                <article key={row.slug} className="rounded-md border border-soft p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h3 className="text-base font-semibold text-primary">{row.name}</h3>
-                    <span className="text-body-s font-semibold text-secondary">{row.sessions.toLocaleString("es-AR")} visitas</span>
-                  </div>
-                  <div className="mt-3 grid gap-2 text-body-s text-secondary sm:grid-cols-4">
-                    <p>Checkout: <span className="font-semibold text-primary">{row.checkoutRate}%</span></p>
-                    <p>Intento pago: <span className="font-semibold text-primary">{row.submit.toLocaleString("es-AR")}</span></p>
-                    <p>Conversion: <span className="font-semibold text-success-700">{row.conversionRate}%</span></p>
-                    <p>Abandono: <span className="font-semibold text-danger-700">{row.abandonmentRate}%</span></p>
-                  </div>
-                </article>
-              ))
-            )}
-          </div>
-        </article>
-
-        <article className="panel p-5">
-          <h2 className="text-body-l font-semibold text-primary">Ventas por dia</h2>
-          <p className="muted mt-1">Ingresos aprobados dentro del rango seleccionado.</p>
-
-          <div className="mt-4 space-y-2">
-            {salesByDay.length === 0 ? (
-              <p className="muted">Aun no hay ventas pagadas.</p>
-            ) : (
-              salesByDay.map((day) => (
-                <div key={day.date} className="grid grid-cols-[110px_1fr_120px] items-center gap-3">
-                  <span className="text-caption text-secondary">{day.date}</span>
-                  <div className="h-3 rounded-full bg-sunken">
-                    <div className="h-3 rounded-full bg-forest-600" style={{ width: `${Math.max((day.total / maxDay) * 100, 2)}%` }} />
-                  </div>
-                  <span className="text-right text-body-s font-medium text-primary">{centsToCurrency(day.total)}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </article>
-      </section>
-
-      <section className="panel p-5">
-        <h2 className="text-body-l font-semibold text-primary">Rendimiento comercial</h2>
-        <p className="muted mt-1">Ingresos y tickets comerciales dentro del filtro actual. Las invitaciones quedan fuera de este bloque.</p>
-
-        <div className="mt-4 space-y-4">
-          {commercialRows.length === 0 ? (
-            <p className="muted">No hay eventos para analizar comercialmente.</p>
+          {journeys.length === 0 ? (
+            <p className="px-4 py-8 text-[12px] text-secondary">Aún no se registraron visitas en el rango seleccionado.</p>
           ) : (
-            commercialRows.map((row) => (
-              <article key={row.id} className="rounded-md border border-soft p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="text-base font-semibold text-primary">{row.name}</h3>
-                  <p className="text-body-s font-semibold text-forest-700">{centsToCurrency(row.revenue)}</p>
-                </div>
+            <div className="overflow-x-auto">
+              <table className="an-dense-table">
+                <thead>
+                  <tr>
+                    <th>Sesión ID</th>
+                    <th>Evento</th>
+                    <th>Estado</th>
+                    <th>Dispositivo</th>
+                    <th>Origen</th>
+                    <th>Último paso</th>
+                    <th>Duración</th>
+                    <th className="right">Última act.</th>
+                    <th className="right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {journeys.slice(0, SESSION_LIST_LIMIT).map((journey) => {
+                    const statusMeta = SESSION_STATUS_META[journey.status];
+                    const stepMeta = getAnalyticsStepMeta(journey.lastStep);
+                    const relTime = formatRelativeTime(journey.lastSeen, now);
+                    const fullTime = dateTimeFormatter.format(journey.lastSeen);
 
-                <div className="mt-3 h-3 rounded-full bg-sunken">
-                  <div className="h-3 rounded-full bg-forest-600" style={{ width: `${Math.max((row.revenue / maxRevenue) * 100, row.revenue > 0 ? 2 : 0)}%` }} />
-                </div>
+                    // Map status to pill class
+                    let statusPillClass = "an-pill-gray";
+                    if (journey.status === "success") statusPillClass = "an-pill-green";
+                    else if (journey.status === "abandoned") statusPillClass = "an-pill-red";
+                    else if (journey.status === "active") statusPillClass = "an-pill-amber";
+                    else if (journey.status === "failure" || journey.status === "checkout_error") statusPillClass = "an-pill-red";
+                    else if (journey.status === "pending") statusPillClass = "an-pill-blue";
 
-                <div className="mt-3 grid gap-2 text-body-s text-secondary md:grid-cols-3">
-                  <p>Tickets vendidos: <span className="font-semibold text-primary">{row.sold}</span></p>
-                  <p>Asistentes: <span className="font-semibold text-primary">{row.attended}</span></p>
-                  <p>Asistencia: <span className="font-semibold text-primary">{row.attendanceRate}%</span></p>
-                </div>
-              </article>
-            ))
+                    // Device pill
+                    let devicePillClass = "an-pill-gray";
+                    if (journey.deviceType === "mobile") devicePillClass = "an-pill-blue";
+                    else if (journey.deviceType === "tablet") devicePillClass = "an-pill-violet";
+
+                    return (
+                      <tr key={journey.key} className="an-trow">
+                        <td className="mono">{journey.sessionId.slice(-8)}</td>
+                        <td className="max-w-[160px] truncate text-[12px]">{journey.eventName}</td>
+                        <td>
+                          <span className={`an-pill ${statusPillClass}`}>
+                            {journey.status === "active" && (
+                              <span className="an-dot-pulse inline-block h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+                            )}
+                            {statusMeta.label}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`an-pill ${devicePillClass}`}>{getDeviceLabel(journey.deviceType)}</span>
+                        </td>
+                        <td className="muted max-w-[120px] truncate">{getReferrerLabel(journey.referrerHost, appHost)}</td>
+                        <td className="muted">{stepMeta.label}</td>
+                        <td className="muted tabular-nums">{formatDuration(journey.durationMs)}</td>
+                        <td className="right muted tabular-nums">
+                          <span title={fullTime}>{relTime}</span>
+                        </td>
+                        <td className="right">
+                          <button
+                            className="an-action-btn"
+                            title="Ver recorrido"
+                            aria-label="Ver recorrido completo"
+                          >
+                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
-        </div>
-      </section>
-    </div>
+        </section>
+
+        {/* ── FUNNEL / ABANDONO + CONVERSIÓN POR EVENTO (2-col grid) ─────────── */}
+        <section className="an-panel an-panel-4 grid gap-4 xl:grid-cols-2">
+
+          {/* Puntos de fuga */}
+          <article className="rounded-xl border border-[color:var(--border-soft)] bg-surface shadow-[var(--shadow-xs)]">
+            <div className="px-4 py-3 border-b border-[color:var(--border-soft)]">
+              <h2 className="font-display text-[13px] font-bold text-primary">Puntos de fuga</h2>
+              <p className="text-[11px] text-secondary">En qué paso terminan las sesiones abandonadas</p>
+            </div>
+            <div className="px-4 py-3 space-y-1.5">
+              {abandonmentRows.length === 0 ? (
+                <p className="text-[12px] text-secondary">No se detectaron abandonos.</p>
+              ) : (
+                abandonmentRows.map((row) => (
+                  <div key={row.step} className="flex items-center justify-between py-1">
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-semibold text-primary">{row.label}</p>
+                      <p className="text-[10px] text-secondary">{row.pct}% del total</p>
+                    </div>
+                    <span className="ml-3 shrink-0 rounded-full bg-danger-500 px-2 py-0.5 text-[11px] font-bold text-white tabular-nums">
+                      {row.count}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </article>
+
+          {/* Conversión por evento */}
+          <article className="rounded-xl border border-[color:var(--border-soft)] bg-surface shadow-[var(--shadow-xs)]">
+            <div className="px-4 py-3 border-b border-[color:var(--border-soft)]">
+              <h2 className="font-display text-[13px] font-bold text-primary">Conversión por evento</h2>
+              <p className="text-[11px] text-secondary">Visitas, checkout, conversión y abandono</p>
+            </div>
+            <div className="divide-y divide-[color:var(--border-soft)]">
+              {eventJourneyRows.length === 0 ? (
+                <p className="px-4 py-6 text-[12px] text-secondary">No hay eventos en el filtro.</p>
+              ) : (
+                eventJourneyRows.map((row) => (
+                  <div key={row.slug} className="px-4 py-2.5 hover:bg-[color:var(--bg-sunken)] transition-colors">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <p className="text-[12px] font-semibold text-primary truncate">{row.name}</p>
+                      <span className="shrink-0 text-[11px] text-secondary tabular-nums">{row.sessions.toLocaleString("es-AR")} vis.</span>
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px]">
+                      <span className="text-secondary">Checkout <span className="font-bold text-primary">{row.checkoutRate}%</span></span>
+                      <span className="text-secondary">Conversión <span className="font-bold text-success-700">{row.conversionRate}%</span></span>
+                      <span className="text-secondary">Abandono <span className="font-bold text-danger-600">{row.abandonmentRate}%</span></span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </article>
+        </section>
+
+        {/* ── RENDIMIENTO COMERCIAL ────────────────────────────────────────────── */}
+        <section className="an-panel an-panel-5 rounded-xl border border-[color:var(--border-soft)] bg-surface shadow-[var(--shadow-xs)] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[color:var(--border-soft)]">
+            <div>
+              <h2 className="font-display text-[13px] font-bold text-primary">Rendimiento comercial</h2>
+              <p className="text-[11px] text-secondary">Ingresos y tickets dentro del filtro · invitaciones excluidas</p>
+            </div>
+          </div>
+
+          {commercialRows.length === 0 ? (
+            <p className="px-4 py-6 text-[12px] text-secondary">No hay eventos para analizar comercialmente.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="an-dense-table">
+                <thead>
+                  <tr>
+                    <th>Evento</th>
+                    <th className="right">Ingresos</th>
+                    <th>Barra</th>
+                    <th className="right">Tickets</th>
+                    <th className="right">Asistentes</th>
+                    <th className="right">Asistencia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {commercialRows.map((row) => (
+                    <tr key={row.id} className="an-trow">
+                      <td className="font-semibold max-w-[200px] truncate">{row.name}</td>
+                      <td className="right">
+                        <span className="an-grad-num font-display text-[13px] font-extrabold tabular-nums">{centsToCurrency(row.revenue)}</span>
+                      </td>
+                      <td className="w-[120px]">
+                        <div className="h-[4px] overflow-hidden rounded-full bg-[color:var(--bg-sunken)]">
+                          <div
+                            className="an-bar h-[4px] rounded-full"
+                            style={{
+                              width: `${Math.max((row.revenue / maxRevenue) * 100, row.revenue > 0 ? 4 : 0)}%`,
+                              background: "var(--grad-hero)"
+                            }}
+                          />
+                        </div>
+                      </td>
+                      <td className="right muted tabular-nums">{row.sold}</td>
+                      <td className="right muted tabular-nums">{row.attended}</td>
+                      <td className="right">
+                        <span className={`font-bold tabular-nums text-[12px] ${row.attendanceRate >= 70 ? "text-success-700" : row.attendanceRate >= 40 ? "text-warning-700" : "text-secondary"}`}>
+                          {row.attendanceRate}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+      </div>
+    </>
   );
 }

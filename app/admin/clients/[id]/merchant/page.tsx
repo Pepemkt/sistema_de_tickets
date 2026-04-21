@@ -5,10 +5,16 @@ import { requirePageRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getScopedEventIdsForViewer, requireViewerClientAccess } from "@/lib/event-scope";
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   TYPES
+───────────────────────────────────────────────────────────────────────────── */
 type Props = {
   params: Promise<{ id: string }>;
 };
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   PAGE
+───────────────────────────────────────────────────────────────────────────── */
 export default async function ClientMerchantPage({ params }: Props) {
   const viewer = await requirePageRole(["ADMIN", "MANAGER"]);
   const scopedEventIds = await getScopedEventIdsForViewer(viewer);
@@ -71,19 +77,15 @@ export default async function ClientMerchantPage({ params }: Props) {
           accessToken: true,
           webhookSecret: true,
           commissionRateBps: true,
-          updatedAt: true
-        }
+          updatedAt: true,
+        },
       },
       events: {
         where: scopedEventIds ? { id: { in: scopedEventIds } } : undefined,
         orderBy: { startsAt: "asc" },
-        select: {
-          id: true,
-          name: true,
-          startsAt: true
-        }
-      }
-    }
+        select: { id: true, name: true, startsAt: true },
+      },
+    },
   });
 
   if (!client) {
@@ -93,20 +95,44 @@ export default async function ClientMerchantPage({ params }: Props) {
   const merchant = client.merchantAccounts[0] ?? null;
 
   return (
-    <div className="space-y-6">
-      <section className="panel p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-overline font-semibold uppercase tracking-[0.1em] text-[color:var(--brand-magenta)]">Cliente</p>
-            <h1 className="mt-1 font-display text-title-xl font-bold text-primary">{client.name}</h1>
-            <p className="mt-1 text-body-s text-secondary">Gestion operativa del merchant Mercado Pago para este cliente.</p>
-          </div>
-          <Link href="/admin/clients" className="btn-secondary">
-            Volver a clientes
-          </Link>
-        </div>
-      </section>
+    <div className="space-y-5">
 
+      {/* ── COMPACT HERO — backlink + hero block, no panel wrapper ── */}
+      <header>
+        <Link
+          href="/admin/clients"
+          className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-secondary transition-colors duration-150 hover:text-primary"
+        >
+          <svg
+            className="h-3 w-3"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Clientes
+        </Link>
+
+        <p
+          className="text-[10px] font-bold uppercase tracking-[0.16em]"
+          style={{ color: "var(--brand-magenta)" }}
+        >
+          Merchants
+        </p>
+        <h1 className="mt-0.5 font-display text-[1.75rem] font-extrabold leading-tight tracking-tight text-primary">
+          {client.name}
+        </h1>
+        <p className="mt-1 text-[13px] text-secondary">
+          Configuración de merchant
+        </p>
+      </header>
+
+      {/* ── FORM ── */}
       <ClientMerchantForm
         clientId={client.id}
         clientName={client.name}
@@ -117,14 +143,15 @@ export default async function ClientMerchantPage({ params }: Props) {
           hasAccessToken: Boolean(merchant?.accessToken?.trim()),
           hasWebhookSecret: Boolean(merchant?.webhookSecret?.trim()),
           commissionRateBps: merchant?.commissionRateBps ?? 500,
-          updatedAt: merchant?.updatedAt?.toISOString() ?? null
+          updatedAt: merchant?.updatedAt?.toISOString() ?? null,
         }}
         linkedEvents={client.events.map((event: { id: string; name: string; startsAt: Date }) => ({
           id: event.id,
           name: event.name,
-          startsAt: event.startsAt.toISOString()
+          startsAt: event.startsAt.toISOString(),
         }))}
       />
+
     </div>
   );
 }
