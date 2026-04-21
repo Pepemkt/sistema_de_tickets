@@ -168,9 +168,9 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
       <form onSubmit={onSubmit} className="space-y-6">
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-3xl font-semibold text-slate-900">Datos del comprador</h2>
-          <p className="mt-1 text-sm text-slate-500">
+        <section className="rounded-lg border border-soft bg-surface p-6 shadow-md">
+          <h2 className="font-display text-title-xl font-bold text-primary">Datos del comprador</h2>
+          <p className="mt-1 text-body-s text-muted">
             {eventName} · {eventDateText}
           </p>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
@@ -214,8 +214,8 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
           </div>
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-2xl font-semibold text-slate-900">Seleccion de entradas</h3>
+        <section className="rounded-lg border border-soft bg-surface p-6 shadow-md">
+          <h3 className="font-display text-title-l font-bold text-primary">Seleccion de entradas</h3>
           <div className="mt-4 space-y-3">
             {ticketTypes.map((type) => {
               const active = type.id === ticketTypeId;
@@ -227,51 +227,53 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
                     trackCheckoutStarted();
                     setTicketTypeId(type.id);
                   }}
-                  className={`w-full rounded-xl border p-4 text-left transition ${
-                    active ? "border-blue-500 bg-blue-50" : "border-slate-200 bg-slate-50 hover:bg-slate-100"
+                  className={`w-full rounded-md border-[1.5px] p-4 text-left transition ${
+                    active
+                      ? "border-[color:var(--brand-magenta)] bg-coral-50"
+                      : "border-soft bg-sunken hover:bg-[color:var(--clr-arena-200)]"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-lg font-semibold text-slate-900">{type.name}</p>
-                    <p className="text-xl font-semibold text-blue-700">{centsToCurrency(type.priceCents)}</p>
+                    <p className="text-body-l font-semibold text-primary">{type.name}</p>
+                    <p className="font-display text-title-s font-bold text-[color:var(--brand-magenta)]">{centsToCurrency(type.priceCents)}</p>
                   </div>
-                  <p className="mt-1 text-sm text-slate-500">Stock: {type.stock}</p>
+                  <p className="mt-1 text-body-s text-muted">Stock: {type.stock}</p>
                 </button>
               );
             })}
           </div>
 
           <div className="mt-4 flex items-center gap-2">
-            <button type="button" className="h-9 w-9 rounded-full border border-slate-300 text-lg" onClick={() => changeQuantity(-1)}>
+            <button type="button" className="h-9 w-9 rounded-full border border-strong text-body-l text-primary transition-colors hover:bg-sunken" onClick={() => changeQuantity(-1)}>
               -
             </button>
-            <span className="w-8 text-center text-lg font-semibold">{quantity}</span>
-            <button type="button" className="h-9 w-9 rounded-full border border-slate-300 text-lg" onClick={() => changeQuantity(1)}>
+            <span className="w-8 text-center text-body-l font-semibold text-primary">{quantity}</span>
+            <button type="button" className="h-9 w-9 rounded-full border border-strong text-body-l text-primary transition-colors hover:bg-sunken" onClick={() => changeQuantity(1)}>
               +
             </button>
           </div>
         </section>
       </form>
 
-      <aside className="h-fit rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-6">
-          <h3 className="text-3xl font-semibold text-slate-900">Resumen de compra</h3>
+      <aside className="h-fit rounded-lg border border-soft bg-surface shadow-md">
+        <div className="border-b border-soft p-6">
+          <h3 className="font-display text-title-l font-bold text-primary">Resumen de compra</h3>
         </div>
-        <div className="space-y-3 p-6 text-sm">
+        <div className="space-y-3 p-6 text-body-s">
           <div className="flex items-center justify-between">
-            <span className="text-slate-500">Subtotal</span>
-            <span className="font-semibold text-slate-900">{centsToCurrency(subtotalCents)}</span>
+            <span className="text-muted">Subtotal</span>
+            <span className="font-semibold text-primary">{centsToCurrency(subtotalCents)}</span>
           </div>
           {fallbackAmounts.appliedItems.map((item) => (
             <div className="flex items-center justify-between" key={item.id}>
-              <span className="text-slate-500">{item.name}</span>
-              <span className="font-semibold text-slate-900">{centsToCurrency(item.amountCents)}</span>
+              <span className="text-muted">{item.name}</span>
+              <span className="font-semibold text-primary">{centsToCurrency(item.amountCents)}</span>
             </div>
           ))}
           {discountCents > 0 && (
             <div className="flex items-center justify-between">
-              <span className="text-slate-500">Descuento cupon</span>
-              <span className="font-semibold text-emerald-700">-{centsToCurrency(discountCents)}</span>
+              <span className="text-muted">Descuento cupon</span>
+              <span className="font-semibold text-success-700">-{centsToCurrency(discountCents)}</span>
             </div>
           )}
           <div className="pt-2">
@@ -285,16 +287,16 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
               }}
               required={selected?.saleMode === "COUPON_ONLY"}
             />
-            {quoteError && <p className="mt-1 text-xs text-red-700">{quoteError}</p>}
+            {quoteError && <p className="mt-1 text-caption text-danger-500">{quoteError}</p>}
           </div>
-          <div className="flex items-center justify-between border-t border-slate-200 pt-3">
-            <span className="text-xl font-semibold text-slate-900">Total</span>
-            <span className="text-3xl font-semibold text-blue-700">{centsToCurrency(totalCents)}</span>
+          <div className="flex items-center justify-between border-t border-soft pt-3">
+            <span className="text-body-l font-semibold text-primary">Total</span>
+            <span className="font-display text-title-l font-bold text-[color:var(--brand-magenta)]">{centsToCurrency(totalCents)}</span>
           </div>
           <button onClick={() => void createOrder()} disabled={loading || !selected} className="btn-primary mt-2 w-full !py-3 !text-base">
             {loading ? "Procesando..." : "Emitir y procesar pago"}
           </button>
-          {error && <p className="text-sm text-red-700">{error}</p>}
+          {error && <p className="text-body-s text-danger-500">{error}</p>}
         </div>
       </aside>
     </div>

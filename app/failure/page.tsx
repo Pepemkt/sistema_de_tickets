@@ -18,8 +18,8 @@ export default async function FailurePage({ searchParams }: Props) {
   return (
     <section className="panel p-7">
       <VisitTracker step="failure" eventSlug={eventSlug} />
-      <h1 className="section-title text-red-700">Pago rechazado</h1>
-      <p className="mt-2 text-slate-700">No se pudo completar la operacion. Puedes volver al evento e intentarlo nuevamente.</p>
+      <h1 className="section-title text-danger-500">Pago rechazado</h1>
+      <p className="mt-2 text-secondary">No se pudo completar la operacion. Puedes volver al evento e intentarlo nuevamente.</p>
       {eventUrl ? (
         <div className="mt-5">
           <Link href={eventUrl} className="btn-primary">

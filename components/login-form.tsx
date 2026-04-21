@@ -72,7 +72,7 @@ export function LoginForm() {
         {loading ? "Ingresando..." : "Iniciar sesion"}
       </button>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-body-s text-danger-500">{error}</p>}
 
     </form>
   );

@@ -28,13 +28,13 @@ export default async function PublicEventCheckoutPage({ params }: Props) {
   const isActive = event.status === "ACTIVE";
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-6 sm:px-6">
+    <div className="min-h-screen bg-page px-4 py-6 sm:px-6">
       <VisitTracker step="checkout" eventSlug={slug} />
       <div className="mx-auto mb-6 flex w-full max-w-6xl items-center justify-between">
         <Link href={`/e/${event.slug}`} className="btn-secondary">
           Volver al evento
         </Link>
-        <p className="text-sm text-slate-500">Compra oficial</p>
+        <p className="text-body-s text-muted">Compra oficial</p>
       </div>
       <div className="mx-auto w-full max-w-6xl">
         {isActive ? (
@@ -54,9 +54,9 @@ export default async function PublicEventCheckoutPage({ params }: Props) {
             feeItems={feeItems}
           />
         ) : (
-          <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-900">
-            <h1 className="text-xl font-semibold">Checkout no habilitado</h1>
-            <p className="mt-2 text-sm">Este evento esta en estado Proximamente. La venta online aun no comenzo.</p>
+          <section className="rounded-lg border border-warning-500/40 bg-warning-50 p-6 text-warning-700">
+            <h1 className="font-display text-title-m font-bold">Checkout no habilitado</h1>
+            <p className="mt-2 text-body-s">Este evento esta en estado Proximamente. La venta online aun no comenzo.</p>
           </section>
         )}
       </div>
