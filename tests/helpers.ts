@@ -93,7 +93,7 @@ type OrderOptions = {
   eventId: string;
   ticketTypeId: string;
   totalCents: number;
-  status?: "PENDING" | "PAID" | "CANCELLED" | "EXPIRED";
+  status?: "PENDING" | "PAID" | "CANCELLED";
   commercialModel?: "GLOBAL" | "DELEGATED";
   clientId?: string | null;
   merchantAccountId?: string | null;
