@@ -84,60 +84,74 @@ export default async function SuccessPage({ searchParams }: Props) {
   const eventUrl = finalEventSlug ? `/e/${encodeURIComponent(finalEventSlug)}` : "/";
 
   return (
-    <div className="min-h-screen bg-slate-200/50 px-4 py-8 sm:px-6">
+    <div className="min-h-screen bg-page px-4 py-12 sm:px-6">
       <VisitTracker step="success" eventSlug={finalEventSlug} />
-      <div className="mx-auto w-full max-w-3xl rounded-3xl border border-slate-200 bg-white shadow-sm">
-        <div className="p-8 sm:p-10">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
-            <span className="text-4xl text-emerald-600">✓</span>
+      <div className="mx-auto w-full max-w-3xl rounded-2xl border border-soft bg-surface shadow-lg">
+        <div className="px-6 py-10 sm:px-12 sm:py-12">
+          <div
+            className="mx-auto flex h-20 w-20 items-center justify-center rounded-full text-onaccent shadow-[0_12px_24px_rgba(16,185,129,0.3)]"
+            style={{ background: "linear-gradient(135deg,#1FAE4A,#10B981)" }}
+            aria-hidden
+          >
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+              <path d="M4 12l5 5L20 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
-          <h1 className="mt-5 text-center text-5xl font-semibold text-slate-900">Pago exitoso</h1>
-          <p className="mt-3 text-center text-slate-600">
+
+          <h1 className="mt-6 text-center font-display text-title-xl font-extrabold tracking-tight text-primary sm:text-[44px] sm:leading-[1.1]">
+            {isPaid ? "Pago exitoso" : "Pago recibido"}
+          </h1>
+          <p className="mt-3 text-center text-body text-secondary">
             {isPaid
               ? "Pago confirmado. Tus tickets ya fueron emitidos."
               : "Recibimos tu pago. Estamos esperando confirmacion final para habilitar tus tickets."}
           </p>
 
-          <section className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <div className="flex items-start justify-between border-b border-slate-200 pb-3">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Numero de orden</p>
-                <p className="text-3xl font-semibold text-slate-900">{orderId || "Pendiente"}</p>
-              </div>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  isPaid ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                }`}
-              >
-                {isPaid ? "Pagado" : "Pendiente"}
-              </span>
+          <section className="mt-8 flex items-center justify-between gap-4 rounded-md bg-sunken px-6 py-5">
+            <div>
+              <p className="font-display text-overline font-semibold uppercase tracking-[0.1em] text-muted">Numero de orden</p>
+              <p className="mt-1 break-all font-display text-title-m font-bold text-primary">{orderId || "Pendiente"}</p>
             </div>
+            <span
+              className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-caption font-semibold ${
+                isPaid ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"
+              }`}
+            >
+              {isPaid ? "Pagado" : "Pendiente"}
+            </span>
           </section>
 
           {isPaid ? (
             <>
-              <p className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+              <p
+                className="mt-5 rounded-md border px-5 py-3.5 text-body-s"
+                style={{
+                  background: "linear-gradient(90deg,#FDF2F8,#F5F3FF)",
+                  borderColor: "#F5D0E8",
+                  color: "var(--brand-violet-deep)"
+                }}
+              >
                 {emailSent
                   ? "Tus tickets fueron emitidos y enviados por email."
                   : "Tus tickets ya fueron emitidos. Hubo un problema enviando el email; puedes descargarlos desde aqui."}
               </p>
 
               {order && order.tickets.length > 0 ? (
-                <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-                  <p className="text-sm font-semibold text-slate-900">Descargar tickets</p>
-                  <div className="mt-3 grid gap-2">
+                <section className="mt-5 rounded-md border border-soft bg-surface p-5">
+                  <p className="font-display text-body-s font-semibold text-primary">Descargar tickets</p>
+                  <div className="mt-4 grid gap-2">
                     {order.tickets.map((ticket, index) => (
                       <a
                         key={ticket.id}
                         href={`/api/public/orders/${encodeURIComponent(order.id)}/ticket/${encodeURIComponent(ticket.id)}/pdf?email=${encodeURIComponent(order.buyerEmail)}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                        className="inline-flex items-center justify-between rounded-sm border border-soft bg-surface px-4 py-3 text-body-s text-primary transition-colors hover:bg-sunken"
                       >
                         <span>
-                          Ticket #{index + 1} <span className="font-semibold">({ticket.code})</span>
+                          Ticket #{index + 1} <code className="ml-1 font-mono text-caption text-muted">({ticket.code})</code>
                         </span>
-                        <span className="font-semibold text-blue-700">Descargar PDF</span>
+                        <span className="font-semibold text-[color:var(--brand-violet)]">Descargar PDF</span>
                       </a>
                     ))}
                   </div>
@@ -145,14 +159,14 @@ export default async function SuccessPage({ searchParams }: Props) {
               ) : null}
             </>
           ) : (
-            <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+            <p className="mt-5 rounded-md border border-warning-500/40 bg-warning-50 px-5 py-3.5 text-body-s text-warning-700">
               Los tickets se habilitan cuando Mercado Pago confirme el cobro. Te los enviaremos por email.
               {reconciled ? " Reintenta en unos segundos para ver el estado actualizado." : ""}
             </p>
           )}
 
-          <div className="mt-6 text-center">
-            <Link href={eventUrl} className="text-sm font-semibold text-blue-700 hover:underline">
+          <div className="mt-8 flex justify-center">
+            <Link href={eventUrl} className="btn-primary">
               Volver al evento
             </Link>
           </div>

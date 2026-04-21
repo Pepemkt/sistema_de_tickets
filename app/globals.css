@@ -1,14 +1,10 @@
 /* =============================================================================
    ENTRY POINT — app/globals.css
-   Cascade order:
+   Cascade:
    1. tokens.css       — CSS custom properties (single source of truth)
-   2. @tailwind base   — preflight + utilities baseline
-   3. @tailwind components
-   4. @tailwind utilities
-   5. @layer components — primitive classes (inlined; cannot live in separate
-      @import file because Next.js + Tailwind processes imported CSS standalone
-      and @apply / @layer would lose the Tailwind theme context)
-   6. Body resets + atmospheric layers (grain + conic gradient wash)
+   2. @tailwind base/components/utilities
+   3. @layer components — primitive classes
+   4. Body resets + hero gradient utility
    ============================================================================= */
 
 @import "../styles/tokens.css";
@@ -18,9 +14,7 @@
 @tailwind utilities;
 
 /* =============================================================================
-   PRIMITIVE CLASSES — Warm Tactile Design System
-   Lives inside @layer components so utilities can override and Tailwind
-   resolves @apply against theme.extend tokens.
+   PRIMITIVE CLASSES — Vibrant Magenta Design System
    ============================================================================= */
 
 @layer components {
@@ -59,51 +53,51 @@
   }
 
   /* BUTTONS ------------------------------------------------------------------ */
+  /* Pill shape (rounded-full), primary = magenta, secondary = violet border,
+     ghost = violet text. */
 
   .btn-primary {
-    @apply inline-flex cursor-pointer items-center justify-center rounded-md bg-forest-600 px-4 py-2 text-body-s font-semibold text-onprimary shadow-sm transition-all duration-base ease-tactile hover:bg-forest-700 hover:shadow-md active:translate-y-px active:shadow-[var(--shadow-inset)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex cursor-pointer items-center justify-center rounded-full bg-coral-500 px-6 py-2.5 text-body-s font-semibold text-onaccent shadow-[var(--shadow-glow-accent)] transition-all duration-base ease-tactile hover:-translate-y-px hover:bg-coral-600 active:translate-y-0 focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-secondary {
-    @apply inline-flex cursor-pointer items-center justify-center rounded-md border border-[color:var(--border-strong)] bg-surface px-4 py-2 text-body-s font-medium text-primary transition-all duration-base ease-tactile hover:border-[color:var(--border-focus)] hover:bg-sunken active:shadow-[var(--shadow-inset)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex cursor-pointer items-center justify-center rounded-full border-[1.5px] border-[color:var(--border-strong)] bg-surface px-6 py-2.5 text-body-s font-medium text-[color:var(--brand-violet)] transition-all duration-base ease-tactile hover:border-[color:var(--brand-violet)] hover:text-[color:var(--brand-violet-deep)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-ghost {
-    @apply inline-flex cursor-pointer items-center justify-center rounded-md px-4 py-2 text-body-s font-medium text-primary transition-colors duration-base ease-tactile hover:bg-sunken focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex cursor-pointer items-center justify-center rounded-full px-4 py-2 text-body-s font-semibold text-[color:var(--brand-violet)] transition-colors duration-base ease-tactile hover:bg-forest-50 focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-destructive {
-    @apply inline-flex cursor-pointer items-center justify-center rounded-md bg-danger-500 px-4 py-2 text-body-s font-semibold text-onaccent shadow-sm transition-all duration-base ease-tactile hover:bg-danger-700 active:translate-y-px active:shadow-[var(--shadow-inset)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus-danger)] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex cursor-pointer items-center justify-center rounded-full bg-danger-500 px-6 py-2.5 text-body-s font-semibold text-onaccent shadow-sm transition-all duration-base ease-tactile hover:-translate-y-px hover:bg-danger-700 focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus-danger)] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
-  /* Small / icon modifiers — used by chrome (topbar CTAs, LogoutButton iconOnly).
-     Pattern: tighter padding, caption type, rounded-sm (10px). Same hover/active/
-     focus/disabled semantics as the base primitive they modify. */
+  /* Small / icon modifiers — same palette, tighter padding. */
 
   .btn-primary--sm {
-    @apply inline-flex cursor-pointer items-center justify-center rounded-sm bg-forest-600 px-3 py-1.5 text-caption font-semibold text-onprimary shadow-sm transition-all duration-base ease-tactile hover:bg-forest-700 hover:shadow-md active:translate-y-px active:shadow-[var(--shadow-inset)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex cursor-pointer items-center justify-center rounded-full bg-coral-500 px-4 py-1.5 text-caption font-semibold text-onaccent shadow-[var(--shadow-glow-accent)] transition-all duration-base ease-tactile hover:-translate-y-px hover:bg-coral-600 focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-secondary--sm {
-    @apply inline-flex cursor-pointer items-center justify-center rounded-sm border border-[color:var(--border-strong)] bg-surface px-3 py-1.5 text-caption font-medium text-primary transition-all duration-base ease-tactile hover:border-[color:var(--border-focus)] hover:bg-sunken active:shadow-[var(--shadow-inset)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex cursor-pointer items-center justify-center rounded-full border-[1.5px] border-[color:var(--border-strong)] bg-surface px-4 py-1.5 text-caption font-medium text-[color:var(--brand-violet)] transition-all duration-base ease-tactile hover:border-[color:var(--brand-violet)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-ghost--sm {
-    @apply inline-flex cursor-pointer items-center justify-center rounded-sm px-3 py-1.5 text-caption font-medium text-primary transition-colors duration-base ease-tactile hover:bg-sunken focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex cursor-pointer items-center justify-center rounded-full px-4 py-1.5 text-caption font-semibold text-[color:var(--brand-violet)] transition-colors duration-base ease-tactile hover:bg-forest-50 focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-ghost--icon {
-    @apply inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md p-0 text-primary transition-colors duration-base ease-tactile hover:bg-sunken focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full p-0 text-[color:var(--brand-violet)] transition-colors duration-base ease-tactile hover:bg-forest-50 focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   /* TAGS & LABELS ------------------------------------------------------------ */
 
   .badge {
-    @apply inline-flex items-center rounded-xs border border-[color:var(--border-soft)] bg-sunken px-2 py-0.5 text-caption font-medium text-secondary;
+    @apply inline-flex items-center rounded-full border border-[color:var(--border-soft)] bg-sunken px-2.5 py-0.5 text-caption font-medium text-secondary;
   }
 
   .chip {
-    @apply inline-flex items-center gap-1 rounded-xs border border-[color:var(--border-soft)] bg-surface px-2 py-0.5 text-caption text-secondary;
+    @apply inline-flex items-center gap-1 rounded-full border border-[color:var(--border-soft)] bg-surface px-2.5 py-0.5 text-caption text-secondary;
   }
 
   .kbd {
@@ -117,21 +111,22 @@
   }
 }
 
-/* GRAIN UTILITY — opt-in for hero surfaces; never on .btn-* / .field / .badge.
-   Encoded as base64 because PostCSS misparses the literal `url(#n)` substring
-   (filter reference inside SVG) as a nested CSS url() function, breaking the
-   tokenizer. Base64 is opaque to the parser and decoded by the browser.
-   Underlying SVG: 140×140 fractalNoise filter, baseFrequency 0.9, numOctaves 2,
-   stitched, seed 7, warm arena-tinted feColorMatrix. */
-.bg-grain {
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIiB2aWV3Qm94PSIwIDAgMTQwIDE0MCI+PGZpbHRlciBpZD0ibiI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuOSIgbnVtT2N0YXZlcz0iMiIgc3RpdGNoVGlsZXM9InN0aXRjaCIgc2VlZD0iNyIvPjxmZUNvbG9yTWF0cml4IHR5cGU9Im1hdHJpeCIgdmFsdWVzPSIwIDAgMCAwIDAuMTUgIDAgMCAwIDAgMC4xMyAgMCAwIDAgMCAwLjEwICAwIDAgMCAwLjkgMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNuKSIvPjwvc3ZnPg==");
-  background-size: 140px 140px;
+/* =============================================================================
+   UTILITIES
+   ============================================================================= */
+
+/* Hero gradient surface. Use for banners, splash sections, marketing hero. */
+.bg-hero-gradient {
+  background: var(--grad-hero);
+  color: #FFFFFF;
 }
+
+/* Legacy: kept as no-op so existing `.bg-grain` references don't break.
+   The vibrant design does not use grain texture. */
+.bg-grain { background-image: none; }
 
 /* =============================================================================
    REDUCED MOTION
-   Universal override outside @layer because !important must win unconditionally.
-   .animate-spin re-declared below to preserve semantic loading indicator.
    ============================================================================= */
 
 @media (prefers-reduced-motion: reduce) {
@@ -148,9 +143,9 @@
 }
 
 /* =============================================================================
-   BODY RESETS + ATMOSPHERIC LAYERS
-   body background = --bg-page (warm sand) + conic gradient wash from top-right.
-   body::before = grain texture (position:fixed, opacity 0.035, multiply blend).
+   BODY RESETS
+   Flat cool off-white background — no grain, no conic wash. Vibrant designs
+   earn their energy from the hero gradient + magenta CTAs, not from noise.
    ============================================================================= */
 
 :root {
@@ -159,27 +154,9 @@
 
 body {
   background-color: var(--bg-page);
-  background-image: conic-gradient(
-    from 210deg at 100% 0%,
-    rgba(31, 74, 59, 0.035) 0deg,
-    transparent 90deg
-  );
   color: var(--text-primary);
   font-family: var(--font-body);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Grain texture layer. SVG encoded as base64 (see .bg-grain comment for why). */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIiB2aWV3Qm94PSIwIDAgMTQwIDE0MCI+PGZpbHRlciBpZD0ibiI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuOSIgbnVtT2N0YXZlcz0iMiIgc3RpdGNoVGlsZXM9InN0aXRjaCIgc2VlZD0iNyIvPjxmZUNvbG9yTWF0cml4IHR5cGU9Im1hdHJpeCIgdmFsdWVzPSIwIDAgMCAwIDAuMTUgIDAgMCAwIDAgMC4xMyAgMCAwIDAgMCAwLjEwICAwIDAgMCAwLjkgMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNuKSIvPjwvc3ZnPg==");
-  background-size: 140px 140px;
-  opacity: 0.035;
-  mix-blend-mode: multiply;
 }

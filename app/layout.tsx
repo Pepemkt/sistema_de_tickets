@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getCurrentViewer } from "@/lib/auth";
 import { readBrandingConfig } from "@/lib/branding";
 import { LayoutShell } from "@/components/layout-shell";
-import { fraunces, geistSans, geistMono } from "@/app/(fonts)/fonts";
+import { poppins, inter, geistMono } from "@/app/(fonts)/fonts";
 
 export const metadata: Metadata = {
   title: "Aiderbrand | Gestion de Entradas",
@@ -20,7 +20,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html
       lang="es"
       data-theme="light"
-      className={`${fraunces.variable} ${geistSans.variable} ${geistMono.variable}`}
+      className={`${poppins.variable} ${inter.variable} ${geistMono.variable}`}
     >
       <body>
         <LayoutShell
