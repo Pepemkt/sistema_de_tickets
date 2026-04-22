@@ -157,17 +157,21 @@ export default async function PublicEventPage({ params }: Props) {
             </div>
 
             {/* Tags row */}
-            <div className="hero-tag flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--brand-magenta)]/50 bg-[color:var(--brand-magenta)]/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--brand-magenta)] backdrop-blur-sm">
-                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--brand-magenta)] animate-pulse" />
-                {event.featuredTag?.trim() || "Evento destacado"}
-              </span>
-              {isUpcoming && (
-                <span className="inline-flex items-center rounded-full bg-warning-50/95 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-warning-700">
-                  Proximamente
-                </span>
-              )}
-            </div>
+            {(event.featuredTag?.trim() || isUpcoming) && (
+              <div className="hero-tag flex flex-wrap items-center gap-2">
+                {event.featuredTag?.trim() && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--brand-magenta)]/50 bg-[color:var(--brand-magenta)]/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--brand-magenta)] backdrop-blur-sm">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--brand-magenta)] animate-pulse" />
+                    {event.featuredTag.trim()}
+                  </span>
+                )}
+                {isUpcoming && (
+                  <span className="inline-flex items-center rounded-full bg-warning-50/95 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-warning-700">
+                    Proximamente
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Title */}
             <h1 className="hero-title mt-5 max-w-[680px] font-display font-extrabold leading-[0.97] tracking-tight text-white" style={{ fontSize: "clamp(2.8rem, 7vw, 5.5rem)" }}>
@@ -178,15 +182,10 @@ export default async function PublicEventPage({ params }: Props) {
             <div className="hero-line mt-5 h-[3px] w-16 rounded-full bg-[color:var(--brand-magenta)]" />
 
             {/* Meta */}
-            <p className="hero-meta mt-4 text-body text-white/70">
+            <div className="hero-meta mt-4 flex flex-col gap-1 text-body text-white/70">
               <span className="font-semibold text-white/90">{dateFormatted}</span>
-              {event.venue && (
-                <>
-                  <span className="mx-3 text-white/30">·</span>
-                  <span>{event.venue}</span>
-                </>
-              )}
-            </p>
+              {event.venue && <span>{event.venue}</span>}
+            </div>
 
             {/* CTA row */}
             <div className="hero-ctas mt-8 flex flex-wrap items-center gap-4">

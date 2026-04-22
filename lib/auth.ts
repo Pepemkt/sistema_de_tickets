@@ -33,6 +33,12 @@ export async function createSession(userId: string) {
   return { token, expiresAt };
 }
 
+function shouldUseSecureCookie() {
+  if (process.env.COOKIE_SECURE === "false") return false;
+  if (process.env.COOKIE_SECURE === "true") return true;
+  return process.env.NODE_ENV === "production";
+}
+
 export async function setSessionCookie(token: string, expiresAt: Date) {
   const cookieStore = await cookies();
   cookieStore.set({
@@ -40,7 +46,7 @@ export async function setSessionCookie(token: string, expiresAt: Date) {
     value: token,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookie(),
     path: "/",
     expires: expiresAt
   });
@@ -53,7 +59,7 @@ export async function clearSessionCookie() {
     value: "",
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookie(),
     path: "/",
     expires: new Date(0)
   });

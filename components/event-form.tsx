@@ -51,6 +51,16 @@ function toLocalInputValue(date: string) {
   return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
 }
 
+// Anchors a `datetime-local` value (no timezone) to the browser's local zone
+// and returns a full ISO string. Without this, the server parses naked
+// "YYYY-MM-DDTHH:mm" as UTC and the hour drifts by the server's offset.
+function localInputToISO(value: string) {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toISOString();
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    CSS — scoped to ef- prefix
 ───────────────────────────────────────────────────────────────────────────── */
@@ -332,8 +342,8 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
       venue,
       status: submitStatus,
       ...(canEditCommission ? { platformCommissionPercent } : {}),
-      startsAt,
-      endsAt: endsAt || undefined,
+      startsAt: localInputToISO(startsAt),
+      endsAt: endsAt ? localInputToISO(endsAt) : undefined,
       ticketTypes: ticketTypes.map((item) => ({
         ...(item.id ? { id: item.id } : {}),
         name: item.name,
@@ -425,7 +435,7 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
             {/* Etiqueta destacada */}
             <Field
               label="Etiqueta destacada del hero"
-              helper="Badge sobre el hero en la landing pública."
+              helper="Badge sobre el hero en la landing pública. Dejala vacía para ocultar el badge."
               className="md:col-span-2"
             >
               <input
