@@ -111,6 +111,7 @@ export default async function SuccessPage({ searchParams }: Props) {
         select: {
           id: true,
           buyerEmail: true,
+          totalCents: true,
           status: true,
           event: { select: { slug: true } },
           tickets: { select: { id: true, code: true } }
@@ -119,6 +120,7 @@ export default async function SuccessPage({ searchParams }: Props) {
     : null;
 
   const isPaid         = Boolean(order && order.status === "PAID" && order.tickets.length > 0);
+  const isFreeOrder    = Boolean(order && order.totalCents === 0);
   const finalEventSlug = eventSlug || order?.event.slug || "";
   const eventUrl       = finalEventSlug ? `/e/${encodeURIComponent(finalEventSlug)}` : "/";
 
@@ -197,7 +199,7 @@ export default async function SuccessPage({ searchParams }: Props) {
                   style={{ background: "var(--clr-success-500)" }}
                   aria-hidden="true"
                 />
-                Pago confirmado
+                {isFreeOrder ? "Registro confirmado" : "Pago confirmado"}
               </span>
             ) : (
               <span
@@ -227,7 +229,7 @@ export default async function SuccessPage({ searchParams }: Props) {
               lineHeight: "1",
             }}
           >
-            {isPaid ? "Pago exitoso" : "Pago en camino"}
+            {isPaid ? (isFreeOrder ? "Registro confirmado" : "Pago exitoso") : "Pago en camino"}
           </h1>
 
           {/* ── SUBTEXT ────────────────────────────────────────────────── */}
@@ -236,7 +238,9 @@ export default async function SuccessPage({ searchParams }: Props) {
             style={{ color: "var(--text-secondary)", lineHeight: "1.5" }}
           >
             {isPaid
-              ? "Pago confirmado. Tus tickets ya fueron emitidos."
+              ? isFreeOrder
+                ? "Tu registro fue confirmado. Tus tickets ya fueron emitidos."
+                : "Pago confirmado. Tus tickets ya fueron emitidos."
               : "Te avisamos por email cuando se confirme el cobro."}
           </p>
 
@@ -270,7 +274,7 @@ export default async function SuccessPage({ searchParams }: Props) {
                       border: "1px solid rgba(31,174,74,0.22)",
                     }}
                   >
-                    Pagado
+                    {isFreeOrder ? "Registrado" : "Pagado"}
                   </span>
                 ) : (
                   <span
@@ -312,7 +316,7 @@ export default async function SuccessPage({ searchParams }: Props) {
                       <path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                     </svg>
                     <p className="text-[13px]" style={{ color: "var(--text-secondary)" }}>
-                      Tus tickets fueron emitidos y enviados por email.
+                      {isFreeOrder ? "Tu registro fue confirmado y tus tickets fueron enviados por email." : "Tus tickets fueron emitidos y enviados por email."}
                     </p>
                   </div>
                 </div>

@@ -25,6 +25,7 @@ export default async function PublicEventPage({ params }: Props) {
 
   const visibleTicketTypes = event.ticketTypes.filter((type) => type.saleMode !== "HIDDEN");
   const startingPrice = visibleTicketTypes[0]?.priceCents ?? 0;
+  const allVisibleTicketsAreFree = visibleTicketTypes.length > 0 && visibleTicketTypes.every((type) => type.priceCents === 0);
   const isActive = event.status === "ACTIVE";
   const isUpcoming = event.status === "UPCOMING";
 
@@ -205,7 +206,7 @@ export default async function PublicEventPage({ params }: Props) {
                   <svg className="h-4 w-4 transition-transform duration-base group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l3 3m0 0l-3 3m3-3H4" />
                   </svg>
-                  Comprar entradas
+                    {allVisibleTicketsAreFree ? "Registrate gratis" : "Comprar entradas"}
                 </Link>
               ) : (
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-6 py-3 text-body-s font-semibold text-white/70 backdrop-blur-sm">

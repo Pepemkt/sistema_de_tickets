@@ -121,6 +121,9 @@ export async function createMercadoPagoCheckout(input: CreateMercadoPagoCheckout
   const { order, ticketType, buyerEmail, discountedSubtotalCents } = transactionResult;
   const feeItems = await resolveCheckoutFeeItems();
   const amounts = calculateCheckoutAmounts(discountedSubtotalCents, feeItems);
+  if (amounts.totalCents <= 0) {
+    throw new Error("Este registro no requiere pago. Usa el flujo gratuito.");
+  }
   const appUrl = resolveAppUrl();
   const encodedEventSlug = encodeURIComponent(ticketType.event.slug);
 

@@ -47,6 +47,7 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
   const totalCents = quote?.totalCents ?? fallbackAmounts.totalCents;
   const subtotalCents = quote?.subtotalCents ?? fallbackAmounts.subtotalCents;
   const discountCents = quote?.discountCents ?? 0;
+  const isFreeCheckout = totalCents === 0;
 
   useEffect(() => {
     if (!selected) {
@@ -129,7 +130,8 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
     trackAnalyticsStep({ step: "checkout_submit", eventSlug, transport: "beacon" });
 
     try {
-      const res = await fetch("/api/orders", {
+      const endpoint = isFreeCheckout ? "/api/orders/free" : "/api/orders";
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -146,6 +148,11 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
       if (!res.ok) {
         trackAnalyticsStep({ step: "checkout_error", eventSlug });
         setError(data.error ?? "No se pudo crear la compra");
+        return;
+      }
+      if (data.successUrl) {
+        trackAnalyticsStep({ step: "checkout_redirect", eventSlug, transport: "beacon" });
+        window.location.href = data.successUrl;
         return;
       }
       if (data.initPoint) {
@@ -493,14 +500,14 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Procesando...
+                    {isFreeCheckout ? "Registrando..." : "Procesando..."}
                   </>
                 ) : (
                   <>
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
                     </svg>
-                    Emitir y procesar pago
+                    {isFreeCheckout ? "Registrarme gratis" : "Emitir y procesar pago"}
                   </>
                 )}
               </button>
@@ -515,10 +522,21 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
               )}
 
               <div className="mt-4 flex items-center justify-center gap-1.5 text-caption text-muted">
-                <svg className="h-3.5 w-3.5 text-success-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
-                </svg>
-                Pago 100% seguro vía Mercado Pago
+                {isFreeCheckout ? (
+                  <>
+                    <svg className="h-3.5 w-3.5 text-success-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path fillRule="evenodd" d="M12 2a10 10 0 100 20 10 10 0 000-20zm4.28 7.22a.75.75 0 10-1.06-1.06L10.5 12.88 8.78 11.16a.75.75 0 10-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l5.25-5.25z" clipRule="evenodd" />
+                    </svg>
+                    Registro gratuito con envío de ticket por email
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-3.5 w-3.5 text-success-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+                    </svg>
+                    Pago 100% seguro vía Mercado Pago
+                  </>
+                )}
               </div>
             </div>
           </div>

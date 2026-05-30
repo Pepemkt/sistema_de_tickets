@@ -34,6 +34,15 @@ export function normalizeCheckoutFeeItems(raw: unknown): CheckoutFeeItem[] {
 }
 
 export function calculateCheckoutAmounts(subtotalCents: number, feeItems: CheckoutFeeItem[]) {
+  if (subtotalCents <= 0) {
+    return {
+      subtotalCents,
+      feesTotalCents: 0,
+      totalCents: 0,
+      appliedItems: [] as Array<CheckoutFeeItem & { amountCents: number }>
+    };
+  }
+
   const appliedItems = feeItems
     .filter((item) => item.enabled)
     .map((item) => {
