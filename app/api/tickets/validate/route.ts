@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { checkApiRole } from "@/lib/api-auth";
 import { verifyTicketPayload } from "@/lib/ticket-signature";
 import { viewerCanAccessEvent } from "@/lib/event-scope";
+import { normalizeRegistrationAnswers } from "@/lib/registration-fields";
 
 export const runtime = "nodejs";
 
@@ -35,7 +36,16 @@ export async function POST(request: Request) {
 
     const ticket = await db.ticket.findUnique({
       where: { code },
-      include: { event: true }
+      include: {
+        event: true,
+        order: {
+          select: {
+            buyerEmail: true,
+            buyerPhone: true,
+            registrationAnswersJson: true
+          }
+        }
+      }
     });
 
     if (!ticket) {
@@ -54,6 +64,9 @@ export async function POST(request: Request) {
         ticketCode: ticket.code,
         attendedAt: ticket.attendedAt,
         attendeeName: ticket.attendeeName,
+        attendeeEmail: ticket.attendeeEmail,
+        buyerPhone: ticket.order.buyerPhone,
+        registrationAnswers: normalizeRegistrationAnswers(ticket.order.registrationAnswersJson),
         eventId: ticket.eventId,
         eventName: ticket.event.name,
         eventScannedCount
@@ -81,6 +94,9 @@ export async function POST(request: Request) {
         ticketCode: latest?.code ?? ticket.code,
         attendedAt: latest?.attendedAt ?? now,
         attendeeName: latest?.attendeeName ?? ticket.attendeeName,
+        attendeeEmail: ticket.attendeeEmail,
+        buyerPhone: ticket.order.buyerPhone,
+        registrationAnswers: normalizeRegistrationAnswers(ticket.order.registrationAnswersJson),
         eventId: ticket.eventId,
         eventName: ticket.event.name,
         eventScannedCount
@@ -92,6 +108,9 @@ export async function POST(request: Request) {
       status: "ok",
       ticketCode: ticket.code,
       attendeeName: ticket.attendeeName,
+      attendeeEmail: ticket.attendeeEmail,
+      buyerPhone: ticket.order.buyerPhone,
+      registrationAnswers: normalizeRegistrationAnswers(ticket.order.registrationAnswersJson),
       eventId: ticket.eventId,
       eventName: ticket.event.name,
       eventScannedCount

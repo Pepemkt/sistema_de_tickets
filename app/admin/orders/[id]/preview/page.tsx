@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requirePageRole } from "@/lib/auth";
 import { getOrderKindBadgeClass, getOrderKindLabel } from "@/lib/order-kind";
+import { normalizeRegistrationAnswers } from "@/lib/registration-fields";
 import { centsToCurrency } from "@/lib/utils";
 import { requireViewerEventAccess } from "@/lib/event-scope";
 
@@ -252,6 +253,7 @@ export default async function OrderPreviewPage({ params }: Props) {
 
   const sentDeliveries   = order.emailDeliveries.filter((d) => d.status === "SENT").length;
   const failedDeliveries = order.emailDeliveries.filter((d) => d.status !== "SENT").length;
+  const registrationAnswers = normalizeRegistrationAnswers(order.registrationAnswersJson);
 
   /* ── KPI chips ── */
   const chips = [
@@ -382,6 +384,24 @@ export default async function OrderPreviewPage({ params }: Props) {
               </p>
             </div>
           </div>
+
+          {registrationAnswers.length > 0 && (
+            <>
+              <div className="op-divider">
+                <span className="op-divider-label">Campos de registro</span>
+                <span className="op-divider-line" aria-hidden="true" />
+              </div>
+
+              <div className="grid gap-4 pb-4 sm:grid-cols-2 md:grid-cols-3">
+                {registrationAnswers.map((answer) => (
+                  <div key={answer.key}>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-secondary">{answer.label}</p>
+                    <p className="mt-1 text-[12px] font-medium text-primary">{answer.value || "—"}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
           {/* ── SECCIÓN: Compra ── */}
           <div className="op-divider">

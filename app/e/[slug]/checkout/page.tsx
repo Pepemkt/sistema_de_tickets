@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { PublicCheckout } from "@/components/public-checkout";
 import { resolveCheckoutFeeItems } from "@/lib/platform-config";
 import { VisitTracker } from "@/components/visit-tracker";
+import { normalizeRegistrationFieldDefinitions } from "@/lib/registration-fields";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -78,6 +79,7 @@ export default async function PublicEventCheckoutPage({ params }: Props) {
                 eventSlug={event.slug}
                 eventName={event.name}
                 eventDateText={new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short" }).format(event.startsAt)}
+                registrationFields={normalizeRegistrationFieldDefinitions(event.registrationFieldsJson)}
                 ticketTypes={visibleTicketTypes.map((type) => ({
                   id: type.id,
                   name: type.name,

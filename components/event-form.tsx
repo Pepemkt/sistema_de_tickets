@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserRole } from "@prisma/client";
 import { commissionBpsToPercent, DEFAULT_PLATFORM_COMMISSION_RATE_BPS } from "@/lib/platform-commission";
+import { normalizeRegistrationFieldDefinitions, type RegistrationFieldDefinition } from "@/lib/registration-fields";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    TYPES — unchanged
@@ -32,11 +33,14 @@ type EventFormProps = {
     venue: string;
     status?: "ACTIVE" | "UPCOMING" | "DRAFT";
     platformCommissionRateBps?: number;
+    registrationFields?: RegistrationFieldDefinition[];
     startsAt: string;
     endsAt: string;
     ticketTypes: TicketTypeInput[];
   };
 };
+
+type RegistrationFieldInput = RegistrationFieldDefinition;
 
 /* ─────────────────────────────────────────────────────────────────────────────
    DATE HELPER — unchanged
@@ -251,6 +255,10 @@ function getSaleModeLabel(mode: TicketTypeInput["saleMode"]) {
   return { label: "Oculto", color: "bg-arena-100 text-arena-500 border-arena-300" };
 }
 
+function createFieldKey() {
+  return `field_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    MAIN COMPONENT
 ───────────────────────────────────────────────────────────────────────────── */
@@ -268,6 +276,9 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
   const [status, setStatus] = useState<"ACTIVE" | "UPCOMING" | "DRAFT">(initial?.status ?? "ACTIVE");
   const [platformCommissionPercent, setPlatformCommissionPercent] = useState(
     commissionBpsToPercent(initial?.platformCommissionRateBps ?? DEFAULT_PLATFORM_COMMISSION_RATE_BPS)
+  );
+  const [registrationFields, setRegistrationFields] = useState<RegistrationFieldInput[]>(
+    normalizeRegistrationFieldDefinitions(initial?.registrationFields ?? [])
   );
   const [startsAt, setStartsAt] = useState(initial?.startsAt ? toLocalInputValue(initial.startsAt) : "");
   const [endsAt, setEndsAt] = useState(initial?.endsAt ? toLocalInputValue(initial.endsAt) : "");
@@ -327,6 +338,23 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
     );
   }
 
+  function addRegistrationField() {
+    setRegistrationFields((current) => [
+      ...current,
+      { key: createFieldKey(), label: "", placeholder: "", required: false }
+    ]);
+  }
+
+  function updateRegistrationField(index: number, key: keyof RegistrationFieldInput, value: string | boolean) {
+    setRegistrationFields((current) =>
+      current.map((item, itemIndex) => (itemIndex === index ? { ...item, [key]: value } : item))
+    );
+  }
+
+  function removeRegistrationField(index: number) {
+    setRegistrationFields((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }
+
   async function submitForm(targetStatus?: "ACTIVE" | "UPCOMING" | "DRAFT") {
     setLoading(true);
     setMessage(null);
@@ -342,6 +370,12 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
       venue,
       status: submitStatus,
       ...(canEditCommission ? { platformCommissionPercent } : {}),
+      registrationFields: registrationFields.map((item) => ({
+        key: item.key,
+        label: item.label.trim(),
+        placeholder: item.placeholder.trim(),
+        required: item.required,
+      })),
       startsAt: localInputToISO(startsAt),
       endsAt: endsAt ? localInputToISO(endsAt) : undefined,
       ticketTypes: ticketTypes.map((item) => ({
@@ -563,6 +597,60 @@ export function EventForm({ mode, eventId, initial, viewerRole }: EventFormProps
               </div>
             </Field>
 
+          </div>
+
+          <div className="px-5">
+            <SectionDivider
+              label="Campos de registro"
+              aside={
+                <button type="button" className="ef-add-btn" onClick={addRegistrationField}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                  Agregar campo
+                </button>
+              }
+            />
+          </div>
+          <div className="px-5 pb-2">
+            {registrationFields.length === 0 ? (
+              <div className="rounded-md border border-[color:var(--border-soft)] bg-sunken px-4 py-3 text-[12px] text-muted">
+                Sin campos extra. El registro usará solo nombre, email y teléfono.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {registrationFields.map((field, index) => (
+                  <div key={field.key} className="grid gap-3 rounded-lg border border-[color:var(--border-soft)] bg-surface px-4 py-4 md:grid-cols-[1fr_1fr_120px_32px]">
+                    <input
+                      className={inputCls}
+                      value={field.label}
+                      onChange={(e) => updateRegistrationField(index, "label", e.target.value)}
+                      placeholder="Nombre del campo"
+                    />
+                    <input
+                      className={inputCls}
+                      value={field.placeholder}
+                      onChange={(e) => updateRegistrationField(index, "placeholder", e.target.value)}
+                      placeholder="Placeholder opcional"
+                    />
+                    <label className="flex items-center gap-2 rounded-md border border-[color:var(--border-soft)] bg-sunken px-3 text-[12px] font-medium text-secondary">
+                      <input
+                        type="checkbox"
+                        checked={field.required}
+                        onChange={(e) => updateRegistrationField(index, "required", e.target.checked)}
+                      />
+                      Obligatorio
+                    </label>
+                    <button type="button" className="ef-del-btn self-center" onClick={() => removeRegistrationField(index)} aria-label="Eliminar campo personalizado">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* ── SECTION: Fechas y configuración ──────────────────────────── */}

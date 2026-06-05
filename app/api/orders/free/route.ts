@@ -9,6 +9,7 @@ import { calculateCheckoutAmounts } from "@/lib/checkout-fees";
 import { ORDER_KIND } from "@/lib/order-kind";
 import { generateTicketsForPaidOrder } from "@/lib/tickets";
 import { sendOrderTicketsEmail } from "@/lib/email";
+import { buildRegistrationAnswerSnapshot, normalizeRegistrationFieldDefinitions, registrationFieldValueSchema } from "@/lib/registration-fields";
 import {
   resolveMercadoPagoContextForEvent,
   serializeMercadoPagoSnapshot
@@ -32,7 +33,8 @@ const schema = z.object({
     .or(z.literal(""))
     .transform((value) => (value?.trim() ? value.trim() : undefined))
     .refine((value) => !value || (value.length >= 6 && value.length <= 30 && /^[0-9+().\-\s]+$/.test(value)), "Telefono invalido"),
-  couponCode: z.string().trim().max(40).optional()
+  couponCode: z.string().trim().max(40).optional(),
+  registrationAnswers: z.array(registrationFieldValueSchema).optional().default([])
 });
 
 export async function POST(request: Request) {
@@ -58,6 +60,11 @@ export async function POST(request: Request) {
               quantity: data.quantity,
               buyerEmail: data.buyerEmail,
               couponCode: data.couponCode
+            });
+            const registrationFields = normalizeRegistrationFieldDefinitions((validated.ticketType.event as { registrationFieldsJson?: unknown }).registrationFieldsJson);
+            const registrationAnswers = buildRegistrationAnswerSnapshot({
+              definitions: registrationFields,
+              submitted: data.registrationAnswers
             });
 
             if (validated.coupon) {
@@ -98,6 +105,7 @@ export async function POST(request: Request) {
                 buyerName: data.buyerName,
                 buyerEmail: validated.normalizedEmail,
                 buyerPhone: data.buyerPhone ?? null,
+                registrationAnswersJson: registrationAnswers,
                 couponId: validated.coupon?.id ?? null,
                 merchantSnapshot: serializeMercadoPagoSnapshot(commercialContext.snapshot)
               },

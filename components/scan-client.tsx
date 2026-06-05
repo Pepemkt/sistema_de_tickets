@@ -11,9 +11,17 @@ type EventStats = {
   eventScannedCount: number;
 };
 
+type RegistrationAnswer = {
+  key: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+  value: string;
+};
+
 type ValidateResult =
-  | ({ status: "ok"; ticketCode: string; attendeeName: string } & EventStats)
-  | ({ status: "already_used"; ticketCode: string; attendedAt: string; attendeeName: string } & EventStats)
+  | ({ status: "ok"; ticketCode: string; attendeeName: string; attendeeEmail: string; buyerPhone: string | null; registrationAnswers: RegistrationAnswer[] } & EventStats)
+  | ({ status: "already_used"; ticketCode: string; attendedAt: string; attendeeName: string; attendeeEmail: string; buyerPhone: string | null; registrationAnswers: RegistrationAnswer[] } & EventStats)
   | { status: "error"; message: string };
 
 type PopupState = {
@@ -959,6 +967,24 @@ export function ScanClient() {
                       >
                         {result.attendeeName}
                       </p>
+                      <p className="mt-0.5 text-[11px]" style={{ color: "var(--text-secondary, #4B4F6B)" }}>
+                        {result.attendeeEmail}
+                      </p>
+                      {result.buyerPhone ? (
+                        <p className="mt-0.5 text-[11px]" style={{ color: "var(--text-secondary, #4B4F6B)" }}>
+                          {result.buyerPhone}
+                        </p>
+                      ) : null}
+                      {result.registrationAnswers.length > 0 ? (
+                        <div className="mt-2 space-y-1 rounded-md border border-soft bg-surface px-2.5 py-2">
+                          {result.registrationAnswers.map((answer) => (
+                            <div key={answer.key} className="text-[11px]">
+                              <p className="font-semibold text-secondary">{answer.label}</p>
+                              <p style={{ color: "var(--text-primary, #15162B)" }}>{answer.value || "—"}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                       <p
                         className="sr-only"
                       >
@@ -998,6 +1024,24 @@ export function ScanClient() {
                       >
                         {result.attendeeName}
                       </p>
+                      <p className="mt-0.5 text-[11px]" style={{ color: "var(--text-secondary, #4B4F6B)" }}>
+                        {result.attendeeEmail}
+                      </p>
+                      {result.buyerPhone ? (
+                        <p className="mt-0.5 text-[11px]" style={{ color: "var(--text-secondary, #4B4F6B)" }}>
+                          {result.buyerPhone}
+                        </p>
+                      ) : null}
+                      {result.registrationAnswers.length > 0 ? (
+                        <div className="mt-2 space-y-1 rounded-md border border-soft bg-surface px-2.5 py-2">
+                          {result.registrationAnswers.map((answer) => (
+                            <div key={answer.key} className="text-[11px]">
+                              <p className="font-semibold text-secondary">{answer.label}</p>
+                              <p style={{ color: "var(--text-primary, #15162B)" }}>{answer.value || "—"}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                       <p
                         className="mt-0.5 text-[11px]"
                         style={{ color: "var(--text-secondary, #4B4F6B)" }}

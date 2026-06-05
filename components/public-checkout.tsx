@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { centsToCurrency } from "@/lib/utils";
 import { CheckoutFeeItem, calculateCheckoutAmounts } from "@/lib/checkout-fees";
 import { trackAnalyticsStep } from "@/lib/analytics-client";
+import type { RegistrationFieldDefinition } from "@/lib/registration-fields";
 
 type TicketType = {
   id: string;
@@ -20,16 +21,20 @@ type Props = {
   eventName: string;
   eventDateText: string;
   ticketTypes: TicketType[];
+  registrationFields?: RegistrationFieldDefinition[];
   feeItems: CheckoutFeeItem[];
 };
 
-export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, ticketTypes, feeItems }: Props) {
+export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, ticketTypes, registrationFields = [], feeItems }: Props) {
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
   const [buyerPhone, setBuyerPhone] = useState("");
   const [ticketTypeId, setTicketTypeId] = useState(ticketTypes[0]?.id ?? "");
   const [quantity, setQuantity] = useState(1);
   const [couponCode, setCouponCode] = useState("");
+  const [registrationAnswers, setRegistrationAnswers] = useState<Record<string, string>>(() =>
+    Object.fromEntries(registrationFields.map((field) => [field.key, ""]))
+  );
   const [quote, setQuote] = useState<{
     subtotalCents: number;
     discountCents: number;
@@ -48,6 +53,16 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
   const subtotalCents = quote?.subtotalCents ?? fallbackAmounts.subtotalCents;
   const discountCents = quote?.discountCents ?? 0;
   const isFreeCheckout = totalCents === 0;
+
+  useEffect(() => {
+    setRegistrationAnswers((current) => {
+      const next: Record<string, string> = {};
+      for (const field of registrationFields) {
+        next[field.key] = current[field.key] ?? "";
+      }
+      return next;
+    });
+  }, [registrationFields]);
 
   useEffect(() => {
     if (!selected) {
@@ -141,7 +156,8 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
           buyerName,
           buyerEmail,
           buyerPhone: buyerPhone.trim() || undefined,
-          couponCode: couponCode.trim() || undefined
+          couponCode: couponCode.trim() || undefined,
+          registrationAnswers: registrationFields.map((field) => ({ key: field.key, value: registrationAnswers[field.key] ?? "" }))
         })
       });
       const data = await res.json();
@@ -325,6 +341,32 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
                   />
                 </div>
               </div>
+
+              {registrationFields.length > 0 && (
+                <div className="mt-5 space-y-4 border-t border-soft pt-4">
+                  {registrationFields.map((field) => (
+                    <div key={field.key}>
+                      <label className="label">
+                        {field.label}
+                        {field.required ? " *" : ""}
+                      </label>
+                      <input
+                        className="field"
+                        value={registrationAnswers[field.key] ?? ""}
+                        onChange={(event) => {
+                          trackCheckoutStarted();
+                          setRegistrationAnswers((current) => ({
+                            ...current,
+                            [field.key]: event.target.value
+                          }));
+                        }}
+                        placeholder={field.placeholder || undefined}
+                        required={field.required}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
 

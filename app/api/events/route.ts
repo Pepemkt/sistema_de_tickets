@@ -5,6 +5,7 @@ import { checkApiRole } from "@/lib/api-auth";
 import { commissionPercentToBps, DEFAULT_PLATFORM_COMMISSION_RATE_BPS } from "@/lib/platform-commission";
 import { defaultTicketTemplate } from "@/lib/ticket-template";
 import { slugify } from "@/lib/utils";
+import { normalizeRegistrationFieldDefinitions, registrationFieldDefinitionSchema } from "@/lib/registration-fields";
 
 export const runtime = "nodejs";
 
@@ -32,6 +33,7 @@ const createSchema = z.object({
   platformCommissionPercent: z.number().min(0).max(100).optional(),
   startsAt: z.string().min(10),
   endsAt: z.string().optional(),
+  registrationFields: z.array(registrationFieldDefinitionSchema).optional().default([]),
   ticketTypes: z.array(ticketTypeSchema).min(1).optional(),
   ticketName: z.string().optional(),
   ticketPrice: z.number().optional(),
@@ -69,6 +71,7 @@ export async function POST(request: Request) {
 
     const startsAt = new Date(data.startsAt);
     const endsAt = data.endsAt ? new Date(data.endsAt) : null;
+    const registrationFields = normalizeRegistrationFieldDefinitions(data.registrationFields);
 
     if (Number.isNaN(startsAt.getTime())) {
       throw new Error("Fecha de inicio invalida");
@@ -114,6 +117,7 @@ export async function POST(request: Request) {
           venue: data.venue,
           status: data.status,
           platformCommissionRateBps,
+          registrationFieldsJson: registrationFields,
           startsAt,
           endsAt,
           templateJson: defaultTicketTemplate,

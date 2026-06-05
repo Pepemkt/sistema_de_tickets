@@ -5,6 +5,7 @@ import { validateOnlinePurchase } from "@/lib/order-rules";
 import { ORDER_KIND } from "@/lib/order-kind";
 import { calculateCheckoutAmounts } from "@/lib/checkout-fees";
 import { resolveAppUrl, resolveCheckoutFeeItems } from "@/lib/platform-config";
+import { buildRegistrationAnswerSnapshot, type RegistrationFieldValueInput, normalizeRegistrationFieldDefinitions } from "@/lib/registration-fields";
 import {
   resolveMercadoPagoContextForEvent,
   serializeMercadoPagoSnapshot
@@ -24,6 +25,7 @@ export type CreateMercadoPagoCheckoutInput = {
   buyerEmail: string;
   buyerPhone?: string;
   couponCode?: string;
+  registrationAnswers?: RegistrationFieldValueInput[];
 };
 
 export async function createMercadoPagoCheckout(input: CreateMercadoPagoCheckoutInput) {
@@ -45,13 +47,18 @@ export async function createMercadoPagoCheckout(input: CreateMercadoPagoCheckout
     try {
       transactionResult = await db.$transaction(
         async (tx) => {
-          const validated = await validateOnlinePurchase(tx, {
+            const validated = await validateOnlinePurchase(tx, {
             eventId: input.eventId,
             ticketTypeId: input.ticketTypeId,
             quantity: input.quantity,
             buyerEmail: input.buyerEmail,
-            couponCode: input.couponCode
-          });
+              couponCode: input.couponCode
+            });
+            const registrationFields = normalizeRegistrationFieldDefinitions((validated.ticketType.event as { registrationFieldsJson?: unknown }).registrationFieldsJson);
+            const registrationAnswers = buildRegistrationAnswerSnapshot({
+              definitions: registrationFields,
+              submitted: input.registrationAnswers ?? []
+            });
 
           if (validated.coupon) {
             const updatedCoupon = await tx.coupon.updateMany({
@@ -86,6 +93,7 @@ export async function createMercadoPagoCheckout(input: CreateMercadoPagoCheckout
               buyerName: input.buyerName,
               buyerEmail: validated.normalizedEmail,
               buyerPhone: input.buyerPhone ?? null,
+              registrationAnswersJson: registrationAnswers,
               couponId: validated.coupon?.id ?? null,
               merchantSnapshot: serializeMercadoPagoSnapshot(commercialContext.snapshot)
             },

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { checkApiRole } from "@/lib/api-auth";
 import { requireViewerEventAccess } from "@/lib/event-scope";
 import { commissionPercentToBps } from "@/lib/platform-commission";
+import { normalizeRegistrationFieldDefinitions, registrationFieldDefinitionSchema } from "@/lib/registration-fields";
 
 type Params = {
   params: Promise<{ id: string }>;
@@ -34,6 +35,7 @@ const updateSchema = z.object({
   venue: z.string().min(2),
   status: z.enum(["ACTIVE", "UPCOMING", "DRAFT"]).optional().default("ACTIVE"),
   platformCommissionPercent: z.number().min(0).max(100).optional(),
+  registrationFields: z.array(registrationFieldDefinitionSchema).optional().default([]),
   startsAt: z.string().min(10),
   endsAt: z.string().optional(),
   ticketTypes: z.array(updateTicketTypeSchema).min(1)
@@ -60,6 +62,7 @@ export async function GET(_request: Request, { params }: Params) {
       venue: true,
       status: true,
       platformCommissionRateBps: true,
+      registrationFieldsJson: true,
       startsAt: true,
       endsAt: true,
       createdAt: true,
@@ -104,6 +107,7 @@ export async function PUT(request: Request, { params }: Params) {
 
     const startsAt = new Date(data.startsAt);
     const endsAt = data.endsAt ? new Date(data.endsAt) : null;
+    const registrationFields = normalizeRegistrationFieldDefinitions(data.registrationFields);
 
     if (Number.isNaN(startsAt.getTime())) {
       throw new Error("Fecha de inicio invalida");
@@ -190,6 +194,7 @@ export async function PUT(request: Request, { params }: Params) {
           heroImageUrl: data.heroImageUrl || null,
           venue: data.venue,
           status: data.status,
+          registrationFieldsJson: registrationFields,
           ...(viewer.role === "ADMIN" && data.platformCommissionPercent !== undefined
             ? { platformCommissionRateBps: commissionPercentToBps(data.platformCommissionPercent) }
             : {}),

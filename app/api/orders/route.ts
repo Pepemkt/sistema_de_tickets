@@ -4,6 +4,7 @@ import {
   createMercadoPagoCheckout,
   isSerializationConflict
 } from "@/lib/application/payments/create-mercadopago-checkout";
+import { registrationFieldValueSchema } from "@/lib/registration-fields";
 
 export const runtime = "nodejs";
 
@@ -20,7 +21,8 @@ const schema = z.object({
     .or(z.literal(""))
     .transform((value) => (value?.trim() ? value.trim() : undefined))
     .refine((value) => !value || (value.length >= 6 && value.length <= 30 && /^[0-9+().\-\s]+$/.test(value)), "Telefono invalido"),
-  couponCode: z.string().trim().max(40).optional()
+  couponCode: z.string().trim().max(40).optional(),
+  registrationAnswers: z.array(registrationFieldValueSchema).optional().default([])
 });
 
 export async function POST(request: Request) {

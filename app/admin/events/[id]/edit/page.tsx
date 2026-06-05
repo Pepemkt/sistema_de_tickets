@@ -5,6 +5,7 @@ import { EventForm } from "@/components/event-form";
 import { EventClientPicker } from "@/components/event-client-picker";
 import { requirePageRole } from "@/lib/auth";
 import { requireViewerEventAccess } from "@/lib/event-scope";
+import { normalizeRegistrationFieldDefinitions } from "@/lib/registration-fields";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    CSS — server-safe (no "use client")
@@ -138,6 +139,7 @@ export default async function EditEventPage({ params }: Props) {
             venue: string | null;
             status: "ACTIVE" | "UPCOMING" | "DRAFT";
             platformCommissionRateBps: number;
+            registrationFieldsJson: unknown;
             startsAt: Date;
             endsAt: Date | null;
             client: { id: string; name: string } | null;
@@ -399,6 +401,7 @@ export default async function EditEventPage({ params }: Props) {
               venue: event.venue ?? "",
               status: event.status,
               platformCommissionRateBps: event.platformCommissionRateBps,
+              registrationFields: normalizeRegistrationFieldDefinitions(event.registrationFieldsJson),
               startsAt: event.startsAt.toISOString(),
               endsAt: event.endsAt ? event.endsAt.toISOString() : "",
               ticketTypes: event.ticketTypes.map((item) => ({

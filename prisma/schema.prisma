@@ -82,6 +82,7 @@ model Event {
   venue              String?
   status             EventStatus        @default(ACTIVE)
   platformCommissionRateBps Int         @default(500)
+  registrationFieldsJson Json?
   startsAt           DateTime
   endsAt             DateTime?
   templateJson       Json?
@@ -132,6 +133,7 @@ model Order {
   buyerName         String
   buyerEmail        String
   buyerPhone        String?
+  registrationAnswersJson Json?
   couponId          String?
   status            OrderStatus        @default(PENDING)
   mercadoPagoRef    String?

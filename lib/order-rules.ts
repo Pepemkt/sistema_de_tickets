@@ -26,7 +26,7 @@ export async function validateOnlinePurchase(tx: TxClient, input: ValidateOnline
 
   const ticketType = await tx.ticketType.findUnique({
     where: { id: input.ticketTypeId },
-    include: { event: { select: { name: true, slug: true, status: true } } }
+    include: { event: { select: { name: true, slug: true, status: true, registrationFieldsJson: true } } }
   });
 
   if (!ticketType || ticketType.eventId !== input.eventId) {
