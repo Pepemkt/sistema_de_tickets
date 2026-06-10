@@ -145,6 +145,7 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
     trackAnalyticsStep({ step: "checkout_submit", eventSlug, transport: "beacon" });
 
     try {
+      const normalizedBuyerEmail = buyerEmail.trim().toLowerCase();
       const endpoint = isFreeCheckout ? "/api/orders/free" : "/api/orders";
       const res = await fetch(endpoint, {
         method: "POST",
@@ -154,7 +155,7 @@ export function PublicCheckout({ eventId, eventSlug, eventName, eventDateText, t
           ticketTypeId,
           quantity,
           buyerName,
-          buyerEmail,
+          buyerEmail: normalizedBuyerEmail,
           buyerPhone: buyerPhone.trim() || undefined,
           couponCode: couponCode.trim() || undefined,
           registrationAnswers: registrationFields.map((field) => ({ key: field.key, value: registrationAnswers[field.key] ?? "" }))

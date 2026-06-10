@@ -13,7 +13,7 @@ const schema = z.object({
   ticketTypeId: z.string().min(1),
   quantity: z.number().int().min(1).max(100),
   buyerName: z.string().min(2),
-  buyerEmail: z.string().email(),
+  buyerEmail: z.string().trim().toLowerCase().email(),
   buyerPhone: z
     .string()
     .trim()
