@@ -162,6 +162,14 @@ function fullDate(date: Date): string {
 export default async function AdminOrdersPage() {
   const viewer = await requirePageRole(["ADMIN", "MANAGER"]);
   const scopedEventIds = await getScopedEventIdsForViewer(viewer);
+  const visibleEvents = await db.event.findMany({
+    where: scopedEventIds ? { id: { in: scopedEventIds } } : undefined,
+    orderBy: { startsAt: "asc" },
+    select: {
+      id: true,
+      name: true
+    }
+  });
 
   const orders = await db.order.findMany({
     where: scopedEventIds ? { eventId: { in: scopedEventIds } } : undefined,
@@ -238,6 +246,35 @@ export default async function AdminOrdersPage() {
 
           {/* Right: ghost export action */}
           <div className="flex items-center gap-2 pt-0.5">
+            <form action="/api/admin/orders/export" method="get" className="flex items-center gap-2">
+              <select
+                name="eventId"
+                className="rounded-[7px] border py-[5px] px-2.5 text-[12px] text-secondary outline-none transition-[border-color] duration-[120ms] hover:border-[color:var(--border-strong)] focus:border-[color:var(--border-focus)]"
+                style={{ borderColor: "var(--border-soft)", backgroundColor: "var(--bg-surface)", minWidth: "180px" }}
+                defaultValue={visibleEvents[0]?.id ?? ""}
+                aria-label="Seleccionar evento para exportar"
+              >
+                {visibleEvents.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 rounded-[7px] border px-3 py-[5px] text-[12px] font-medium text-secondary transition-colors duration-[120ms] hover:border-[color:var(--border-strong)] hover:text-primary"
+                style={{ borderColor: "var(--border-soft)", backgroundColor: "var(--bg-surface)" }}
+                title="Exportar órdenes CSV"
+                disabled={visibleEvents.length === 0}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 3v12" />
+                  <path d="m7 10 5 5 5-5" />
+                  <path d="M5 21h14" />
+                </svg>
+                Exportar CSV
+              </button>
+            </form>
             <Link
               href="/admin/events"
               className="inline-flex items-center gap-1.5 rounded-[7px] border px-3 py-[5px] text-[12px] font-medium text-secondary transition-colors duration-[120ms] hover:border-[color:var(--border-strong)] hover:text-primary"
